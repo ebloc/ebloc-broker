@@ -54,6 +54,10 @@ console = Console(
 )
 
 
+def _tb():
+    console.print_exception(word_wrap=True, extra_lines=1)
+
+
 class QuietExit(Exception):
     """Exit quietly without printing the trace."""
 

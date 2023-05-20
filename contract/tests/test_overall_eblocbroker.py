@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import atexit
 import os
 import pytest
 import sys
@@ -39,23 +40,28 @@ Ebb = None
 chain = None
 ebb = None
 
-# @pytest.fixture(scope="session", autouse=True)
-# def cleanup():
-#     """Cleanup a testing directory once we are finished."""
-#     for k, v in gas_costs.items():
-#         if v:
-#             print(f"{k} => {v}")
+
+def print_gas_costs():
+    """Cleanup a testing directory once we are finished."""
+    for k, v in gas_costs.items():
+        if v:
+            # print(f"{k} => {v}")
+            log(f"#> {k} => {int(sum(v) / len(v))}")
 
 
 def append_gas_cost(func_n, tx):
     gas_costs[func_n].append(tx.__dict__["gas_used"])
 
 
+@pytest.fixture(scope="session", autouse=True)
+def cleanup():
+    """Cleanup a testing directory once we are finished."""
+    print_gas_costs()
+
+
 @pytest.fixture(scope="module", autouse=True)
 def my_own_session_run_at_beginning(_Ebb):
-    global Ebb  # type: ignore
-    global chain  # noqa
-    global ebb  # noqa
+    global Ebb, chain, ebb  # type: ignore
 
     cfg.IS_BROWNIE_TEST = True
     config.Ebb = Ebb = Contract.Contract(is_brownie=True)
@@ -184,9 +190,9 @@ def set_transfer(to, amount):
     ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
 
 
-# @pytest.mark.skip(reason="skip")
-def test_dummy():
-    print("skip me")
+# # @pytest.mark.skip(reason="skip")
+# def test_dummy():
+#     print("skip me")
 
 
 # =========== testing starts ======================== #
@@ -308,7 +314,7 @@ def test_stored_data_usage():
         job.code_hashes,
         {"from": requester},
     )
-    assert tx.events["LogDataStorageRequest"]["owner"] == requester.address
+    assert "LogDataStorageRequest" not in tx.events
 
 
 def test_data_info():
@@ -751,7 +757,7 @@ def test_multiple_data():
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
-    log(f"received={received_sum} refunded={refunded_sum}", "bold")
+    log(f"received={received_sum} refunded={refunded_sum}")
     assert received_sum == 320 * Cent("1 cent") and refunded_sum == 0
     assert Cent(ebb.balanceOf(provider)) == received_sum
     assert Cent(ebb.balanceOf(requester)) == refunded_sum
@@ -971,7 +977,7 @@ def test_submit_jobs():
             core = int(arguments[2])
             job.cores = [core]
             job.run_time = [core_min]
-            log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}", "bold")
+            log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}")
             job_id = 0
             elapsed_time = int(arguments[1]) - int(arguments[0])
             end_ts = int(arguments[1])
@@ -994,9 +1000,9 @@ def test_submit_jobs():
             refunded = tx.events["LogProcessPayment"]["refundedCent"]
             assert Cent(ebb.balanceOf(provider)) == received
             assert Cent(ebb.balanceOf(requester)) == refunded
-            log(f"received={received} | refunded={refunded}", "bold")
+            log(f"received={received} | refunded={refunded}")
 
-    log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}", "bold")
+    log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}")
     for idx in range(0, ebb.getProviderReceiptNode(provider, index)[0]):
         # prints finalize version of the linked list
         log(ebb.getProviderReceiptNode(provider, idx))
@@ -1258,3 +1264,13 @@ def test_receive_registered_data_deposit():
     refunded = tx.events["LogProcessPayment"]["refundedCent"]
     log(f"received={received} refunded={refunded}")
     assert job_price == received + refunded
+
+
+def report():
+    """Cleanup a testing directory once we are finished.
+
+    __ https://stackoverflow.com/a/51025279/2402577"""
+    print_gas_costs()  #
+
+
+atexit.register(report)

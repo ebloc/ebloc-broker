@@ -8,7 +8,7 @@ yes_or_no () {
         read -p "$(echo -e $string) " yn
         case $yn in
             [Yy]*) return 0  ;;
-            [Nn]*) echo "end" ; return  1 ;;
+            [Nn]*) echo "done" ; return  1 ;;
             * ) echo "Please answer yes or no";;
         esac
     done
@@ -24,7 +24,7 @@ fi
 
 set_gmail () {
     echo "Type your gmail-address, followed by [ENTER]:"
-    read GMAIL
+    read -r GMAIL
     line_old="GMAIL="
     line_new=$GMAIL
     sed -i.bak "s/^\(GMAIL=\).*/\1\"$line_new\"/" $DIR/slurm_mail_prog.sh

@@ -44,6 +44,14 @@ chain = None
 ebb = None
 
 
+def print_gas_costs():
+    """Cleanup a testing directory once we are finished."""
+    for k, v in gas_costs.items():
+        if v:
+            # print(f"{k} => {v}")
+            log(f"#> {k} => {int(sum(v) / len(v))}")
+
+
 def append_gas_cost(func_n, tx):
     gas_costs[func_n].append(tx.__dict__["gas_used"])
 
@@ -220,6 +228,9 @@ def test_workflow():
         job.run_time,
         False,
     ]
+
+    # print_gas_costs() #
+
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     append_gas_cost("processPayment", tx)
     # log(tx.events['LogProcessPayment'])
@@ -304,6 +315,3 @@ def test_workflow():
     assert job_price == received_sum + refunded_sum
     assert ebb.balanceOf(provider) == received_sum
     assert ebb.balanceOf(requester) == refunded_sum
-    for k, v in gas_costs.items():
-        if v:
-            print(f"{k} => {v}")
