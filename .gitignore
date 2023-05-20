@@ -171,10 +171,12 @@ eblocbroker_bloxberg_deployed.txt
 slurm.out
 slurm.err
 slurm-*.out
-README.html
 _slurm/example/hello
 alper.csv
 helloWorld.txt
 volumes
 provider_*.txt
 docs/_build_htm
+alper.md
+alper.html
+README.htm

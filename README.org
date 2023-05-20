@@ -1,4 +1,5 @@
-#+ATTR_HTML: width="1px"
+#+ATTR_HTML: :alt neural network :title Neural network representation :align right
+#+ATTR_HTML: :width 33% :height 33%
 * [[https://github.com/ebloc/ebloc-broker/raw/dev/imgs/logo.png]] ebloc-broker
 
 =eBlocBroker= is a smart contract as an autonomous volunteer computing and sharing data resource broker based on blockchain for e-Science.
@@ -23,13 +24,11 @@ docker-compose up -d
 #+end_src
 
 To enter the shell of the running container in the interactive mode, run:
-
 #+begin_src
 docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
 #+end_src
 
 To stop the container, run:
-
 #+begin_src bash
 docker-compose down
 #+end_src
