@@ -761,6 +761,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                 _cleanJobStorage(jobSt);
                 emit LogDepositStorage(args.provider, temp);
             }
+
             if (
                 !(temp > 0 ||
                     (jobSt.receivedBlock + jobSt.storageDuration >= block.number &&
@@ -769,6 +770,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             ) {
                 Lib.RegisteredData storage registeredData = provider.registeredData[codeHash];
                 // temp used for returned bool value True or False
+                if (args.cloudStorageID[i] != uint8(Lib.CloudStorageID.NONE) && registeredData.committedBlock.length > 0){
+                    revert();
+                }
                 temp = _checkRegisteredData(args.cloudStorageID[i], registeredData);
                 if (temp == 0) {
                     // if returned value of _checkRegisteredData is False move on to next condition
@@ -797,7 +801,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                     _dataTransferIn = _dataTransferIn.add(dataTransferIn[i]);
                     // owner of the sourceCodeHash is also detected, first time usage
                     emit LogDataStorageRequest(args.provider, msg.sender, codeHash, storageInfo.received);
-                } else {
+                } else {  // priority is given to dataset fee
                     sum = sum.add(temp); // keeps track of deposit for dataset fees for data
                     emit LogRegisteredDataRequestToUse(args.provider, codeHash);
                 }

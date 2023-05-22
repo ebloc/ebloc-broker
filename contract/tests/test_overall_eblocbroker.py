@@ -1,12 +1,10 @@
 #!/usr/bin/python3
 
-import atexit
 import os
 import pytest
 import sys
 from os import path
 import atexit
-
 import brownie
 import contract.tests.cfg as _cfg
 from broker import cfg, config
@@ -44,7 +42,7 @@ ebb = None
 
 def print_gas_costs():
     """Cleanup a testing directory once we are finished."""
-    log("average_gas_costs=",end="")
+    log("average_gas_costs=", end="")
     gas_costs_items_temp = {}
     for k, v in gas_costs.items():
         if v:

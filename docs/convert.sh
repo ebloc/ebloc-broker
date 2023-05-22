@@ -14,6 +14,14 @@ cp source/readme.rst ../index.rst
 cp source/gdrive_readme.rst ../
 cp source/cost_example.rst ../
 
+gsed -i "s/file:\/docs\//\.\.\ image\:\:\ /" $DIR/docs/index.rst
+echo "[ok]"
+
+
+# file:/docs/
+
+
+
 # wget -O geth.md https://raw.githubusercontent.com/ebloc/eBlocPOA/master/README.md
 # mv geth.md source/geth.md
 # cp $HOME/ebloc-broker/README.md ~/ebloc-broker/docs/convert/source/readme.md
@@ -21,5 +29,3 @@ cp source/cost_example.rst ../
 
 # mv source/readme.rst ../quickstart.rst
 # mv source/geth.rst   ../connect.rst
-
-echo "[ok]"
