@@ -82,14 +82,12 @@ g.add_edge('job3', 'job4', weight=2)
 g.add_edge('job1', 'job5', weight=3)
 """
 
-
 # list(G.neighbors('job3'))
 # print(G.edges('job3'))
 # print(G.adjacency())
 
 
 # print(list(G.adj['job3']))
-
 
 """
 d = dict(g.degree)

@@ -25,6 +25,15 @@ def driver():
         sys.exit(1)
 
 
+def workflow():
+    from broker.workflow import Workflow
+
+    try:
+        Workflow.main(_args)
+    except KeyboardInterrupt:
+        sys.exit(1)
+
+
 def init():
     import git
     from pathlib import Path
@@ -38,7 +47,8 @@ def init():
         if _args.base:
             arg1 = "base"
 
-        constantly_print_popen([Path(repo.working_tree_dir) / "broker" / "bash_scripts" / "folder_setup.sh", arg1])
+        fn = Path(repo.working_tree_dir) / "broker" / "bash_scripts" / "folder_setup.sh"
+        constantly_print_popen([fn, arg1])
     except KeyboardInterrupt:
         sys.exit(1)
 
@@ -61,7 +71,7 @@ def about():
 
                 if "cfg" not in line and " " * indent in line[:indent]:
                     line = line[indent:]
-                    log(line.rstrip(), "bold")
+                    log(line.rstrip(), is_write=False)
     except KeyboardInterrupt:
         sys.exit(1)
 

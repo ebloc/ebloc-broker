@@ -13,7 +13,8 @@ class Helper:
     def __init__(self):
         """Initialize helper.
 
-        test: ./_cli/__main__.py -h
+        ./_cli/__main__.py -h
+
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
 
@@ -32,6 +33,9 @@ class Helper:
         self.subparsers.add_parser("about", help="ebloc-broker metadata")
         self.init()
         self.driver()
+
+        self.workflow()
+
         # self.bloxberg()
         self.daemon()
         self.register()
@@ -77,6 +81,9 @@ class Helper:
     #     obj.add_argument(
     #         "tx-receipt", type=str, default=0, help="Return transaction receipt"
     #     ).completer = EnvironCompleter
+
+    def workflow(self):
+        obj = self.subparsers.add_parser("workflow", help="eblocworkflow scripts")
 
     def daemon(self):
         """Select daemon program to run.

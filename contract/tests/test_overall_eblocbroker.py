@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
+import atexit
 import os
 import pytest
 import sys
 from os import path
-import atexit
+
 import brownie
 import contract.tests.cfg as _cfg
 from broker import cfg, config

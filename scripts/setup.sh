@@ -176,8 +176,19 @@ fix-black-package () {
 install_ebb_pip_packages () {
     VENV=$HOME/venv
     [ ! -d $VENV ] && command python3.8 -m venv $VENV
-    source $VENV/bin/activate
-    $VENV/bin/python3 -m pip install --upgrade pip wheel dbus-python
+    source ${VENV}/bin/activate
+
+    uname_out="$(uname -s)"
+    case "${uname_out}" in
+        Darwin*) # UNIX
+            $VENV/bin/python3 -m pip install --disable-pip-version-check pip==21.3.1
+            ;;
+        *) # LINUX
+            $VENV/bin/python3 -m pip install --upgrade pip
+            ;;
+    esac
+    $VENV/bin/python3 -m pip install --upgrade wheel
+    $VENV/bin/python3 -m pip install dbus-python==1.2.16
     cd ~/ebloc-broker && \
         $VENV/bin/python3 -m pip install -e . --use-deprecated=legacy-resolver && \
         fix-black-package

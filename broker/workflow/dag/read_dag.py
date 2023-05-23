@@ -2,10 +2,10 @@
 
 import networkx as nx
 import random
-from broker.errors import QuietExit
+
 from broker._utils._log import console
 from broker._utils.tools import print_tb
-
+from broker.errors import QuietExit
 
 job_ids = {}
 
