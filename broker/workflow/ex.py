@@ -52,4 +52,9 @@ def ex_2():
     plt.show()
 
 
-ex_2()
+def main():
+    ex_1()
+
+
+if __name__ == "__main__":
+    main()

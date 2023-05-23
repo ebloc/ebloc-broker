@@ -2,11 +2,15 @@
 
 import networkx as nx
 import random
+from broker.errors import QuietExit
+from broker._utils._log import console
+from broker._utils.tools import print_tb
+
 
 job_ids = {}
 
 
-def dependencyJob(i):
+def dependency_job(G, i):
     if not len(set(G.predecessors(i))):
         job_id = notDependentSubmitJob(i)
         job_ids[i] = job_id
@@ -46,19 +50,31 @@ def dependentSubmitJob(i, predecessors):
         return random.randint(1, 101)
 
 
-G = nx.drawing.nx_pydot.read_dot("job.dot")
+def main():
+    G = nx.drawing.nx_pydot.read_dot("job.dot")
 
-print("List of nodes:")
-print(list(G.nodes))
+    print("List of nodes:")
+    print(list(G.nodes))
 
-for i in list(G.nodes):
-    # print(i)
-    # print(len(set(G.successors(i))))
-    if i not in job_ids:
-        dependencyJob(i)
+    for i in list(G.nodes):
+        # print(i)
+        # print(len(set(G.successors(i))))
+        if i not in job_ids:
+            dependencyJob(i)
+
+    for i in list(G.nodes):
+        print(i + " " + str(job_ids[i]))
+
+    # jid4=$(sbatch --dependency=afterany:$jid2:$jid3 job4.sh)
 
 
-for i in list(G.nodes):
-    print(i + " " + str(job_ids[i]))
-
-# jid4=$(sbatch --dependency=afterany:$jid2:$jid3 job4.sh)
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    except QuietExit as e:
+        print(f"#> {e}")
+    except Exception as e:
+        print_tb(str(e))
+        console.print_exception(word_wrap=True)
