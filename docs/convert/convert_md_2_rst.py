@@ -48,7 +48,7 @@ def convert_md_2_rst_process(fn_root):
     file_source.close()
     data = "\n".join(lines)
     data = data.encode("utf-8")
-    data = pypandoc.convert(data, "rst", format="markdown")
+    data = pypandoc.convert_text(data, "rst", format="markdown")
     file_target = open(fn_target, "w")
     file_target.write(data)
     file_target.flush()

@@ -18,19 +18,16 @@ You can use a sandbox container provided in the [[./docker-compose.yml]] file fo
 environment.
 
 This container provides everything you need to test using a ~Python 3.7~ interpreter. Start the test environment:
-
 #+begin_src bash
 docker-compose up -d
 #+end_src
 
 To enter the shell of the running container in the interactive mode, run:
-
 #+begin_src
 docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
 #+end_src
 
 To stop the container, run:
-
 #+begin_src bash
 docker-compose down
 #+end_src

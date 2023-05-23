@@ -39,7 +39,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender and minting.
      */
-    constructor () ERC20("USDT", "USDT") {
+    constructor () ERC20("USDmy", "USDmy") {
         _mint(msg.sender, 1000000000 * (10 ** uint256(decimals()) ));
     }
 
@@ -118,7 +118,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         gain = gain.add(jobInfo.receivedRegisteredDataFee);
         //: computationalCostRefund
         _refund = _refund.add(info.priceCoreMin.mul(core.mul((runTime.sub(args.elapsedTime)))));
-        // require(gain.add(_refund) <= jobInfo.received); // UNCOMMENT
+        require(gain.add(_refund) <= jobInfo.received);
         Lib.IntervalArg memory _interval;
         _interval.startTimestamp = job.startTimestamp;
         _interval.endTimestamp = uint32(args.endTimestamp);
@@ -581,9 +581,10 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         //                         decreased if there is caching for specific block
         // refunded => used as receivedRegisteredDataFee due to limit for local variables
 
-        // sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp
-        //  |          |            |          /         /
-        (cost, dataTransferIn[0], tmp[0], tmp[1],    tmp[2]) = _calculateCacheCost(
+        // sum, _dataTransferIn, storageCost, cacheCost, sumRegisterDataDeposit
+        //  |          |            |          /      ___/
+        //  |          |            |         /      |
+        (cost, dataTransferIn[0], tmp[0], tmp[1], tmp[2]) = _calculateCacheCost(
             provider,
             args,
             sourceCodeHash,
@@ -760,6 +761,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                 _cleanJobStorage(jobSt);
                 emit LogDepositStorage(args.provider, temp);
             }
+
             if (
                 !(temp > 0 ||
                     (jobSt.receivedBlock + jobSt.storageDuration >= block.number &&
@@ -768,6 +770,9 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             ) {
                 Lib.RegisteredData storage registeredData = provider.registeredData[codeHash];
                 // temp used for returned bool value True or False
+                if (args.cloudStorageID[i] != uint8(Lib.CloudStorageID.NONE) && registeredData.committedBlock.length > 0){
+                    revert();
+                }
                 temp = _checkRegisteredData(args.cloudStorageID[i], registeredData);
                 if (temp == 0) {
                     // if returned value of _checkRegisteredData is False move on to next condition
@@ -796,17 +801,17 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
                     _dataTransferIn = _dataTransferIn.add(dataTransferIn[i]);
                     // owner of the sourceCodeHash is also detected, first time usage
                     emit LogDataStorageRequest(args.provider, msg.sender, codeHash, storageInfo.received);
-                } else {
-                    sum = sum.add(temp); // now used to keep track of registerDataCost
+                } else {  // priority is given to dataset fee
+                    sum = sum.add(temp); // keeps track of deposit for dataset fees for data
                     emit LogRegisteredDataRequestToUse(args.provider, codeHash);
                 }
             }
         } // for-loop ended
-        uint registerDataCostTemp = sum;
+        uint sumRegisterDataDeposit = sum;
         // sum already contains the registered data cost fee
         sum = sum.add(info.priceDataTransfer.mul(_dataTransferIn.add(args.dataTransferOut)));
         sum = sum.add(storageCost).add(cacheCost);
-        return (sum, _dataTransferIn, storageCost, cacheCost, registerDataCostTemp);
+        return (sum, _dataTransferIn, storageCost, cacheCost, sumRegisterDataDeposit);
     }
 
     /**

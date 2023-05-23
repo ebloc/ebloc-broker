@@ -1,5 +1,5 @@
-ebloc-broker
-============
+https://github.com/ebloc/ebloc-broker/raw/dev/imgs/logo.png ebloc-broker
+========================================================================
 
 ``eBlocBroker`` is a smart contract as an autonomous volunteer computing
 and sharing data resource broker based on blockchain for e-Science. It
@@ -7,7 +7,7 @@ applies blockchain technology to provide a market for computational and
 data resources to research communities.
 
 For more info see:
-`documentation <http://ebloc-broker-readthedocs.duckdns.org:8000/index.html>`__
+`documentation <http://ebloc-broker-readthedocs.duckdns.org:8000/index.html>`__.
 
 Prerequisites
 -------------
@@ -36,7 +36,7 @@ This container provides everything you need to test using a
 To enter the shell of the running container in the interactive mode,
 run:
 
-.. code:: bash
+::
 
    docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
 
@@ -98,35 +98,33 @@ the following http://eblocbroker.duckdns.org/.
 Example yaml file in order to define a job to submit.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``job.yaml``:
+``job.yaml`` :
 
 .. code:: yaml
 
    config:
-       provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
-       source_code:
-           cache_type: public
-           path: ~/test_eblocbroker/source_code
-           storage_hours: 0
-           storage_id: ipfs
-       data:
-           data1:
-               cache_type: public
-               path: ~/test_eblocbroker/dataset_zip/small/KZ2-tsukuba
-               storage_hours: 1
-               storage_id: ipfs
-           data2:
-               cache_type: public
-               path: ~/test_eblocbroker/test_data/base/data/data1
-               storage_hours: 0
-               storage_id: ipfs
-           data3:
-               hash: f13d75bc60898f0823566347e380a34b
-       data_transfer_out: 1
-       jobs:
-           job1:
-               cores: 1
-               run_time: 1
+     requester_address: '0x378181ce7b07e8dd749c6f42772574441b20e35f'
+     provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+     source_code:
+       storage_id: ipfs
+       cache_type: public
+       path: ~/test_eblocbroker/run_cppr
+       storage_hours: 0
+     data:
+       data1:
+         hash: 4613abc322e8f2fdeae9a5dd10f17540
+       data2:
+         hash: 050e6cc8dd7e889bf7874689f1e1ead6
+       data3:
+         cache_type: public
+         path: /home/alper/test_eblocbroker/small/BVZ-venus
+         storage_hours: 1
+         storage_id: ipfs
+     data_transfer_out: 10
+     jobs:
+       job1:
+         cores: 1
+         run_time: 60
 
 -  ``path`` should represented as full path of the corresponding folder.
 -  ``cache_type`` should be variable from [ ``public``, ``private`` ]
@@ -141,7 +139,7 @@ Provider
 Each provider should run ``eblocbroker driver`` for start running the
 Python script.
 
-file:/gui1.png
+.. image:: gui1.png
 
 🎬 Demonstration
 ----------------
