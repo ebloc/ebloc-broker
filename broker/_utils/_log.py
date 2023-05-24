@@ -50,6 +50,7 @@ custom_theme = Theme(
 console = Console(
     theme=custom_theme,
     force_terminal=True,  # https://rich.readthedocs.io/en/latest/console.html#terminal-detection
+    markup=True,
     # force_interactive=False,
 )
 

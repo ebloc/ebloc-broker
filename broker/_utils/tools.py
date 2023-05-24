@@ -23,7 +23,7 @@ from pathlib import PosixPath
 from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
-from broker._utils._log import WHERE, br, log, ok
+from broker._utils._log import WHERE, br, console, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate
 
 try:
@@ -111,7 +111,7 @@ def PrintException() -> str:
     return '{}:{} "{}"'.format(os.path.basename(fn), lineno, line.strip())
 
 
-def print_tb(message=None, is_print_exc=True) -> None:
+def print_tb(message=None, is_print_exc=False) -> None:
     """Log the traceback.
 
     Alternative code: console.print_exception(word_wrap=True, extra_lines=1)
@@ -140,6 +140,8 @@ def print_tb(message=None, is_print_exc=True) -> None:
 
     if message and "An exception of type Exception occurred" not in message:
         log(message, back=1)
+
+    console.print_exception(word_wrap=True)
 
 
 def _remove(path: str, is_verbose=False) -> None:
@@ -364,11 +366,7 @@ def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
         else:
             return check_output(cmd, env=env).decode("utf-8").strip()
     except CalledProcessError as e:
-        if not is_quiet:
-            print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
-            raise Exception from None  # prevents tree of trace
-
-        raise Exception from e
+        raise Exception(str(e)) from None  # prevents tree of trace
     except Exception as e:
         raise e
 

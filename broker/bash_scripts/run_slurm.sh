@@ -1,13 +1,14 @@
 #!/bin/bash
 
-MA="\033[33;35m"; RED="\033[1;31m"; GREEN="\033[1;32m"; PURPLE="\033[1;34m"; NC="\033[0m"
+MA="\033[33;35m"; PURPLE="\033[1;34m"; NC="\033[0m"
 alias sudo='nocorrect sudo'
 USER=$(whoami)
 # VERBOSE=true
 run_worker_slurmd_nodes () {
     echo "#> running worker slurmd nodes"
     ## https://slurm.schedmd.com/faq.html#multi_slurmd
-    IFS=/ read A  I O T <<<$(command sinfo -h -o%C)
+    #             A I O T
+    IFS=/ read -r _ _ _ T <<<$(command sinfo -h -o%C)
     for id in $( seq 1 $T ); do
         echo "==> sudo slurmd -N "$(hostname -s)$id
         sudo slurmd -N $(hostname -s)$id &
@@ -42,6 +43,7 @@ _kill () {
 
 if [[ $(whoami) == "root" ]] ; then
     echo -e "$PURPLE##$NC logname=$MA"$(logname)$NC "hostname=$MA"$(hostname -s)$NC $(scontrol --version)
+    echo "conf_file=/usr/local/etc/slurm.conf"
     USER=$(logname)
 fi
 
@@ -69,26 +71,26 @@ sudo -u $USER mkdir -p /tmp/slurmstate
 sudo chown -R $USER /tmp/slurmstate
 # sudo systemctl --no-pager status --full systemd-journald
 sudo -u $USER /usr/local/sbin/slurmctld -ic
-sleep 1.0
+sleep 1
 run_worker_slurmd_nodes
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
-scontrol show node
+scontrol show node | sed "s/^[ \t]*//" | sed "s/^[ \t]*//"
 
 dir=$(/usr/bin/pwd)
 cd /home/"$(logname)"/ebloc-broker/broker/_slurm/
-sbatch slurm_test.sh
-sbatch slurm_test.sh
-sbatch slurm_test.sh
-sbatch slurm_test.sh
+sbatch slurm_test.sh && sleep 0.25
+sbatch slurm_test.sh && sleep 0.25
+sbatch slurm_test.sh && sleep 0.25
+sbatch slurm_test.sh && sleep 0.25
 cd $dir
 
 echo ""
-/usr/local/bin/sinfo -N -l
+/usr/local/bin/sinfo -N -l | sed "s/^[ \t]*//"
 
 echo ""
-ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
-    grep -v unattended-upgrade-shutdown | \
-    grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox,.mypy_cache} -E "slurm";
+# command ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
+#     grep -v unattended-upgrade-shutdown | \
+#     grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox,.mypy_cache} -E "slurm";
 
 echo ""
 sinfo | grep idle
@@ -97,6 +99,7 @@ echo "Sleeping for 5 seconds..."
 sleep 5
 squeue
 
+echo "done"
 #: verbose
 # sudo /usr/local/sbin/slurmctld -cDvvvvvv
 

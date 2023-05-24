@@ -205,6 +205,11 @@ class Job:
         self.cfg = Yaml(fn)
         self.requester_addr = self.cfg["config"]["requester_address"]
         self.provider_addr = self.cfg["config"]["provider_address"]
+        if "search_cheapest_provider" in self.cfg["config"]:
+            self.search_cheapest_provider = self.cfg["config"]["search_cheapest_provider"]
+        else:
+            self.search_cheapest_provider = True
+
         # self.gmail = self.cfg["config"]["provider_address"]
         self.source_code_storage_id = storage_id = self.cfg["config"]["source_code"]["storage_id"]
         self.storage_ids.append(STORAGE_IDs[storage_id])

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import re
-
 from broker import cfg
 from broker._utils.tools import get_ip, log, print_tb
 from broker._utils.web3_tools import get_tx_status
@@ -57,6 +56,7 @@ if __name__ == "__main__":
         # public IP should exists in the ipfs id
         ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_address, flags=re.DOTALL)
 
+    # ipfs_address = cfg.ipfs.local_ip_check(ipfs_address)
     gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
     ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
     f_id = env.OC_USER

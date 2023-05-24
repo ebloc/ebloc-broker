@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 from web3.logs import DISCARD
-
+from sys import platform
 from broker import cfg
 from broker._utils.tools import _remove, log
 from broker._utils.web3_tools import get_tx_status
@@ -51,8 +51,14 @@ def pre_check(job: Job, requester):
 
     job.check_account_status(requester)
     is_bin_installed("ipfs")
-    if not is_dpkg_installed("pigz"):
-        raise Exception("E: Install [g]pigz[/g].\nsudo apt install -y pigz")
+    if platform == "linux" or platform == "linux2":
+        if not is_dpkg_installed("pigz"):
+            raise Exception("Install pigz.\nsudo apt install -y pigz")
+    elif platform == "darwin":
+        try:
+            is_bin_installed("pigz")
+        except Exception:
+            raise Exception("Install pigz.\nbrew install pigz")
 
     if not os.path.isfile(env.GPG_PASS_FILE):
         log(f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption", is_wrap=True)
@@ -144,7 +150,12 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                 job.code_hashes.append(code_hash)
                 job.code_hashes_str.append(code_hash.decode("utf-8"))
 
-    provider_addr = job.search_best_provider(requester)
+    print()
+    if job.search_cheapest_provider:
+        provider_addr = job.search_best_provider(requester)
+    else:
+        provider_addr = job.search_best_provider(requester, is_force=True)
+
     if is_ipfs_gpg:  # re-organize for the gpg file
         job.code_hashes = []
         job.code_hashes_str = []

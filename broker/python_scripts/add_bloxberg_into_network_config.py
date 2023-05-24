@@ -29,9 +29,11 @@ def bloxberg_dict(_id, url):
     return config
 
 
-def add_bloxberg_config(fn):
+def add_bloxberg_config():
+    fn = Path.home() / ".brownie" / "network-config.yaml"
     bloxberg_config = bloxberg_dict("bloxberg", "http://berg-cmpe-boun.duckdns.org:8545")
     bloxberg_config_core = bloxberg_dict("bloxberg_core", "https://core.bloxberg.org")
+    bloxberg_config_core["name"] = "bloxberg"
     config_data, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
     is_bloxberg_added = False
     for _config in config_data["live"]:
@@ -52,15 +54,15 @@ def add_bloxberg_config(fn):
                 _config["networks"].append(bloxberg_config)
                 _config["networks"].append(bloxberg_config_core)
 
-    yaml = ruamel.yaml.YAML()
-    yaml.indent(mapping=ind, sequence=ind, offset=bsi)
-    with open(fn, "w") as fp:
-        yaml.dump(config_data, fp)
+    if not is_bloxberg_added:  # do not update the yaml file
+        yaml = ruamel.yaml.YAML()
+        yaml.indent(mapping=ind, sequence=ind, offset=bsi)
+        with open(fn, "w") as fp:
+            yaml.dump(config_data, fp)
 
 
 def main():
-    fn = Path.home() / ".brownie" / "network-config.yaml"
-    add_bloxberg_config(fn)
+    add_bloxberg_config()
 
 
 if __name__ == "__main__":

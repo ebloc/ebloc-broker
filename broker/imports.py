@@ -11,7 +11,7 @@ from broker.utils import popen_communicate, terminate
 
 
 def nc(url: str, port: int):
-    """Nc: arbitrary TCP and UDP connections and listens."""
+    """Nc: arbitrary TCP and UDP connections and listens them."""
     try:
         for string in ["http://", "https://", ":8545"]:
             url = url.replace(string, "")
@@ -22,9 +22,9 @@ def nc(url: str, port: int):
 
 
 def _ping(host) -> bool:
-    """Return True if host (str) responds to a ping request.
+    """Return 'True' if host responds to a ping request.
 
-    Remember that a host may not respond to a ping (ICMP) request even if the host name is valid.
+    Note that that a host may not respond to a ping (ICMP) request even if the host name is valid.
     Building the command.
 
     Ex: "ping -c 1 google.com"
@@ -98,9 +98,9 @@ def connect_to_eblocbroker() -> None:
 
                 cfg.w3 = network.web3
             except:
-                # from broker.python_scripts import add_bloxberg_into_network_config
+                from broker.python_scripts import add_bloxberg_into_network_config
 
-                # add_bloxberg_into_network_config.main()
+                add_bloxberg_into_network_config.main()
                 try:
                     log(
                         "warning: [green]bloxberg[/green] key is added into the "

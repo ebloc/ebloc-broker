@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import socket
 import ipfshttpclient
 import os
 import re
@@ -387,6 +388,17 @@ class Ipfs:
 
         return False
 
+    def local_ip_check(self, ipfs_address):
+        with suppress(Exception):
+            if socket.gethostbyname("avatar-home.duckdns.org") in ipfs_address:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                local_ip = s.getsockname()[0]
+                s.close()
+                ipfs_address = ipfs_address.replace(socket.gethostbyname("avatar-home.duckdns.org"), local_ip)
+
+        return ipfs_address
+
     def get_ipfs_address(self, client=None) -> str:
         if self.client:
             _client = self.client
@@ -396,11 +408,9 @@ class Ipfs:
         """Return public ipfs id."""
         ipfs_addresses = _client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
-            if "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address:
-                return ipfs_address
-
-        for ipfs_address in reversed(ipfs_addresses):
-            if "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address:
+            if (
+                "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address
+            ) or "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address:
                 return ipfs_address
 
         raise QuietExit("E: No valid ipfs address is found from output of `ipfs id`. Try opening port 4001")
