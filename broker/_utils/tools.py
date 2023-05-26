@@ -435,6 +435,11 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
     return False
 
 
+def sudo_mkdir(user, path):
+    run(["sudo", "-u", "root", "mkdir", "-p", path])
+    run(["sudo", "chown", f"{user}:{user}", path])
+
+
 def mkdir(path) -> None:
     if not os.path.isdir(path):
         os.makedirs(path)
@@ -570,7 +575,7 @@ def countdown(seconds: int, is_verbose=False) -> None:
         seconds -= 1
 
 
-def squeue() -> None:
+def squeue():
     try:
         squeue_output = run(["squeue"])
         if "squeue: error:" in str(squeue_output):
@@ -580,11 +585,16 @@ def squeue() -> None:
             "warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
         ) from e
 
+    job_ids = []
     # Get real info under the header after the first line
     if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
         # checks if the squeue output's line number is gretaer than 1
         # log("view information about jobs located in the Slurm scheduling queue:", "yellow")
         log(f"{squeue_output}{ok()}\n")
+        for line in squeue_output.splitlines():
+            job_ids.append(line.split()[0])
+
+    return job_ids
 
 
 def compare_files(fn1, fn2) -> bool:

@@ -384,6 +384,16 @@ def run_driver(given_bn):
     if not env.SLURMUSER:
         raise Terminate(f"SLURMUSER is not set in {env.LOG_DIR}/cfg.yaml")
 
+    with open("/usr/local/etc/slurm.conf") as origin:
+        for line in origin:
+            if "SlurmUser=" in line:
+                real_slurm_user = line.replace("\n", "").replace("SlurmUser=", "")
+                break
+
+    if env.SLURMUSER != real_slurm_user:
+        msg = f"E: env.SLURMUSER={env.SLURMUSER} is not equal to SlurmUser={real_slurm_user} in slurm's config."
+        raise QuietTerminate(msg)
+
     try:
         deployed_block_number = Ebb.get_deployed_block_number()
     except Exception as e:

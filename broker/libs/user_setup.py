@@ -3,7 +3,7 @@
 import hashlib
 import os
 import pwd
-
+from broker.config import env
 from broker._utils._log import log, ok
 from broker._utils.tools import _remove, mkdir
 from broker.lib import run
@@ -91,7 +91,12 @@ def user_add(user_address, basedir, slurm_user):
             set_folder_permission(user_dir, user_name, slurm_user)
             log(f"{user_address} => {user_name} is created", "yellow")
             add_user_to_slurm(user_name)  # force to add user to slurm
-            mkdir(f"{user_dir}/cache")
+            try:
+                mkdir(f"{user_dir}/cache")
+            except:
+                give_rwe_access(env.SLURMUSER, user_dir)
+                mkdir(f"{user_dir}/cache")
+
         else:
             log(f"## [m]{user_address}[/m] => [blue]{user_name}[/blue] has already been created")
 

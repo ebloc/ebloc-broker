@@ -16,7 +16,7 @@ from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communica
 
 def git_init():
     log("Creating an empty Git repository using 'git init'", end="")
-    run(["git", "init", "--initial-branch=master"])
+    run(["git", "init", "--quiet"])
     run(["git", "reflog", "expire", "--all", "--expire=now"])
     run(["git", "gc", "--prune=now", "--aggressive"])  # takes few seconds but saves space
     log(ok())

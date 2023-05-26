@@ -14,9 +14,9 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import ok
-from broker._utils.tools import mkdir, read_json, squeue
+from broker._utils.tools import mkdir, read_json, squeue, sudo_mkdir
 from broker.config import ThreadFilter, env, logging
-from broker.lib import calculate_size, log, subprocess_call
+from broker.lib import calculate_size, log, run, subprocess_call
 from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
@@ -98,8 +98,10 @@ class Storage(BaseClass):
         - cmd:
         sudo su - $requester_id -c "cd $results_folder && firejail --noprofile \
             sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
+
+        sbatch -c1 *~*.sh
         """
-        for _attempt in range(10):
+        for _attempt in range(5):
             try:
                 cmd = f'sbatch -n {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
                 with cd(self.results_folder):
@@ -112,7 +114,7 @@ class Storage(BaseClass):
                             add_user_to_slurm(env.SLURMUSER)
                             job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
 
-                time.sleep(1)  # wait 1 second for slurm idle core to be updated
+                time.sleep(2)  # wait 2 second for slurm idle core to be updated
             except Exception as e:
                 print_tb(e)
                 slurm.remove_user(self.requester_id)
@@ -360,7 +362,6 @@ class Storage(BaseClass):
         except:
             log(f"==> calculated_data_transfer_in={int(self.data_transfer_in_to_download_mb)} MB")
             data["data_transfer_in"] = int(self.data_transfer_in_to_download_mb)
-            # breakpoint()  # DEBUG
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
 
@@ -389,8 +390,12 @@ class Storage(BaseClass):
         slurm_job_id = self.scontrol_update(job_core_num, sbatch_file_path, time_limit)
         if not slurm_job_id.isdigit():
             log("E: Detects an error on the sbatch, slurm_job_id is not a digit")
+            return False
 
+        time.sleep(3)
         with suppress(Exception):
-            squeue()
+            job_ids = squeue()
+            job_ids.remove("JOBID")
 
+        log(f"#> ongoing_job_ids={job_ids}")
         return True
