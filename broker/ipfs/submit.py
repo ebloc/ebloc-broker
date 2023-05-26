@@ -101,8 +101,9 @@ def _submit(provider_addr, job, requester, targets, required_confs):
             processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             try:
                 if processed_logs:
-                    log("[y]job_info[/y]=", "bold", end="")
-                    log(vars(processed_logs[0].args))
+                    job.info = vars(processed_logs[0].args)
+                    log("[y]job_info=[/y]", end="")
+                    log(job.info)
 
                 for target in targets:
                     if ".tar.gz.gpg" in str(target):
@@ -110,6 +111,7 @@ def _submit(provider_addr, job, requester, targets, required_confs):
             except IndexError as e:
                 raise QuietExit(f"E: tx={tx_hash} is reverted") from e
 
+    job.tx_hash = tx_hash
     return tx_hash
 
 
@@ -196,8 +198,9 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
 def main():
     job = Job()
-    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_example.yaml"
+    # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_example.yaml"
     # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml"
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_without_data.yaml"
     job.set_config(yaml_fn)
     submit_ipfs(job)
 

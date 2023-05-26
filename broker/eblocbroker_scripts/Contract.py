@@ -40,6 +40,7 @@ class Base:
         analyze_data,
         fetch_log_data_storage_request,
         get_job_code_hashes,
+        get_job_state,
         get_job_info,
         get_job_info_print,
         set_job_received_bn,

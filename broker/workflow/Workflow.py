@@ -2,20 +2,15 @@
 
 import matplotlib.pyplot as plt
 import networkx as nx
-from typing import List
 import random
+from typing import List
+
 from broker._utils._log import console, log
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
 
 
-class Base:
-    """Import base functions."""
-
-    pass
-
-
-class Workflow(Base):
+class Workflow:
     """Object to access ebloc-broker smart-contract functions."""
 
     def __init__(self, G=None) -> None:
@@ -162,23 +157,14 @@ def test_3():
 
 def test_4():
     G = nx.DiGraph()
-
     G.add_edge(0, 1)
     G.add_edge(0, 2)
     G.add_edge(1, 3)
     G.add_edge(2, 3)
+    # G.add_edge(9, 7, weight=10)  # example
 
     # jobs
-    # G.add_edge(0, 5, weight=10)
-    # G.add_edge(1, 5, weight=10)
-    # G.add_edge(2, 5, weight=10)
-    # G.add_edge(3, 5, weight=10)
-    # G.add_edge(4, 5, weight=10)
-    # G.add_edge(6, 0, weight=10)
-    # G.add_edge(7, 0, weight=10)
-    # G.add_edge(8, 7, weight=10)
-    # G.add_edge(9, 7, weight=10)
-
+    # G.add_edges_from([(0, 5), (1, 5), (2,5), (3,5), (4,5), (6,0), (7,0), (8,7), (9,7)])
     # G is:
     # 0 -> 5  6 -> 0  8 -> 7
     # 1 -> 5  7 -> 0  9 -> 7
@@ -243,8 +229,8 @@ if __name__ == "__main__":
         # test_1()
         # test_2()
         # test_3()
-        # test_4()
-        test_5()
+        test_4()
+        # test_5()
     except KeyboardInterrupt:
         pass
     except QuietExit as e:

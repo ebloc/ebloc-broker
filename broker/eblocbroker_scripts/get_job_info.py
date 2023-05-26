@@ -222,6 +222,20 @@ def get_job_info_print(self, provider, _hash, index, received_bn, is_print=True)
         print(self.job_info)
 
 
+def get_job_state(self, provider, job_key, index, job_id):
+    provider = cfg.w3.toChecksumAddress(provider)
+    try:
+        job, received, job_owner, data_transfer_in, _cacheCost, data_transfer_out = self._get_job_info(
+            provider, job_key, int(index), int(job_id)
+        )
+        return job[0]
+    except Exception as e:
+        if str(e) == "VM execution error: Bad instruction fe":
+            raise QuietExit("Not valid <provider_address, [m]job_key[/m] and [m]index[/m]> is given") from e
+
+        raise e
+
+
 def get_job_info(
     self, provider, job_key, index, job_id, received_bn=0, is_print=True, is_log_print=False, is_fetch_code_hashes=False
 ):
