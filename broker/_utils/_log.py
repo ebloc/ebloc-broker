@@ -50,6 +50,7 @@ custom_theme = Theme(
 console = Console(
     theme=custom_theme,
     force_terminal=True,  # https://rich.readthedocs.io/en/latest/console.html#terminal-detection
+    markup=True,
     # force_interactive=False,
 )
 
@@ -175,9 +176,12 @@ def br(text, color="white"):
         return f"[bold][[/bold]  {text}  [bold]][/bold]"
 
 
-def ok():
+def ok(no_space=False):
     """Done."""
-    return " [[g]ok[/g]]"
+    if no_space:
+        return "[[g]ok[/g]]"
+    else:
+        return " [[g]ok[/g]]"
 
 
 def _console_clear():

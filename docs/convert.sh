@@ -17,10 +17,7 @@ cp source/cost_example.rst ../
 gsed -i "s/file:\/docs\//\.\.\ image\:\:\ /" $DIR/docs/index.rst
 echo "[ok]"
 
-
 # file:/docs/
-
-
 
 # wget -O geth.md https://raw.githubusercontent.com/ebloc/eBlocPOA/master/README.md
 # mv geth.md source/geth.md

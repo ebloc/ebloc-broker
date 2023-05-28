@@ -1,18 +1,18 @@
 #!/usr/bin/python3
 
-import brownie
 import os
 import pytest
 import sys
 from os import path
-from broker.utils import CacheType, StorageID
+
+import brownie
 import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
-from broker.utils import log, zero_bytes32
+from broker.utils import CacheType, StorageID, log, zero_bytes32
 from brownie import accounts, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import mine, new_test

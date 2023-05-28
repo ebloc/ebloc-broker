@@ -236,11 +236,12 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
             job = job[1]
             _args = job["args"]
 
+        _job_id = 0
         _job = Ebb.get_job_info(
             _args["provider"],
             _args["jobKey"],
             _args["index"],
-            0,
+            _job_id,
             job["blockNumber"],
             is_print=False,
             is_fetch_code_hashes=True,

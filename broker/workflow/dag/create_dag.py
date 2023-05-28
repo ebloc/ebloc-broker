@@ -1,12 +1,58 @@
 #!/usr/bin/env python3
 
-
 import matplotlib.pyplot as plt
 import networkx as nx
 import sys
+from broker._utils.tools import print_tb
+from broker.errors import QuietExit
 
-g = nx.Graph()
-G = nx.DiGraph()
+
+def main():
+    G = nx.DiGraph()
+
+    # jobs
+    G.add_edge(0, 5, weight=10)
+    G.add_edge(1, 5, weight=10)
+    G.add_edge(2, 5, weight=10)
+    G.add_edge(3, 5, weight=10)
+    G.add_edge(4, 5, weight=10)
+    G.add_edge(6, 0, weight=10)
+    G.add_edge(7, 0, weight=10)
+    G.add_edge(8, 7, weight=10)
+    G.add_edge(9, 7, weight=10)
+
+    # saves DAG into job.dot file
+    nx.nx_pydot.write_dot(G, "job.dot")
+
+    listG = list(G.nodes)
+
+    for i in list(G.nodes):
+        print(i)
+        print(set(G.predecessors(i)))
+
+    nx.draw(G, with_labels=True)
+    plt.savefig("labels.png")
+
+    sys.exit(0)
+
+    print(set(G.predecessors(5)))
+    print([a[0] for a in G.edges() if a[1] == 5])
+    print([a[1] for a in G.edges() if a[0] == 0])
+    print([a[0] for a in G.edges() if a[1] == 1])
+    print(G.edges())
+    print(nx.ancestors(G, 5))
+    print(nx.descendants(G, 0))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    except QuietExit as e:
+        print(f"#> {e}")
+    except Exception as e:
+        print_tb(str(e))
 
 """
 # add 5 nodes, labeled 0-4:
@@ -23,42 +69,6 @@ G.add_edge('job1', 'job4', weight=10)
 G.add_edge('job3', 'job5', weight=10)
 G.add_edge('job4', 'job5', weight=10)
 """
-
-G.add_edge("job0", "job5", weight=10)
-G.add_edge("job1", "job5", weight=10)
-G.add_edge("job2", "job5", weight=10)
-G.add_edge("job3", "job5", weight=10)
-G.add_edge("job4", "job5", weight=10)
-G.add_edge("job6", "job0", weight=10)
-G.add_edge("job7", "job0", weight=10)
-G.add_edge("job8", "job7", weight=10)
-G.add_edge("job9", "job7", weight=10)
-
-# saves DAG into job.dot file
-nx.nx_pydot.write_dot(G, "job.dot")
-
-listG = list(G.nodes)
-
-for i in list(G.nodes):
-    print(i)
-    print(set(G.predecessors(i)))
-
-nx.draw(G, with_labels=True)
-plt.savefig("labels.png")
-
-sys.exit(0)
-
-print(set(G.predecessors("job5")))
-
-
-print([a[0] for a in G.edges() if a[1] == "job5"])
-print([a[1] for a in G.edges() if a[0] == "job0"])
-print([a[0] for a in G.edges() if a[1] == "job1"])
-print(G.edges())
-
-print(nx.ancestors(G, "job5"))
-print(nx.descendants(G, "job0"))
-
 
 """
 g.add_edges_from([('job1', 'job3')], weight=3)
@@ -82,14 +92,12 @@ g.add_edge('job3', 'job4', weight=2)
 g.add_edge('job1', 'job5', weight=3)
 """
 
-
 # list(G.neighbors('job3'))
 # print(G.edges('job3'))
 # print(G.adjacency())
 
 
 # print(list(G.adj['job3']))
-
 
 """
 d = dict(g.degree)

@@ -388,8 +388,12 @@ def remove_empty_files_and_folders(dir_path) -> None:
 
 
 def is_ipfs_on(is_print=False) -> bool:
-    """Check whether ipfs runs on the background."""
-    return is_process_on("[i]pfs\ daemon", "IPFS", process_count=0, is_print=is_print)
+    """Check whether ipfs runs on the background.
+
+    "ipfs\ daemon" causes: grep: warning: stray \ before white space
+    """
+
+    return is_process_on("[i]pfs daemon", "IPFS", process_count=0, is_print=is_print)
 
 
 def is_geth_account_locked(address) -> bool:
@@ -417,7 +421,7 @@ def is_geth_on():
     process_name = f"geth@{env.RPC_PORT}"
     if not is_process_on(process_name, "Geth", process_count=0):
         log(f"E: geth is not running on the background, {process_name}. Please run:")
-        log("sudo ~/eBlocPOA/server.sh", "bold yellow")
+        log("sudo ~/eBlocPOA/server.sh", "yellow")
         raise QuietExit
 
 
@@ -497,15 +501,15 @@ def is_dpkg_installed(package) -> bool:
 
 def terminate(msg="", is_traceback=False, lock=None) -> None:
     """Terminate the program and exit."""
+    if is_traceback:
+        print_tb()
+
     if msg:
-        log(f"{WHERE(1)} Terminated: ", "red", end="", h=False)
+        log(f"{WHERE(1)} [alert]Terminate:[/alert] ", end="", h=False)
         if msg[:3] == "E: ":
             log(msg[3:])
         else:
             log(msg)
-
-    if is_traceback:
-        print_tb()
 
     if lock:
         with suppress(Exception):
