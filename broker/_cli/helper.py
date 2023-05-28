@@ -83,7 +83,7 @@ class Helper:
     #     ).completer = EnvironCompleter
 
     def workflow(self):
-        obj = self.subparsers.add_parser("workflow", help="eblocworkflow scripts")
+        obj = self.subparsers.add_parser("workflow", help="eblocworkflow scripts")  # noqa
 
     def daemon(self):
         """Select daemon program to run.

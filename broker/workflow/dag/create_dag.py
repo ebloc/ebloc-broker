@@ -3,6 +3,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import sys
+
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
 
@@ -23,9 +24,6 @@ def main():
 
     # saves DAG into job.dot file
     nx.nx_pydot.write_dot(G, "job.dot")
-
-    listG = list(G.nodes)
-
     for i in list(G.nodes):
         print(i)
         print(set(G.predecessors(i)))

@@ -5,7 +5,7 @@ import os
 import re
 import sys
 from os.path import expanduser
-import socket
+
 from broker import cfg
 from broker._utils._log import log
 from broker._utils.tools import get_ip, is_byte_str_zero, print_tb

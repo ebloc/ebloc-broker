@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import socket
 import ipfshttpclient
 import os
 import re
 import signal
+import socket
 import time
 from cid import make_cid
 from contextlib import suppress

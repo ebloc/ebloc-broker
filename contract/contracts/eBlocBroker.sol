@@ -699,7 +699,7 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
             uint256 computationalCost = uint256(info.priceCoreMin).mul(uint256(core[i]).mul(uint256(runTime[i])));
             totalRunTime = totalRunTime.add(runTime[i]);
             // execution time of the workflow should be shorter than a day
-            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 14400);
+            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 1 days);
             sum = sum.add(computationalCost);
         }
         return sum;

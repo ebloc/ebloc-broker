@@ -3,9 +3,10 @@
 import hashlib
 import os
 import pwd
-from broker.config import env
+
 from broker._utils._log import log, ok
 from broker._utils.tools import _remove, mkdir
+from broker.config import env
 from broker.lib import run
 from broker.libs.slurm import add_user_to_slurm
 from broker.utils import popen_communicate  # noqa: F401

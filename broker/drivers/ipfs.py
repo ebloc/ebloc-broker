@@ -6,7 +6,7 @@ import time
 
 from broker import cfg
 from broker._utils._log import br
-from broker._utils.tools import _remove, mkdir, print_tb, sudo_mkdir
+from broker._utils.tools import _remove, mkdir, print_tb
 from broker.config import ThreadFilter, env, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.libs import _git

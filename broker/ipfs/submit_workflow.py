@@ -2,14 +2,13 @@
 
 import time
 from pathlib import Path
-from broker._utils._log import log
-from broker._utils.tools import print_tb
+
+from broker._utils._log import log, ok
+from broker._utils.tools import _date, print_tb
+from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit
 from broker.ipfs.submit import submit_ipfs
-from broker.eblocbroker_scripts.job import Job
 from broker.lib import state
-from broker._utils.tools import _date
-from broker._utils._log import ok
 
 
 def wait_till_job_is_completed(jobs):

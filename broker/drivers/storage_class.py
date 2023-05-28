@@ -14,9 +14,9 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import ok
-from broker._utils.tools import mkdir, read_json, squeue, sudo_mkdir
+from broker._utils.tools import mkdir, read_json, squeue
 from broker.config import ThreadFilter, env, logging
-from broker.lib import calculate_size, log, run, subprocess_call
+from broker.lib import calculate_size, log, subprocess_call
 from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo

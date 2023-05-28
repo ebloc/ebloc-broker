@@ -21,11 +21,12 @@ class SubmitBase:
         elif self.job.source_code_storage_id == "gdrive":
             return submit_gdrive(self.job, is_pass, required_confs)
 
-        raise Exception("source_code_storage_id is not valid")
+        raise Exception("'source_code_storage_id' is not valid")
 
 
 def main():
-    SubmitBase(Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml")
+    fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml"
+    SubmitBase(fn)
 
 
 if __name__ == "__main__":

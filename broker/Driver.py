@@ -27,7 +27,7 @@ from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.eblocbroker_scripts.utils import Cent
-from broker.errors import HandlerException, JobException, QuietExit, Terminate, QuietTerminate
+from broker.errors import HandlerException, JobException, QuietExit, QuietTerminate, Terminate
 from broker.imports import nc
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm

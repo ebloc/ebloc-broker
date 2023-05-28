@@ -2,8 +2,9 @@
 
 import os
 from pathlib import Path
-from web3.logs import DISCARD
 from sys import platform
+from web3.logs import DISCARD
+
 from broker import cfg
 from broker._utils.tools import _remove, log
 from broker._utils.web3_tools import get_tx_status
