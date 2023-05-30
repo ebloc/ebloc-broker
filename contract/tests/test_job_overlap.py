@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker.lib import JOB
 import os
 import pytest
 import sys
@@ -165,9 +166,19 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
     # assert ebb.balanceOf(requester) == 0
     rpc.sleep(60)
     mine(5)
-    data_transfer_in = 0
+    dt_in = 0
     data_transfer_out = 0
-    args = [job.index, job._id, end_timestamp, data_transfer_in, data_transfer_out, elapsed_time, job.cores, [1]]
+    args = [
+        job.index,
+        job._id,
+        end_timestamp,
+        dt_in,
+        data_transfer_out,
+        elapsed_time,
+        job.cores,
+        [1],
+        JOB.TYPE["SINGLE"],
+    ]
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
     # log(dict(tx.events["LogProcessPayment"]))
 

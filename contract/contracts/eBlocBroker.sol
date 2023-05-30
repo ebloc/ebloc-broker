@@ -77,37 +77,41 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         uint256 _refund;
         uint256 core = args.core[args.jobID];
         uint256 runTime = args.runTime[args.jobID];
-        if (jobInfo.cacheCost > 0) { //: checking data transferring cost
-            gain = info.priceCache.mul(args.dataTransferIn); // cache payment to receive
-            if (jobInfo.cacheCost > gain) {
-                _refund = jobInfo.cacheCost - gain;
-            }
-            else {
-                gain = jobInfo.cacheCost;
-            }
-            delete jobInfo.cacheCost;
-        }
-
-        if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {  // check data transferring cost
-            //: data transfer refund
-            _refund = _refund.add(
-                info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
-            );
-            // Prevents additional cacheCost to be requested
-            delete jobInfo.dataTransferIn;
-        }
-
-        if (jobInfo.dataTransferOut > 0 && args.dataTransferOut != jobInfo.dataTransferOut) {
-            _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
-            if (jobInfo.cacheCost > 0) {
-                // If job cache is not used full refund for cache
-                _refund = _refund.add(jobInfo.cacheCost); // cacheCost for storage is already multiplied with priceCache
+        if (args.finalize == 0 || args.finalize == 3) {  // SINGLE-JOB or BEGIN-JOB
+            if (jobInfo.cacheCost > 0) { //: checking data transferring cost
+                gain = info.priceCache.mul(args.dataTransferIn); // cache payment to receive
+                if (jobInfo.cacheCost > gain) {
+                    _refund = jobInfo.cacheCost - gain;
+                }
+                else {
+                    gain = jobInfo.cacheCost;
+                }
                 delete jobInfo.cacheCost;
             }
-            if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
-                // If job data transfer is not used full refund for cache
-                _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
+
+            if (jobInfo.dataTransferIn > 0 && args.dataTransferIn != jobInfo.dataTransferIn) {  // check data transferring cost
+                //: data transfer refund
+                _refund = _refund.add(
+                    info.priceDataTransfer.mul((jobInfo.dataTransferIn.sub(args.dataTransferIn)))
+                );
+                // prevents additional cacheCost to be requested
                 delete jobInfo.dataTransferIn;
+            }
+        }
+
+        if (args.finalize == 2 || args.finalize == 3) {
+            if (jobInfo.dataTransferOut > 0 && args.dataTransferOut != jobInfo.dataTransferOut) {
+                _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
+                if (jobInfo.cacheCost > 0) {
+                    // If job cache is not used full refund for cache
+                    _refund = _refund.add(jobInfo.cacheCost); // cacheCost for storage is already multiplied with priceCache
+                    delete jobInfo.cacheCost;
+                }
+                if (jobInfo.dataTransferIn > 0 && args.dataTransferIn == 0) {
+                    // If job data transfer is not used full refund for cache
+                    _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferIn));
+                    delete jobInfo.dataTransferIn;
+                }
             }
         }
         gain = gain.add(
@@ -694,12 +698,11 @@ contract eBlocBroker is eBlocBrokerInterface, EBlocBrokerBase, ERC20 {  //, Toke
         uint16[] memory core,
         uint16[] memory runTime
     ) internal pure returns (uint256 sum) {
-        uint256 totalRunTime;
+        uint256 sumRunTime;
         for (uint256 i = 0; i < core.length; i++) {
             uint256 computationalCost = uint256(info.priceCoreMin).mul(uint256(core[i]).mul(uint256(runTime[i])));
-            totalRunTime = totalRunTime.add(runTime[i]);
-            // execution time of the workflow should be shorter than a day
-            require(core[i] <= info.availableCore && computationalCost > 0 && totalRunTime <= 1 days);
+            sumRunTime = sumRunTime.add(runTime[i]);
+            require(core[i] <= info.availableCore && computationalCost > 0 && sumRunTime <= ONE_DAY);
             sum = sum.add(computationalCost);
         }
         return sum;

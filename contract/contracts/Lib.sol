@@ -82,6 +82,7 @@ library Lib {
         uint32 elapsedTime;
         uint256[] core;
         uint256[] runTime;
+        uint8 finalize;  // {0: first-job, 1: in-between-job, 2 final-job}
     }
 
     struct DataInfo {
