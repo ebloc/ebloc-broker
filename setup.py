@@ -14,7 +14,7 @@ setup(
     name="ebloc-broker",
     packages=find_packages(),
     setup_requires=["wheel", "eth-brownie", "ipdb", "rich", "dbus-python"],
-    version="2.3.0",  # don't change this manually, use bumpversion instead
+    version="2.3.1",  # don't change this manually, use bumpversion instead
     license="MIT",
     description=(  # noqa: E501
         "A Python framework to communicate with ebloc-broker that is "
