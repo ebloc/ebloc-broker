@@ -122,7 +122,6 @@ def test_workflow():
 
     ebb.removeRegisteredData(code_hash, {"from": provider})  # should submitJob fail if it is not removed
     append_gas_cost("removeRegisteredData", tx)
-    #
     data_hash = "0x68b8d8218e730fc2957bcb12119cb204"
     ebb.registerData(data_hash, Cent("2 cent"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     append_gas_cost("registerData", tx)
