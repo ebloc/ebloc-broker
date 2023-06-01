@@ -14,6 +14,7 @@ from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import DataStorage, Job
 from broker.eblocbroker_scripts.utils import Cent
+from broker.lib import JOB, JobType
 from broker.utils import CacheType, StorageID, ipfs_to_bytes32, log, zero_bytes32
 from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
@@ -433,7 +434,7 @@ def test_computational_refund():
     rpc.sleep(60)
     mine(5)
     run_time = 1
-    args = [index, job_id, 1579524998, 2, 0, run_time, job.cores, [5]]
+    args = [index, job_id, 1579524998, 2, 0, run_time, job.cores, [5], JOB.TYPE["SINGLE"]]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
@@ -755,6 +756,7 @@ def test_multiple_data():
         elapsed_time,
         job.cores,
         job.run_time,
+        JOB.TYPE["SINGLE"],
     ]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
@@ -779,7 +781,17 @@ def test_multiple_data():
     append_gas_cost("setJobStateRunning", tx)
     mine(60 * elapsed_time / cfg.BLOCK_DURATION)
     end_ts = start_ts + 60 * elapsed_time
-    args = [index, job_id, end_ts, data_transfer[0], data_transfer[1], elapsed_time, job.cores, job.run_time]
+    args = [
+        index,
+        job_id,
+        end_ts,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        JOB.TYPE["SINGLE"],
+    ]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     append_gas_cost("processPayment", tx)
@@ -853,6 +865,7 @@ def test_simple_submit():
         elapsed_time,
         job.cores,
         [1],
+        JOB.TYPE["SINGLE"],
     ]
     out_hash = b"[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99"
     tx = ebb.processPayment(job.key, args, out_hash, {"from": provider})
@@ -993,6 +1006,7 @@ def test_submit_jobs():
                 elapsed_time,
                 job.cores,
                 job.run_time,
+                JOB.TYPE["SINGLE"],
             ]
             set_transfer(provider, Cent(0))  # clean provider balance
             set_transfer(requester, Cent(0))  # clean requester balance
@@ -1261,7 +1275,17 @@ def test_receive_registered_data_deposit():
     #
     data_transfer_in_sum = 1
     data_transfer_out = 0
-    args = [index, job._id, end_ts, data_transfer_in_sum, data_transfer_out, elapsed_time, job.cores, [1]]
+    args = [
+        index,
+        job._id,
+        end_ts,
+        data_transfer_in_sum,
+        data_transfer_out,
+        elapsed_time,
+        job.cores,
+        [1],
+        JOB.TYPE["SINGLE"],
+    ]
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
     received = tx.events["LogProcessPayment"]["receivedCent"]
     refunded = tx.events["LogProcessPayment"]["refundedCent"]
