@@ -493,7 +493,7 @@ multimapping==4.1
 multipart==0.2.4
     # via
     #   zope-publisher
-mypy==1.2.0
+mypy==1.3.0
     # via
     #   flake8-mypy
 mypy-extensions==1.0.0
@@ -794,7 +794,7 @@ RestrictedPython==6.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==13.3.5
+rich==13.4.1
 rlp==2.0.1
     # via
     #   eth-account

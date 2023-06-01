@@ -7,7 +7,7 @@ from broker.config import env
 from broker.eblocbroker_scripts.job import Job
 from broker.libs import gdrive
 from broker.link import check_linked_data
-from broker.utils import CacheType, StorageID, log, print_tb
+from broker.utils import CacheID, StorageID, log, print_tb
 
 # TODO: if a-source submitted with b-data and b-data is updated meta_data.json
 # file remain with the previos sent version
@@ -41,7 +41,7 @@ def main():
     job.data_transfer_out = 1
 
     job.storage_ids = [StorageID.GDRIVE, StorageID.GDRIVE]
-    job.cache_types = [CacheType.PRIVATE, CacheType.PUBLIC]
+    job.cache_types = [CacheID.PRIVATE, CacheID.PUBLIC]
     job.storage_hours = [1, 1]
     job.data_prices_set_block_numbers = [0, 0]
 

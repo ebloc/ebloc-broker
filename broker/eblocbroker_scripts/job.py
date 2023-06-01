@@ -22,7 +22,7 @@ from broker.lib import calculate_size
 from broker.libs import _git
 from broker.utils import (
     CACHE_TYPES,
-    CacheType,
+    CacheID,
     STORAGE_IDs,
     StorageID,
     bytes32_to_ipfs,
@@ -139,7 +139,7 @@ class Job:
             for idx, storage_id in enumerate(self.storage_ids):
                 assert storage_id <= 4
                 if storage_id == StorageID.IPFS:
-                    assert self.cache_types[idx] == CacheType.PUBLIC
+                    assert self.cache_types[idx] == CacheID.PUBLIC
         except Exception as e:
             print_tb(e)
             raise e
@@ -157,7 +157,7 @@ class Job:
         self.cache_types = types
         for idx, storage_id in enumerate(self.storage_ids):
             if storage_id == StorageID.IPFS_GPG:
-                self.cache_types[idx] = CacheType.PRIVATE
+                self.cache_types[idx] = CacheID.PRIVATE
 
     def generate_git_repos(self):
         _git.generate_git_repo(self.folders_to_share)
@@ -321,7 +321,7 @@ class Job:
                             "code_hash": code_hash,
                             "folder_size_mb": self.data_transfer_ins[idx],
                             "storage_ids": StorageID(self.storage_ids[idx]).name,
-                            "cache_type": CacheType(self.cache_types[idx]).name,
+                            "cache_type": CacheID(self.cache_types[idx]).name,
                         }
                     )
                 )

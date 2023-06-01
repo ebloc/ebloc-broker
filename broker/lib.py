@@ -18,6 +18,16 @@ from broker.errors import Terminate
 from broker.utils import byte_to_mb, popen_communicate, run
 
 
+class JobType:
+    TYPE = {
+        "BEGIN": 0,
+        "BETWEEN": 1,
+        "FINAL": 2,
+        "SINGLE": 3,
+    }
+    inv_code = {value: key for key, value in TYPE.items()}
+
+
 class State:
     """Set state code of slurm jobs and add their keys link in the hashmap.
 
@@ -58,6 +68,7 @@ class State:
 
 
 state = State()
+JOB = JobType()
 
 
 def enum(*sequential, **named):

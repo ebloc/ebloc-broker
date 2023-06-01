@@ -14,7 +14,8 @@ from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import DataStorage, Job
 from broker.eblocbroker_scripts.utils import Cent
-from broker.utils import CacheType, StorageID, ipfs_to_bytes32, log, zero_bytes32
+from broker.lib import JOB
+from broker.utils import CacheID, StorageID, ipfs_to_bytes32, log, zero_bytes32
 from brownie import accounts, rpc, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import gas_costs, mine, new_test
@@ -238,7 +239,7 @@ def test_stored_data_usage():
     job.run_time = [5]
     job.provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PRIVATE.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PRIVATE.value]
     job_price, cost = job.cost(provider, requester)
     log(f"price={float(Cent(job_price).to('usd'))} usd")
     args = [
@@ -333,7 +334,7 @@ def test_data_info():
     job.data_transfer_ins = [0, 1]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.IPFS.value, StorageID.IPFS.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job.storage_hours = [0, 1]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
@@ -400,7 +401,7 @@ def test_computational_refund():
     job.data_transfer_ins = [1, 1]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.B2DROP.value, StorageID.B2DROP.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
@@ -433,7 +434,7 @@ def test_computational_refund():
     rpc.sleep(60)
     mine(5)
     run_time = 1
-    args = [index, job_id, 1579524998, 2, 0, run_time, job.cores, [5]]
+    args = [index, job_id, 1579524998, 2, 0, run_time, job.cores, [5], JOB.TYPE["SINGLE"]]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
@@ -461,7 +462,7 @@ def test_storage_refund():
     job.run_time = [10]
     job.provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     job.storage_ids = [StorageID.B2DROP.value, StorageID.IPFS.value]
-    job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PRIVATE.value, CacheID.PUBLIC.value]
     job.data_prices_set_block_numbers = [0, 0]  # provider's registered data won't be used
     job_price, cost = job.cost(provider, requester)
     job_price += 1  # for test additional 1 Gwei is paid
@@ -659,7 +660,7 @@ def test_multiple_data():
     job.run_time = [10]
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     job.storage_ids = [StorageID.B2DROP.value, StorageID.IPFS.value]
-    job.cache_types = [CacheType.PRIVATE.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PRIVATE.value, CacheID.PUBLIC.value]
     job_price, cost = job.cost(provider, requester)
     args = [
         provider,
@@ -755,6 +756,7 @@ def test_multiple_data():
         elapsed_time,
         job.cores,
         job.run_time,
+        JOB.TYPE["SINGLE"],
     ]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
@@ -779,7 +781,17 @@ def test_multiple_data():
     append_gas_cost("setJobStateRunning", tx)
     mine(60 * elapsed_time / cfg.BLOCK_DURATION)
     end_ts = start_ts + 60 * elapsed_time
-    args = [index, job_id, end_ts, data_transfer[0], data_transfer[1], elapsed_time, job.cores, job.run_time]
+    args = [
+        index,
+        job_id,
+        end_ts,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        JOB.TYPE["SINGLE"],
+    ]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     append_gas_cost("processPayment", tx)
@@ -806,7 +818,7 @@ def test_simple_submit():
     job.data_transfer_ins = [1, 1]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.B2DROP.value, StorageID.B2DROP.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, cost = job.cost(provider, requester)
@@ -853,6 +865,7 @@ def test_simple_submit():
         elapsed_time,
         job.cores,
         [1],
+        JOB.TYPE["SINGLE"],
     ]
     out_hash = b"[46\x17\x98r\xc2\xfc\xe7\xfc\xb8\xdd\n\xd6\xe8\xc5\xca$fZ\xebVs\xec\xff\x06[\x1e\xd4f\xce\x99"
     tx = ebb.processPayment(job.key, args, out_hash, {"from": provider})
@@ -913,7 +926,7 @@ def test_submit_jobs():
             job.data_transfer_out = 100
             job.data_prices_set_block_numbers = [0]
             job.storage_ids = [StorageID.IPFS.value]
-            job.cache_types = [CacheType.PUBLIC.value]
+            job.cache_types = [CacheID.PUBLIC.value]
             # log(code_hashes[0])
             job_price, *_ = job.cost(provider, requester)
             args = [
@@ -993,6 +1006,7 @@ def test_submit_jobs():
                 elapsed_time,
                 job.cores,
                 job.run_time,
+                JOB.TYPE["SINGLE"],
             ]
             set_transfer(provider, Cent(0))  # clean provider balance
             set_transfer(requester, Cent(0))  # clean requester balance
@@ -1040,7 +1054,7 @@ def test_submit_n_data():
     job.data_transfer_ins = [1]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.IPFS.value]
-    job.cache_types = [CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PUBLIC.value]
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
     job_price, *_ = job.cost(provider, requester)
@@ -1074,7 +1088,7 @@ def test_submit_n_data():
     job.data_transfer_ins = [1, 1]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.B2DROP.value, StorageID.B2DROP.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
@@ -1112,7 +1126,7 @@ def test_submit_n_data():
     job.data_transfer_ins = [1, 1, 199]
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.GDRIVE.value, StorageID.GDRIVE.value, StorageID.GDRIVE.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job.storage_hours = [0, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0]
     job_price, *_ = job.cost(provider, requester)
@@ -1154,10 +1168,10 @@ def test_submit_n_data():
     job.data_transfer_out = 1
     job.storage_ids = [StorageID.IPFS.value, StorageID.IPFS.value, StorageID.IPFS.value, StorageID.IPFS.value]
     job.cache_types = [
-        CacheType.PUBLIC.value,
-        CacheType.PUBLIC.value,
-        CacheType.PUBLIC.value,
-        CacheType.PUBLIC.value,
+        CacheID.PUBLIC.value,
+        CacheID.PUBLIC.value,
+        CacheID.PUBLIC.value,
+        CacheID.PUBLIC.value,
     ]
     job.storage_hours = [0, 0, 0, 1]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
@@ -1219,7 +1233,7 @@ def test_receive_registered_data_deposit():
     job.data_transfer_ins = [1, 0, 0]
     job.data_transfer_out = 0
     job.storage_ids = [StorageID.B2DROP.value, StorageID.NONE.value, StorageID.NONE.value]
-    job.cache_types = [CacheType.PUBLIC.value, CacheType.PUBLIC.value, CacheType.PUBLIC.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job.storage_hours = [0, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0]
     job.provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
@@ -1261,7 +1275,17 @@ def test_receive_registered_data_deposit():
     #
     data_transfer_in_sum = 1
     data_transfer_out = 0
-    args = [index, job._id, end_ts, data_transfer_in_sum, data_transfer_out, elapsed_time, job.cores, [1]]
+    args = [
+        index,
+        job._id,
+        end_ts,
+        data_transfer_in_sum,
+        data_transfer_out,
+        elapsed_time,
+        job.cores,
+        [1],
+        JOB.TYPE["SINGLE"],
+    ]
     tx = ebb.processPayment(job.key, args, "", {"from": provider})
     received = tx.events["LogProcessPayment"]["receivedCent"]
     refunded = tx.events["LogProcessPayment"]["refundedCent"]

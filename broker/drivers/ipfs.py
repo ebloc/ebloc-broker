@@ -10,14 +10,14 @@ from broker._utils.tools import _remove, mkdir, print_tb
 from broker.config import ThreadFilter, env, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.libs import _git
-from broker.utils import CacheType, StorageID, byte_to_mb, bytes32_to_ipfs, get_date, is_ipfs_on, log, start_ipfs_daemon
+from broker.utils import CacheID, StorageID, byte_to_mb, bytes32_to_ipfs, get_date, is_ipfs_on, log, start_ipfs_daemon
 
 
 class IpfsClass(Storage):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         #: if storage class is IPFS, then `cache_type` is always public
-        self.cache_type = CacheType.PUBLIC
+        self.cache_type = CacheID.PUBLIC
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
         self.job_info = self.job_infos[0]

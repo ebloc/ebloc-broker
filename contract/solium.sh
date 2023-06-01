@@ -10,5 +10,6 @@
 
 # Linux
 prettier --write contracts/**/*.sol --config .prettierrce
+echo "prettier... done"
 rm -f contracts/.#*
-solium --config contracts/.soliumrc.json -d contracts/
+solium --config contracts/.soliumrc.json -d contracts/ | grep -v "unexpected token" | grep -v "✖" | head -n -2

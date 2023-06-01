@@ -9,7 +9,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 library Lib {
-    enum CacheType {
+    enum CacheID {
         PUBLIC, // 0
         PRIVATE // 1
     }
@@ -82,6 +82,7 @@ library Lib {
         uint32 elapsedTime;
         uint256[] core;
         uint256[] runTime;
+        uint8 finalize; // {0: first-job, 1: in-between-job, 2 final-job}
     }
 
     struct DataInfo {
@@ -304,7 +305,13 @@ library Lib {
         } while (true);
     }
 
-    function _refund(Status storage self, address provider, uint32 jobID, uint256[] memory core, uint256[] memory elapsedTime) internal returns (uint256 flag) {
+    function _refund(
+        Status storage self,
+        address provider,
+        uint32 jobID,
+        uint256[] memory core,
+        uint256[] memory elapsedTime
+    ) internal returns (uint256 flag) {
         require(self.jobInfo == keccak256(abi.encodePacked(core, elapsedTime)));
         Job storage job = self.jobs[jobID];
         require(
@@ -313,7 +320,6 @@ library Lib {
                 job.stateCode != Lib.JobStateCodes.REFUNDED &&
                 job.stateCode != Lib.JobStateCodes.CANCELLED
         );
-
     }
 
     function overlapCheck(LL storage self, IntervalArg memory _interval) internal returns (uint256 flag) {

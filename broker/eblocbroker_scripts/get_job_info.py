@@ -8,7 +8,7 @@ from broker._utils.tools import print_tb
 from broker.eblocbroker_scripts.job import DataStorage
 from broker.errors import QuietExit
 from broker.lib import state
-from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
+from broker.utils import CacheID, StorageID, bytes32_to_ipfs, empty_bytes32
 
 Ebb = cfg.Ebb
 
@@ -74,7 +74,7 @@ def analyze_data(self, key, provider=None):
             else:
                 log(f" {code_hash_str} {code_hash} ", end="")
 
-        log(CacheType(self.job_info["cacheType"][idx]).name, "magenta", end="")
+        log(CacheID(self.job_info["cacheType"][idx]).name, "magenta", end="")
         log(" ", end="")
         log(StorageID(self.job_info["cloudStorageID"][idx]).name, end="")
         log(" ", end="")

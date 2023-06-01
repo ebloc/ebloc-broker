@@ -44,7 +44,7 @@ class BaseEnum(IntEnum):
         return int(self.value) == other
 
 
-class CacheType(BaseEnum):
+class CacheID(BaseEnum):
     PUBLIC = 0
     PRIVATE = 1
 
@@ -58,8 +58,8 @@ class StorageID(BaseEnum):
 
 
 CACHE_TYPES = {
-    "public": CacheType.PUBLIC,
-    "private": CacheType.PRIVATE,
+    "public": CacheID.PUBLIC,
+    "private": CacheID.PRIVATE,
 }
 
 STORAGE_IDs = {

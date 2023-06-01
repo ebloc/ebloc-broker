@@ -23,7 +23,7 @@ from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
 from broker.link import Link
 from broker.utils import (
-    CacheType,
+    CacheID,
     bytes32_to_ipfs,
     cd,
     generate_md5sum,
@@ -178,10 +178,10 @@ class Storage(BaseClass):
                 self.folder_type_dict[name] = folder_type
 
             self.cache_type[_id] = cache_type
-            if cache_type == CacheType.PUBLIC:
+            if cache_type == CacheID.PUBLIC:
                 self.folder_path_to_download[name] = self.public_dir
                 log(f"==> {name} is already cached under the public directory", "blue")
-            elif cache_type == CacheType.PRIVATE:
+            elif cache_type == CacheID.PRIVATE:
                 self.folder_path_to_download[name] = self.private_dir
                 log(f"==> {name} is already cached under the private directory")
 
@@ -190,14 +190,14 @@ class Storage(BaseClass):
         return False
 
     def _is_cached(self, name, _id) -> bool:
-        if self.cache_type[_id] == CacheType.PRIVATE:
+        if self.cache_type[_id] == CacheID.PRIVATE:
             #: checks whether it is already exist under public cache directory
-            _cache_type = CacheType.PUBLIC
+            _cache_type = CacheID.PUBLIC
             cache_folder = f"{self.public_dir}/{name}"
             cached_tar_fn = f"{cache_folder}.tar.gz"
         else:
             #: checks whether it is already exist under the requesting user's private cache directory
-            _cache_type = CacheType.PRIVATE
+            _cache_type = CacheID.PRIVATE
             cache_folder = self.private_dir
             cache_folder = f"{self.private_dir}/{name}"
             cached_tar_fn = f"{cache_folder}.tar.gz"
