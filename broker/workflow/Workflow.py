@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from broker._utils.tools import run
 import matplotlib.pyplot as plt
 import networkx as nx
 import random
@@ -60,29 +61,43 @@ class Workflow:
         except KeyboardInterrupt:
             pass
 
-    def dependency_job(self, i):
+    def dependency_job(self, i, slurm=False):
         if not len(set(self.G.predecessors(i))):
-            job_id = self.not_dependent_submit_job(i)
+            job_id = self.not_dependent_submit_job(i, slurm)
             self.job_ids[i] = job_id
             print("job_id: " + str(job_id))
         else:
-            job_id = self.dependent_submit_job(i, list(self.G.predecessors(i)))
+            job_id = self.dependent_submit_job(i, list(self.G.predecessors(i)), slurm)
             self.job_ids[i] = job_id
             print("job_id: " + str(job_id))
             print(list(self.G.predecessors(i)))
 
-    def not_dependent_submit_job(self, i):
+    def not_dependent_submit_job(self, i, slurm):
         log(f"$ sbatch job{i}.sh", "pink")
-        return random.randint(1, 101)
+        if slurm:
+            cmd = ["sbatch", f"job{i}.sh"]
+            output = run(cmd)
+            print(output)
+            job_id = int(output.split(" ")[3])
+            return job_id
+        else:
+            return random.randint(1, 101)
 
-    def dependent_submit_job(self, i, predecessors):
+    def dependent_submit_job(self, i, predecessors, slurm):
         if len(predecessors) == 1:
             if not predecessors[0] in self.job_ids:
                 #: if the required job is not submitted to Slurm, recursive call
                 self.dependency_job(predecessors[0])
 
             log(f"$ sbatch --dependency=afterok:{self.job_ids[predecessors[0]]} job{i}.sh", "blue")
-            return random.randint(1, 101)
+            if slurm:
+                cmd = ["sbatch", f"--dependency=afterok:{self.job_ids[predecessors[0]]}", f"job{i}.sh"]
+                output = run(cmd)
+                print(output)
+                job_id = int(output.split(" ")[3])
+                return job_id
+            else:
+                return random.randint(1, 101)
         else:
             job_id_str = ""
             for j in predecessors:
@@ -93,7 +108,14 @@ class Workflow:
 
             job_id_str = job_id_str[:-1]
             log(f"$ sbatch --dependency=afterok:{job_id_str} job{i}.sh", "blue")
-            return random.randint(1, 101)
+            if slurm:
+                cmd = ["sbatch", f"--dependency=afterok:{job_id_str}", f"job{i}.sh"]
+                output = run(cmd)
+                print(output)
+                job_id = int(output.split(" ")[3])
+                return job_id
+            else:
+                return random.randint(1, 101)
 
 
 def main(args):
@@ -155,7 +177,7 @@ def test_3():
     w.draw()
 
 
-def test_4():
+def test_4(slurm=False):
     G = nx.DiGraph()
     G.add_edge(0, 1)
     G.add_edge(0, 2)
@@ -184,7 +206,7 @@ def test_4():
     print()
     for idx in list(w.G.nodes):
         if idx != "\\n" and idx not in w.job_ids:
-            w.dependency_job(idx)
+            w.dependency_job(idx, slurm=slurm)
 
     # for idx in list(G.nodes):
     #     print(idx + " " + str(job_ids[idx]))
@@ -230,6 +252,7 @@ if __name__ == "__main__":
         # test_2()
         # test_3()
         test_4()
+        test_4(slurm=True)
         # test_5()
     except KeyboardInterrupt:
         pass

@@ -18,6 +18,7 @@ from brownie import accounts, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import gas_costs, mine, new_test
 from contract.tests.test_overall_eblocbroker import register_provider, register_requester
+from broker.lib import JOB
 
 # from brownie.test import given, strategy
 
@@ -88,7 +89,7 @@ def check_price_keys(price_keys, provider, code_hash):
     res = ebb.getRegisteredDataBlockNumbers(provider, code_hash)
     for key in price_keys:
         if key > 0:
-            assert key in res, f"{key} does no exist in price keys({res}) for the registered data{code_hash}"
+            assert key in res, f"{key} does no exist in price keys={res} for the registered data{code_hash}"
 
 
 def remove_zeros_gpg_fingerprint(_gpg_fingerprint):
@@ -104,7 +105,7 @@ def get_block_timestamp():
     return web3.eth.getBlock(get_block_number()).timestamp
 
 
-@pytest.mark.skip(reason="no way of currently testing this")
+# @pytest.mark.skip(reason="no way of currently testing this")
 def test_workflow():
     job = Job()
     provider = accounts[1]
@@ -121,7 +122,6 @@ def test_workflow():
 
     ebb.removeRegisteredData(code_hash, {"from": provider})  # should submitJob fail if it is not removed
     append_gas_cost("removeRegisteredData", tx)
-    #
     data_hash = "0x68b8d8218e730fc2957bcb12119cb204"
     ebb.registerData(data_hash, Cent("2 cent"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     append_gas_cost("registerData", tx)
@@ -142,11 +142,11 @@ def test_workflow():
     assert output[0] == Cent("26 cent")
     mine(cfg.ONE_HOUR_BLOCK_DURATION - 10)
     output = ebb.getRegisteredDataPrice(provider, data_hash, 0)
-    log(f"register_data_price={output}", "bold")
+    log(f"register_data_price={output}")
     assert output[0] == Cent("2 cent")
     mine(1)
     output = ebb.getRegisteredDataPrice(provider, data_hash, 0)
-    log(f"register_data_price={output}", "bold")
+    log(f"register_data_price={output}")
     assert output[0] == Cent("26 cent")
 
     job.code_hashes = [code_hash, data_hash]  # Hashed of the data file in array
@@ -226,11 +226,9 @@ def test_workflow():
         elapsed_time,
         job.cores,
         job.run_time,
-        False,
+        JOB.TYPE["BEGIN"],
     ]
-
     # print_gas_costs() #
-
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     append_gas_cost("processPayment", tx)
     # log(tx.events['LogProcessPayment'])
@@ -238,7 +236,7 @@ def test_workflow():
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedCent"])
     received_sum += tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum += tx.events["LogProcessPayment"]["refundedCent"]
-    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
+    log(f"received_sum={received_sum} | refunded_sum={refunded_sum}")
     index = 0
     job_id = 1
     elapsed_time = 15
@@ -254,7 +252,7 @@ def test_workflow():
         elapsed_time,
         job.cores,
         job.run_time,
-        False,
+        JOB.TYPE["BETWEEN"],
     ]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
@@ -263,7 +261,8 @@ def test_workflow():
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedCent"])
     received_sum += tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum += tx.events["LogProcessPayment"]["refundedCent"]
-    log(f"received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}", "bold")
+    log(f"received_sum={received_sum} | refunded_sum={refunded_sum}")
+    assert refunded_sum == 0
     index = 0
     job_id = 2
     elapsed_time = 20
@@ -280,7 +279,7 @@ def test_workflow():
             elapsed_time,
             job.cores,
             job.run_time,
-            False,
+            JOB.TYPE["BETWEEN"],
         ]
         tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
         append_gas_cost("processPayment", tx)
@@ -299,19 +298,23 @@ def test_workflow():
         elapsed_time,
         job.cores,
         job.run_time,
-        True,
+        JOB.TYPE["FINAL"],
     ]
     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
     assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
     append_gas_cost("processPayment", tx)
-    # log(tx.events['LogProcessPayment'])
     received_sums.append(tx.events["LogProcessPayment"]["receivedCent"])
     refunded_sums.append(tx.events["LogProcessPayment"]["refundedCent"])
     received_sum += tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum += tx.events["LogProcessPayment"]["refundedCent"]
-    log(f"#> received_sum={received_sum} | refunded_sum={refunded_sum} | job_price={job_price}")
+    _refunded_sum = Cent(refunded_sum).to_usd()
+    _received_sum = Cent(received_sum).to_usd()
+    job_price_str = Cent(job_price).to_usd()
+    log(f"#> received_sum={_received_sum} usd | refunded_sum={_refunded_sum} usd | job_price={job_price_str} usd")
     log(f"#> received_sums={received_sums}")
     log(f"#> refunded_sums={refunded_sums}")
-    assert job_price == received_sum + refunded_sum
+
+    assert _refunded_sum == 0
     assert ebb.balanceOf(provider) == received_sum
     assert ebb.balanceOf(requester) == refunded_sum
+    assert job_price == received_sum + refunded_sum
