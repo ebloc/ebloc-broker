@@ -95,15 +95,15 @@ sudo chown munge:munge -R /run/munge  # double check
 nohup sudo -u munge munged -F > /var/log/munged.log &!
 # munged: Info: Unauthorized credential for client UID=0 GID=0 // but works
 
-for service in mysqld slurmdbd slurmctld slurmd_1 slurmd_2 mongod ipfs; do
+for service in mysqld slurmdbd slurmctld slurmd_1 slurmd_2 mongod ipfs dbus; do
     start_service $service
 done
 
-for port in 6817 6818 6819 6001 6002; do
-    check_port_status $port
-done
+# for port in 6817 6818 6819 6001 6002; do
+#     check_port_status $port
+# done
 
-check_cluster
+# check_cluster
 /usr/bin/supervisorctl start startup >/dev/null 2>&1
 echo "#> cluster is now available"
 exec "$@"

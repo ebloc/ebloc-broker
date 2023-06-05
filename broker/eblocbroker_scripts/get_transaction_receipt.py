@@ -24,7 +24,6 @@ def merge_two_dicts(x, y):
 def get_transaction_receipt(tx_hash, only_receipt=False):
     try:
         tx_receipt = Ebb.get_transaction_receipt(tx_hash)
-        breakpoint()  # DEBUG
         tx_by_block = Ebb.get_transaction_by_block(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"])
         merged = merge_two_dicts(tx_receipt, tx_by_block)
         with suppress(Exception):

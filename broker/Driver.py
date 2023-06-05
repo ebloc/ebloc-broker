@@ -384,11 +384,14 @@ def run_driver(given_bn):
     if not env.SLURMUSER:
         raise Terminate(f"SLURMUSER is not set in {env.LOG_DIR}/cfg.yaml")
 
-    with open("/usr/local/etc/slurm.conf") as origin:
-        for line in origin:
-            if "SlurmUser=" in line:
-                real_slurm_user = line.replace("\n", "").replace("SlurmUser=", "")
-                break
+    try:
+        with open("/usr/local/etc/slurm.conf") as origin:
+            for line in origin:
+                if "SlurmUser=" in line:
+                    real_slurm_user = line.replace("\n", "").replace("SlurmUser=", "")
+                    break
+    except Exception as e:
+        raise QuietTerminate(e)
 
     if env.SLURMUSER != real_slurm_user:
         msg = f"E: env.SLURMUSER={env.SLURMUSER} is not equal to SlurmUser={real_slurm_user} in slurm's config."
@@ -602,8 +605,9 @@ def main(args):
             lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
         except PermissionError:
             print_tb("E: PermissionError is generated for the locked file")
-            give_rwe_access(env.WHOAMI, "/tmp/run")
-            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+
+        give_rwe_access(env.WHOAMI, "/tmp/run")
+        lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
     except Exception as e:
         print_tb(e, is_print_exc=False)
         console.print_exception(word_wrap=True, extra_lines=1)

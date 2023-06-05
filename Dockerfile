@@ -47,8 +47,10 @@ RUN curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | tee /etc/apt/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --assume-yes apt-utils \
  && apt-get install -y --no-install-recommends --assume-yes \
+        acl \
         build-essential \
         aptitude \
+        dbus \
         libdbus-1-dev \
         libdbus-glib-1-dev \
         libgirepository1.0-dev \
@@ -94,7 +96,7 @@ RUN git checkout dev >/dev/null 2>&1 \
  && git fetch --all --quiet >/dev/null 2>&1 \
  && git pull --all -r -v >/dev/null 2>&1 \
  && pip install --upgrade pip \
- && pip install -U pip wheel setuptools \
+ && pip install -U pip wheel setuptools dbus-python \
  && pip install -e . --use-deprecated=legacy-resolver \
  && mkdir -p ~/.cache/black/$(pip freeze | grep black | sed 's|black==||g') \
  && eblocbroker init --base \
@@ -107,17 +109,6 @@ RUN brownie init \
   && /workspace/ebloc-broker/broker/python_scripts/add_bloxberg_into_network_config.py \
   && cd /workspace//ebloc-broker/contract \
   && brownie compile
-
-## finally
-RUN ipfs version \
- && ipfs init --profile=lowpower \
- && ipfs config Reprovider.Strategy roots \
- && ipfs config Routing.Type none \
- # && ganache --version \
- && gdrive version \
- && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
- && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc \
- && du -sh / 2>&1 | grep -v "cannot"
 
 ## slurm
 RUN apt-get install -y --no-install-recommends --assume-yes \
@@ -133,7 +124,7 @@ RUN apt-get install -y --no-install-recommends --assume-yes \
         libmariadbd-dev && \
     apt-get clean
 
-# Compile, build and install Slurm from git source
+# Compile, build and install Slurm from git source -- takes few minutes
 ARG SLURM_TAG=slurm-23-02-2-1
 RUN git config --global advice.detachedHead false
 WORKDIR /workspace
@@ -160,6 +151,16 @@ RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/Sched
     /var/spool/slurmctld \
     /var/log/slurm \
     /var/run/slurm
+
+## final operations
+RUN echo "7c7fc68" \
+ && gdrive version \
+ && ipfs version \
+ && ipfs init --profile=lowpower \
+ && ipfs config Reprovider.Strategy roots \
+ && ipfs config Routing.Type none \
+ && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
+ && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc
 
 VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
 COPY --chown=slurm docker/provider/create-munge-key /sbin/
