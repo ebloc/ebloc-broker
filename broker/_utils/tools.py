@@ -2,6 +2,7 @@
 
 import decimal
 import errno
+import functools
 import json
 import linecache
 import math
@@ -22,7 +23,7 @@ from pathlib import PosixPath
 from pytz import timezone, utc
 from subprocess import PIPE, CalledProcessError, Popen, check_output
 
-from broker._utils._log import WHERE, br, log, ok
+from broker._utils._log import WHERE, br, console, log, ok
 from broker.errors import HandlerException, QuietExit, Terminate
 
 try:
@@ -110,7 +111,7 @@ def PrintException() -> str:
     return '{}:{} "{}"'.format(os.path.basename(fn), lineno, line.strip())
 
 
-def print_tb(message=None, is_print_exc=True) -> None:
+def print_tb(message=None, is_print_exc=False) -> None:
     """Log the traceback.
 
     Alternative code: console.print_exception(word_wrap=True, extra_lines=1)
@@ -139,6 +140,8 @@ def print_tb(message=None, is_print_exc=True) -> None:
 
     if message and "An exception of type Exception occurred" not in message:
         log(message, back=1)
+
+    console.print_exception(word_wrap=True)
 
 
 def _remove(path: str, is_verbose=False) -> None:
@@ -363,11 +366,7 @@ def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
         else:
             return check_output(cmd, env=env).decode("utf-8").strip()
     except CalledProcessError as e:
-        if not is_quiet:
-            print_trace(cmd, back=2, exc=e.output.decode("utf-8"), returncode=e.returncode)
-            raise Exception from None  # prevents tree of trace
-
-        raise Exception from e
+        raise Exception(str(e)) from None  # prevents tree of trace
     except Exception as e:
         raise e
 
@@ -431,9 +430,14 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
 
     name = name.replace("\\", "").replace(">", "").replace("<", "")
     if is_print:
-        print_tb(f"[bg]{name}[/bg] is not running on the background  {WHERE(1)}")
+        log(f"==> [bg]{name}[/bg] is not running on the background  {WHERE(1)}")
 
     return False
+
+
+def sudo_mkdir(user, path):
+    run(["sudo", "-u", "root", "mkdir", "-p", path])
+    run(["sudo", "chown", f"{user}:{user}", path])
 
 
 def mkdir(path) -> None:
@@ -571,7 +575,7 @@ def countdown(seconds: int, is_verbose=False) -> None:
         seconds -= 1
 
 
-def squeue() -> None:
+def squeue():
     try:
         squeue_output = run(["squeue"])
         if "squeue: error:" in str(squeue_output):
@@ -581,11 +585,16 @@ def squeue() -> None:
             "warning: SLURM is not running on the background. Please run:\nsudo ./broker/bash_scripts/run_slurm.sh"
         ) from e
 
+    job_ids = []
     # Get real info under the header after the first line
     if len(f"{squeue_output}\n".split("\n", 1)[1]) > 0:
         # checks if the squeue output's line number is gretaer than 1
         # log("view information about jobs located in the Slurm scheduling queue:", "yellow")
         log(f"{squeue_output}{ok()}\n")
+        for line in squeue_output.splitlines():
+            job_ids.append(line.split()[0])
+
+    return job_ids
 
 
 def compare_files(fn1, fn2) -> bool:
@@ -632,3 +641,27 @@ def remove_ansi_escape_sequence(string):
     """
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
     return ansi_escape.sub("", string)
+
+
+class TimeoutError(Exception):
+    pass
+
+
+def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    def decorator(func):
+        def _handle_timeout(signum, frame):
+            raise TimeoutError(error_message)
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            signal.signal(signal.SIGALRM, _handle_timeout)
+            signal.alarm(seconds)
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                signal.alarm(0)
+            return result
+
+        return wrapper
+
+    return decorator

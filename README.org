@@ -7,7 +7,7 @@ It applies blockchain technology to provide a market for computational and data 
 
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
 
-For more info see: [[http://ebloc-broker-readthedocs.duckdns.org:8000/index.html][documentation]].
+For more info see: [[https://ebloc-broker-readthedocs.duckdns.org/][documentation]].
 
 ** Prerequisites
 - [[https://github.com/SchedMD/slurm][Slurm]], [[https://ipfs.io][IPFS]], [[https://github.com/eth-brownie/brownie][eth-brownie]], [[https://github.com/prasmussen/gdrive][prasmussen/gdrive]], [[https://github.com/owncloud/pyocclient][owncloud/pyocclient]], [[https://github.com/trufflesuite/ganache][ganache-cli]].
@@ -108,11 +108,8 @@ config:
 ** Provider
 Each provider should run ~eblocbroker driver~ for start running the Python script.
 
-
 #+HTML: <details><summary>Example screenshot of provider GUI:</summary>
-
 [[file:/docs/gui1.png]]
-
 #+HTML: </details>
 
 ** 🎬 Demonstration

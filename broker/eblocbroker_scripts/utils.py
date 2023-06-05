@@ -87,6 +87,17 @@ class Cent(int):
         else:
             return str(self.to(unit)).rstrip("0")
 
+    def to_usd(self) -> float:
+        """
+        Returns a converted denomination of the stored cent value.
+        Accepts any valid ether unit denomination as string, like:
+        "gcent", "milliether", "finney", "ether".
+
+        :param unit: An ether denomination like "ether" or "gcent"
+        :return: A 'Fixed' type number in the specified denomination
+        """
+        return float(str(self.to("usd")).rstrip("0"))
+
     def to(self, unit: str) -> "Fixed":
         """
         Returns a converted denomination of the stored cent value.

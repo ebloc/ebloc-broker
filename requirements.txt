@@ -28,7 +28,7 @@ argcomplete==2.0.0
 aspy-refactor-imports==2.1.1
     # via
     #   seed-isort-config
-astroid==2.15.1
+astroid==2.15.5
     # via
     #   pylint
 asttokens==2.0.5
@@ -188,7 +188,7 @@ DateTime==5.1
     # via
     #   accesscontrol
 dbfread==2.0.4
-dbus-python==1.2.16
+dbus-python==1.2.18
 decorator==4.4.2
     # via
     #   ipdb
@@ -493,7 +493,7 @@ multimapping==4.1
 multipart==0.2.4
     # via
     #   zope-publisher
-mypy==1.2.0
+mypy==1.3.0
     # via
     #   flake8-mypy
 mypy-extensions==1.0.0
@@ -509,7 +509,7 @@ netaddr==0.8.0
     # via
     #   eth-brownie
     #   multiaddr
-networkx==2.6.3
+networkx==3.1
 neurotools==0.3.1
 ng==1.2.0
 nodeenv==1.6.0
@@ -794,7 +794,7 @@ RestrictedPython==6.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==13.3.5
+rich==13.4.1
 rlp==2.0.1
     # via
     #   eth-account
@@ -1060,7 +1060,7 @@ webtest==2.0.35
 werkzeug==2.2.3
     # via
     #   flask
-wheel==0.37.1
+wheel==0.40.0
     # via
     #   eth-brownie
     #   pip-tools
@@ -1073,7 +1073,7 @@ wrapt==1.14.1
 wsgiproxy2==0.4.6
 wtforms==2.3.1
 xlrd==1.2.0
-yapf==0.32.0
+yapf==0.33.0
 yarl==1.8.1
     # via
     #   aiohttp
@@ -1216,6 +1216,8 @@ zope-traversing==4.4.1
     #   z3c-pt
 sphinx-autobuild==2021.3.14
 watchdog==3.0.0
+pydot==1.4.2
+# graphviz==0.20.1
 # The following packages are considered to be unsafe in a requirements file:
 # pip
 # setuptools

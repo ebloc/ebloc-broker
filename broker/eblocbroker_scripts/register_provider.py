@@ -91,12 +91,13 @@ def register_provider_wrapper(yaml_fn):
     gmail = args["cfg"]["gmail"]
     _args = args["cfg"]["provider"]
     available_core = _args["available_core"]
-    commitment_blk = _args["prices"]["commitment_blk"]
+    _prices = _args["prices"]
+    commitment_blk = _prices["commitment_blk"]
     try:
-        price_core_min = Cent(_args["prices"]["price_core_min"])
-        price_data_transfer = Cent(_args["prices"]["price_data_transfer"])
-        price_storage = Cent(_args["prices"]["price_storage"])
-        price_cache = Cent(_args["prices"]["price_cache"])
+        price_core_min = Cent(_prices["price_core_min"])
+        price_data_transfer = Cent(_prices["price_data_transfer"])
+        price_storage = Cent(_prices["price_storage"])
+        price_cache = Cent(_prices["price_cache"])
     except Exception as e:
         print_tb(e)
 
@@ -153,8 +154,8 @@ def register_provider_wrapper(yaml_fn):
         ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip}/tcp", ipfs_address, flags=re.DOTALL)
         log(f"==> ipfs_address={ipfs_address}")
 
+    gmail = env.GMAIL
     try:
-        gmail = env.GMAIL
         gpg_fingerprint = ipfs.get_gpg_fingerprint(gmail)
         ipfs.is_gpg_published(gpg_fingerprint)
         ipfs.publish_gpg(gpg_fingerprint)

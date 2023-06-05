@@ -16,6 +16,7 @@ mysql_init () {
 }
 
 install_slurm () {
+    sudo useradd slurm
     # compile, build and install SLURM from Git source
     SLURM_TAG="slurm-23-02-2-1"
     scontrol --version && return

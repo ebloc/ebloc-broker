@@ -13,7 +13,7 @@ from contextlib import suppress
 from broker import cfg
 from broker._utils._log import br, console_ruler
 from broker._utils.tools import _date, log
-from broker.utils import CacheType, StorageID, bytes32_to_ipfs
+from broker.utils import CacheID, StorageID, bytes32_to_ipfs
 
 
 def handle_event(logged_jobs):
@@ -31,7 +31,7 @@ def handle_event(logged_jobs):
         log(f"job_key={job.args['jobKey']}")
         log(f"index={job.args['index']}")
         log(f"cloud_storage_id={StorageID(cloud_storage_id).name}")
-        log(f"cache_type={CacheType(job.args['cacheType'].name)}")
+        log(f"cache_type={CacheID(job.args['cacheType'].name)}")
         log(f"received={job.args['received']}")
         for value in job.args["sourceCodeHash"]:
             sourceCodeHash = job.args["sourceCodeHash"][value]

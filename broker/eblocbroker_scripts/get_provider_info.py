@@ -7,7 +7,7 @@ from broker import cfg
 from broker._utils.tools import is_byte_str_zero, log, print_tb
 from broker.config import env
 from broker.eblocbroker_scripts.utils import Cent
-from broker.errors import QuietExit
+from broker.errors import QuietExit, QuietTerminate
 from brownie.network.account import Account
 
 Ebb = cfg.Ebb
@@ -19,7 +19,7 @@ def get_provider_info(self, provider):
         provider = self.w3.toChecksumAddress(provider)
 
     if not self.does_provider_exist(provider):
-        raise QuietExit(
+        raise QuietTerminate(
             f"E: provider={provider} is not registered.\n"
             f"Please try again with registered Ethereum Address as provider."
         )

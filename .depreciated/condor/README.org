@@ -1,10 +1,7 @@
-# Condor Setup
-
-## Condor Install:
-
-### Ubuntu: https://research.cs.wisc.edu/htcondor/instructions/ubuntu/14/stable/
-
-```
+* Condor Setup
+** Condor Install:
+*** Ubuntu: https://research.cs.wisc.edu/htcondor/instructions/ubuntu/14/stable/
+#+begin_src bash
 wget -qO - https://research.cs.wisc.edu/htcondor/ubuntu/HTCondor-Release.gpg.key | sudo apt-key add -
 # echo "deb http://research.cs.wisc.edu/htcondor/ubuntu/stable/ trusty contrib" >> /etc/apt/sources.list
 sudo apt-get update
@@ -17,15 +14,13 @@ sudo apt -f install
 $ condor_version
 $ CondorVersion: 8.6.13 Oct 30 2018 BuildID: 453497 $
 $ CondorPlatform: x86_64_Ubuntu14 $
-```
+#+end_src
 
---------------
+Link: [[https://stackoverflow.com/a/53029436/2402577]]
 
-Link: https://stackoverflow.com/a/53029436/2402577
-
-```
-mkdir -p /var/run/condor  # If it does not exist
-mkdir -p /var/lock/condor # If it does not exist
+#+begin_src bash
+mkdir -p /var/run/condor
+mkdir -p /var/lock/condor
 
 # Recreate them from scratch
 sudo rm -rf /var/lib/condor
@@ -60,13 +55,11 @@ $ condor_q # check condor_q works or not
 OWNER BATCH_NAME      SUBMITTED   DONE   RUN    IDLE   HOLD  TOTAL JOB_IDS
 
 0 jobs; 0 completed, 0 removed, 0 idle, 0 running, 0 held, 0 suspended
-```
+#+end_src
 
------------------
+- montage-workflow-v2: https://github.com/pegasus-isi/montage-workflow-v2
 
-montage-workflow-v2: https://github.com/pegasus-isi/montage-workflow-v2
-
-```
+#+begin_src bash
 ./example-dss.sh
 
 $ pegasus-run  ~/pegasus/montage-workflow-v2/work/1540532824
@@ -78,11 +71,11 @@ Your workflow has been started and is running in the base directory:
 
   ~/pegasus/montage-workflow-v2/work/1540532824
 
-*** To monitor the workflow you can run ***
+=>=> To monitor the workflow you can run ***
 
   pegasus-status -l ~/pegasus/montage-workflow-v2/work/1540532824
 
-*** To remove your workflow run ***
+=>=> To remove your workflow run ***
 
   pegasus-remove ~/pegasus/montage-workflow-v2/work/1540532824
 
@@ -104,4 +97,4 @@ $ pegasus-status -l ~/pegasus/montage-workflow-v2/work/1540532824
 UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
     0     0     0     0     0    60     0 100.0 Success *montage-0.dag
 Summary: 1 DAG total (Success:1)
-```
+#+end_src

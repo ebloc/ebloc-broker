@@ -1,18 +1,19 @@
 #!/usr/bin/python3
 
-import brownie
 import os
 import pytest
 import sys
 from os import path
-from broker.utils import CacheType, StorageID
+
+import brownie
 import contract.tests.cfg as _cfg
 from broker import cfg, config
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
-from broker.utils import log, zero_bytes32
+from broker.lib import JOB
+from broker.utils import CacheID, StorageID, log, zero_bytes32
 from brownie import accounts, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import mine, new_test
@@ -125,7 +126,7 @@ def result_check(delta, spent, value, received_sum, refunded_sum):
     assert delta == 0
 
 
-def test_cost_4():
+def test_cost_0():
     _prices = Prices()
     _prices.set_core_min("0.001 usd")
     _prices.set_data_transfer("0.0001 cent")
@@ -153,7 +154,7 @@ def test_cost_4():
     job.data_transfer_ins = [10]
     job.data_transfer_out = 5
     job.storage_ids = [StorageID.IPFS]
-    job.cache_types = [CacheType.PUBLIC]
+    job.cache_types = [CacheID.PUBLIC]
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
     job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
@@ -214,7 +215,7 @@ def test_cost_1():
     job.storage_hours = [0, 1, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
-    args = [
+    _args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
         job.storage_ids,
@@ -226,10 +227,22 @@ def test_cost_1():
         job_price,
     ]
     set_transfer(requester, Cent(job_price))
+    with brownie.reverts():
+        _args[6] = [14401]  # job run time upper limit check
+        tx = ebb.submitJob(
+            job.key,
+            job.data_transfer_ins,
+            _args,
+            job.storage_hours,
+            job.code_hashes,
+            {"from": requester},
+        )
+
+    _args[6] = [60]
     tx = ebb.submitJob(
         job.key,
         job.data_transfer_ins,
-        args,
+        _args,
         job.storage_hours,
         job.code_hashes,
         {"from": requester},
@@ -256,13 +269,23 @@ def test_cost_1():
     # ----------------------------------------------------------------------------------------------
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
-    elapsed_time = 7
-    _dataTransferIn = 140
-    _dataTransferOut = 0
+    elapsed = 7
+    dt_in = 140
+    dt_out = 0
     #  index jobId endTimestamp
     #      \   |       |
-    args = [0, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
-    tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
+    _args = [
+        0,
+        0,
+        1681003991,
+        dt_in,
+        dt_out,
+        elapsed,
+        job.cores,
+        [60],
+        JOB.TYPE["SINGLE"],
+    ]
+    tx = ebb.processPayment(job.code_hashes[0], _args, zero_bytes32, {"from": provider})
     log_process_payment = dict(tx.events["LogProcessPayment"])
     if log_process_payment["resultIpfsHash"] == _cfg.ZERO:
         del log_process_payment["resultIpfsHash"]
@@ -344,12 +367,12 @@ def test_cost_1():
     # ----------------------------------------------------------------------------------------------
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], index, 0, start_ts, {"from": provider})
-    elapsed_time = 7
-    _dataTransferIn = 9  # if its > 9 fails
-    _dataTransferOut = 0
+    elapsed = 7
+    dt_in = 9  # if its > 9 fails
+    dt_out = 0
     #  index jobId endTimestamp
     #      \   |       |
-    args = [index, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
+    args = [index, 0, 1681003991, dt_in, dt_out, elapsed, job.cores, [60], JOB.TYPE["SINGLE"]]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     log_process_payment = dict(tx.events["LogProcessPayment"])
     if log_process_payment["resultIpfsHash"] == _cfg.ZERO:
@@ -444,12 +467,22 @@ def test_cost_2():
     # ----------------------------------------------------------------------------------------------
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
-    elapsed_time = 7
-    _dataTransferIn = 0
-    _dataTransferOut = 4
+    elapsed = 7
+    dt_in = 0
+    dt_out = 4
     #  index jobId endTimestamp
     #      \   |       |
-    args = [0, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
+    args = [
+        0,
+        0,
+        1681003991,
+        dt_in,
+        dt_out,
+        elapsed,
+        job.cores,
+        [60],
+        JOB.TYPE["SINGLE"],
+    ]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     log_process_payment = dict(tx.events["LogProcessPayment"])
     if log_process_payment["resultIpfsHash"] == _cfg.ZERO:
@@ -544,12 +577,12 @@ def test_cost_3():
     # ----------------------------------------------------------------------------------------------
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
-    elapsed_time = 3
-    _dataTransferIn = 404
-    _dataTransferOut = 0
+    elapsed = 3
+    dt_in = 404
+    dt_out = 0
     #  index jobId endTimestamp
     #      \   |       |
-    args = [0, 0, 1681003991, _dataTransferIn, _dataTransferOut, elapsed_time, job.cores, [60]]
+    args = [0, 0, 1681003991, dt_in, dt_out, elapsed, job.cores, [60], JOB.TYPE["SINGLE"]]
     tx = ebb.processPayment(job.code_hashes[0], args, zero_bytes32, {"from": provider})
     log_process_payment = dict(tx.events["LogProcessPayment"])
     if log_process_payment["resultIpfsHash"] == _cfg.ZERO:

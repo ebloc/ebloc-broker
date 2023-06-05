@@ -1,4 +1,7 @@
-# GUIDE
+* GUIDE
+
+Link: [[https://stackoverflow.com/questions/44742023/one-to-one-dependency-between-two-job-arrays-in-slurm/44758889#44758889]]
+__ [[https://stackoverflow.com/a/50613999/2402577]]
 
 #+begin_src bash
 sbatch run.sh
@@ -7,6 +10,6 @@ scancel 83
 sbatch  --dependency=aftercorr:83 run.sh
 scontrol requeue 83
 
---dependency=afterany:$jid2:$jid3
---dependency=singleton
+# --dependency=afterany:$jid2:$jid3
+# --dependency=singleton
 #+end_src

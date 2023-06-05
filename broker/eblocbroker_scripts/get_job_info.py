@@ -8,7 +8,7 @@ from broker._utils.tools import print_tb
 from broker.eblocbroker_scripts.job import DataStorage
 from broker.errors import QuietExit
 from broker.lib import state
-from broker.utils import CacheType, StorageID, bytes32_to_ipfs, empty_bytes32
+from broker.utils import CacheID, StorageID, bytes32_to_ipfs, empty_bytes32
 
 Ebb = cfg.Ebb
 
@@ -74,7 +74,7 @@ def analyze_data(self, key, provider=None):
             else:
                 log(f" {code_hash_str} {code_hash} ", end="")
 
-        log(CacheType(self.job_info["cacheType"][idx]).name, "magenta", end="")
+        log(CacheID(self.job_info["cacheType"][idx]).name, "magenta", end="")
         log(" ", end="")
         log(StorageID(self.job_info["cloudStorageID"][idx]).name, end="")
         log(" ", end="")
@@ -220,6 +220,20 @@ def get_job_info_print(self, provider, _hash, index, received_bn, is_print=True)
             self.analyze_data(_hash, provider)
     elif is_print:
         print(self.job_info)
+
+
+def get_job_state(self, provider, job_key, index, job_id):
+    provider = cfg.w3.toChecksumAddress(provider)
+    try:
+        job, received, job_owner, data_transfer_in, _cacheCost, data_transfer_out = self._get_job_info(
+            provider, job_key, int(index), int(job_id)
+        )
+        return job[0]
+    except Exception as e:
+        if str(e) == "VM execution error: Bad instruction fe":
+            raise QuietExit("Not valid <provider_address, [m]job_key[/m] and [m]index[/m]> is given") from e
+
+        raise e
 
 
 def get_job_info(

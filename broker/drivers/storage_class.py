@@ -23,7 +23,7 @@ from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
 from broker.link import Link
 from broker.utils import (
-    CacheType,
+    CacheID,
     bytes32_to_ipfs,
     cd,
     generate_md5sum,
@@ -98,8 +98,10 @@ class Storage(BaseClass):
         - cmd:
         sudo su - $requester_id -c "cd $results_folder && firejail --noprofile \
             sbatch -c$job_core_num $results_folder/${job_key}*${index}.sh --mail-type=ALL
+
+        sbatch -c1 *~*.sh
         """
-        for _attempt in range(10):
+        for _attempt in range(5):
             try:
                 cmd = f'sbatch -n {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
                 with cd(self.results_folder):
@@ -112,7 +114,7 @@ class Storage(BaseClass):
                             add_user_to_slurm(env.SLURMUSER)
                             job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
 
-                time.sleep(1)  # wait 1 second for slurm idle core to be updated
+                time.sleep(2)  # wait 2 second for slurm idle core to be updated
             except Exception as e:
                 print_tb(e)
                 slurm.remove_user(self.requester_id)
@@ -176,10 +178,10 @@ class Storage(BaseClass):
                 self.folder_type_dict[name] = folder_type
 
             self.cache_type[_id] = cache_type
-            if cache_type == CacheType.PUBLIC:
+            if cache_type == CacheID.PUBLIC:
                 self.folder_path_to_download[name] = self.public_dir
                 log(f"==> {name} is already cached under the public directory", "blue")
-            elif cache_type == CacheType.PRIVATE:
+            elif cache_type == CacheID.PRIVATE:
                 self.folder_path_to_download[name] = self.private_dir
                 log(f"==> {name} is already cached under the private directory")
 
@@ -188,14 +190,14 @@ class Storage(BaseClass):
         return False
 
     def _is_cached(self, name, _id) -> bool:
-        if self.cache_type[_id] == CacheType.PRIVATE:
+        if self.cache_type[_id] == CacheID.PRIVATE:
             #: checks whether it is already exist under public cache directory
-            _cache_type = CacheType.PUBLIC
+            _cache_type = CacheID.PUBLIC
             cache_folder = f"{self.public_dir}/{name}"
             cached_tar_fn = f"{cache_folder}.tar.gz"
         else:
             #: checks whether it is already exist under the requesting user's private cache directory
-            _cache_type = CacheType.PRIVATE
+            _cache_type = CacheID.PRIVATE
             cache_folder = self.private_dir
             cache_folder = f"{self.private_dir}/{name}"
             cached_tar_fn = f"{cache_folder}.tar.gz"
@@ -360,7 +362,6 @@ class Storage(BaseClass):
         except:
             log(f"==> calculated_data_transfer_in={int(self.data_transfer_in_to_download_mb)} MB")
             data["data_transfer_in"] = int(self.data_transfer_in_to_download_mb)
-            # breakpoint()  # DEBUG
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
 
@@ -389,8 +390,12 @@ class Storage(BaseClass):
         slurm_job_id = self.scontrol_update(job_core_num, sbatch_file_path, time_limit)
         if not slurm_job_id.isdigit():
             log("E: Detects an error on the sbatch, slurm_job_id is not a digit")
+            return False
 
+        time.sleep(3)
         with suppress(Exception):
-            squeue()
+            job_ids = squeue()
+            job_ids.remove("JOBID")
 
+        log(f"#> ongoing_job_ids={job_ids}")
         return True

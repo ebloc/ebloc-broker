@@ -27,7 +27,7 @@ from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.eblocbroker_scripts.utils import Cent
-from broker.errors import HandlerException, JobException, QuietExit, Terminate
+from broker.errors import HandlerException, JobException, QuietExit, QuietTerminate, Terminate
 from broker.imports import nc
 from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
 from broker.libs import eudat, gdrive, slurm
@@ -102,8 +102,7 @@ def tools(bn):
             is_geth_on()
 
         if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-            log(f"warning: provider [g]{env.PROVIDER_ID}[/g]'s orcid id is not authenticated yet")
-            raise QuietExit
+            raise QuietTerminate(f"warning: provider {env.PROVIDER_ID}'s orcid id is not authenticated yet")
 
         slurm.is_on()
         if not is_process_on("mongod"):
@@ -142,14 +141,13 @@ def tools(bn):
                     )
                     raise QuietExit
             except Exception as e:
-                print_tb(e, is_print_exc=False)
-                console.print_exception(word_wrap=True, extra_lines=1)
+                print_tb(e)
                 raise Terminate(e)
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
                 log(f"E: Store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
-                raise QuietExit
+                raise QuietTerminate
 
             if not os.path.isdir(env.IPFS_REPO):
                 raise QuietExit(f"E: {env.IPFS_REPO} does not exist")
@@ -276,8 +274,7 @@ class Driver:
             log({k: v for k, v in self.job_info.items() if v is not None})
         except Exception as e:
             if "Max retries exceeded with url" not in str(e):
-                print_tb(e, is_print_exc=False)
-                console.print_exception(word_wrap=True, extra_lines=1)
+                print_tb(e)
 
             return
 
@@ -310,7 +307,6 @@ class Driver:
                     eudat.login(env.OC_USER, f"{env.LOG_DIR}/.b2drop_client.txt", env.OC_CLIENT)
                 except Exception as e:
                     print_tb(e)
-                    console.print_exception(word_wrap=True)
                     sys.exit(1)
 
             storage_class = B2dropClass(**kwargs)
@@ -339,7 +335,6 @@ class Driver:
             except Exception as e:
                 if "Max retries exceeded with url" not in str(e):
                     print_tb(e)
-                    console.print_exception(word_wrap=True)
 
                 log(str(e))
 
@@ -388,6 +383,16 @@ def run_driver(given_bn):
 
     if not env.SLURMUSER:
         raise Terminate(f"SLURMUSER is not set in {env.LOG_DIR}/cfg.yaml")
+
+    with open("/usr/local/etc/slurm.conf") as origin:
+        for line in origin:
+            if "SlurmUser=" in line:
+                real_slurm_user = line.replace("\n", "").replace("SlurmUser=", "")
+                break
+
+    if env.SLURMUSER != real_slurm_user:
+        msg = f"E: env.SLURMUSER={env.SLURMUSER} is not equal to SlurmUser={real_slurm_user} in slurm's config."
+        raise QuietTerminate(msg)
 
     try:
         deployed_block_number = Ebb.get_deployed_block_number()
@@ -448,7 +453,7 @@ def run_driver(given_bn):
         f"==> account_balance={math.floor(gwei_balance)} [blue]gwei[/blue] ≈ "
         f"{format(cfg.w3.fromWei(wei_amount, 'ether'), '.2f')} [blue]ether"
     )
-    log(f"==> Overall Ebb_token_balance={Cent(balance_temp)._to()} [blue]usd")
+    log(f"==> Ebb_token_balance={Cent(balance_temp)._to()} [blue]usd")
     slurm.pending_jobs_check()
     cfg.IS_FIRST_CYCLE = False
     first_iteration_flag = True
@@ -539,26 +544,26 @@ def _run_driver(given_bn, lock):
             run_driver(given_bn)
         except HandlerException:
             pass
+        except QuietTerminate as e:
+            if str(e):
+                log(str(e))
+
+            terminate("", is_traceback=False, lock=lock)
         except QuietExit as e:
             log(e, is_err=True)
         except zc.lockfile.LockError:
             log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
         except Terminate as e:
-            sleep_dur = 20
-            log(f"#> Sleeping for {sleep_dur} seconds before termination")
-            time.sleep(sleep_dur)
             terminate(str(e), lock)
         except Exception as e:
             if "Max retries exceeded with url" not in str(e):
-                print_tb(e, is_print_exc=False)
-                console.print_exception(word_wrap=True, extra_lines=1)
+                print_tb(e)
 
             if not network.is_connected():
                 reconnect()
                 if not network.is_connected():
                     time.sleep(15)
 
-            breakpoint()  # DEBUG
             console_ruler(character="^", style="#6272a4")
             continue
         finally:
@@ -587,6 +592,9 @@ def main(args):
         log(f"provider_address: [cy]{env.PROVIDER_ID.lower()}", h=False)
         log(f"rootdir: {os.getcwd()}", h=False)
         log(f"logfile: {_log.DRIVER_LOG}", h=False)
+        if env.IS_IPFS_USE:
+            log(f"ipfs_id: {get_ipfs_address()}", h=False)
+
         log(f"Attached to host RPC client listening at '{env.BLOXBERG_HOST}'", h=False)
         print()
         is_driver_on(process_count=1, is_print=False)
@@ -594,7 +602,6 @@ def main(args):
             lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
         except PermissionError:
             print_tb("E: PermissionError is generated for the locked file")
-            console.print_exception(word_wrap=True, extra_lines=1)
             give_rwe_access(env.WHOAMI, "/tmp/run")
             lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
     except Exception as e:

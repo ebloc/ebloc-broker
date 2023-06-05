@@ -5,10 +5,8 @@
 # npm install -g ethlint --force
 # npm install -g --save-dev prettier prettier-plugin-solidity
 
-# macOS
-# $HOME/node_modules/.bin/prettier --write contracts/**/*.sol --config .prettierrce
-
-# Linux
-prettier --write contracts/**/*.sol --config .prettierrce
+prettier --write contracts/**/*.sol --config .prettierrce | grep -v "No parser could be inferred for file"
+echo "prettier... done"
 rm -f contracts/.#*
-solium --config contracts/.soliumrc.json -d contracts/
+solium --config contracts/.soliumrc.json -d contracts/ --no-soliumignore | \
+    grep -v "unexpected token" | grep -v "✖" | head -n -2

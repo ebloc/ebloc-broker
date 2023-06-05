@@ -14,8 +14,18 @@ from broker import cfg, config
 from broker._utils._log import WHERE, br
 from broker._utils.tools import _remove, is_process_on, log, mkdir, print_tb
 from broker.config import env
-from broker.errors import QuietExit
+from broker.errors import Terminate
 from broker.utils import byte_to_mb, popen_communicate, run
+
+
+class JobType:
+    TYPE = {
+        "BEGIN": 0,
+        "BETWEEN": 1,
+        "FINAL": 2,
+        "SINGLE": 3,
+    }
+    inv_code = {value: key for key, value in TYPE.items()}
 
 
 class State:
@@ -58,6 +68,7 @@ class State:
 
 
 state = State()
+JOB = JobType()
 
 
 def enum(*sequential, **named):
@@ -81,7 +92,7 @@ def session_start_msg(bn):
     log(f"* left_of_block_number={bn}")
     log(f"** latest_block_number={cfg.Ebb.get_block_number()}")
     if PROVIDER_ID == cfg.ZERO_ADDRESS:
-        raise QuietExit(f"provider_address={cfg.ZERO_ADDRESS} is invalid")
+        raise Terminate(f"provider_address={cfg.ZERO_ADDRESS} is invalid")
 
 
 def calculate_size(path, _type="MB") -> float:
@@ -228,25 +239,11 @@ def pre_check():
         env.LOG_DIR / "end_code_output",
     ]
     for folder in folders:
-        mkdir(folder)
+        mkdir(env.LOG_DIR / folder)
 
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
-        raise Exception(f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}")
-
-
-# from broker.utils StorageID
-#
-# def check_size_of_file_before_download(file_type, key=None):
-#     """Check size of the file before downloading it."""
-#     # TODO: fill
-#     if int(file_type) in (StorageID.IPFS, StorageID.IPFS_GPG):
-#         if not key:
-#             return False
-#     elif int(file_type) == StorageID.B2DROP:
-#         pass
-#     elif int(file_type) == StorageID.GDRIVE:
-#         pass
-#     return True
+        msg = f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}"
+        raise Terminate(msg)
 
 
 # def preexec_function():

@@ -16,7 +16,7 @@ from broker._utils.tools import _remove, mkdir, read_json
 from broker.config import env
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size, run
-from broker.utils import CacheType, StorageID, cd, generate_md5sum, get_date, print_tb, untar
+from broker.utils import CacheID, StorageID, cd, generate_md5sum, get_date, print_tb, untar
 
 Ebb = cfg.Ebb
 
@@ -82,10 +82,10 @@ class B2dropClass(Storage):
     def cache(self, folder_name, _id) -> bool:
         is_cache_success = self._is_cached(folder_name, _id)
         cache_folder = Path()
-        if self.cache_type[_id] == CacheType.PRIVATE:
+        if self.cache_type[_id] == CacheID.PRIVATE:
             # download into private directory of the user
             cache_folder = self.private_dir
-        elif self.cache_type[_id] == CacheType.PUBLIC:
+        elif self.cache_type[_id] == CacheID.PUBLIC:
             cache_folder = self.public_dir
 
         cached_tar_fn = cache_folder / f"{folder_name}.tar.gz"

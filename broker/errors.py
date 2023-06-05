@@ -19,6 +19,10 @@ class HandlerException(Exception):
     """Generate HandlerException."""
 
 
+class QuietTerminate(Exception):
+    """Terminate the process."""
+
+
 class Terminate(Exception):
     """Terminate the process."""
 

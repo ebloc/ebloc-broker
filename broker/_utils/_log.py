@@ -50,6 +50,7 @@ custom_theme = Theme(
 console = Console(
     theme=custom_theme,
     force_terminal=True,  # https://rich.readthedocs.io/en/latest/console.html#terminal-detection
+    markup=True,
     # force_interactive=False,
 )
 
@@ -105,7 +106,7 @@ class Log:
         """Print string in color format."""
         if text[0:3] in self.inner_bullets:
             if color and text == "==> ":
-                console.print(f"[bold][{color}]{text[0:3]}[{color}][/bold]", end="")
+                console.print(f"[{color}]{text[0:3]}[{color}]", end="")
             else:
                 console.print(f"[bb]{text[0:3]}[/bb]", end="")
 
@@ -175,9 +176,12 @@ def br(text, color="white"):
         return f"[bold][[/bold]  {text}  [bold]][/bold]"
 
 
-def ok():
+def ok(no_space=False):
     """Done."""
-    return " [[g]ok[/g]]"
+    if no_space:
+        return "[[g]ok[/g]]"
+    else:
+        return " [[g]ok[/g]]"
 
 
 def _console_clear():
@@ -262,7 +266,7 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
     else:
         text_to_write = ""
         if is_bullet:
-            text_to_write = f"[bold][{_color}]{is_r}{_text[:_len]}[/{_color}][/bold]{_text[_len:]}"
+            text_to_write = f"[{_color}]{is_r}{_text[:_len]}[/{_color}]{_text[_len:]}"
         else:
             if _color:
                 text_to_write = f"[{_color}]{_text}[/{_color}]"

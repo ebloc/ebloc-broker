@@ -12,7 +12,7 @@ from broker.config import env
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size, echo_grep_awk, log, run, subprocess_call
 from broker.libs import _git, gdrive
-from broker.utils import CacheType, StorageID, byte_to_mb, generate_md5sum, get_date, popen_communicate, print_tb, untar
+from broker.utils import CacheID, StorageID, byte_to_mb, generate_md5sum, get_date, popen_communicate, print_tb, untar
 
 
 class GdriveClass(Storage):
@@ -26,7 +26,7 @@ class GdriveClass(Storage):
             is_continue = True
 
         if is_continue and not self.job_infos[0]["is_cached"][code_hash] and not output:
-            log("## Downloaded as temporary data file", "bold yellow")
+            log("## Downloaded as temporary data file", "yellow")
             self.folder_path_to_download[code_hash] = self.results_folder_prev
         else:
             self.folder_path_to_download[code_hash] = cache_folder
@@ -79,9 +79,9 @@ class GdriveClass(Storage):
         self.check_downloaded_folder_hash(cache_folder / name, code_hash)
 
     def assign_folder_path_to_download(self, _id, code_hash, path):
-        if self.cache_type[_id] == CacheType.PUBLIC:
+        if self.cache_type[_id] == CacheID.PUBLIC:
             self.folder_path_to_download[code_hash] = path
-        elif self.cache_type[_id] == CacheType.PRIVATE:
+        elif self.cache_type[_id] == CacheID.PRIVATE:
             self.folder_path_to_download[code_hash] = self.private_dir
 
     def cache(self, _id, name, code_hash, key, is_job_key) -> None:
@@ -90,7 +90,7 @@ class GdriveClass(Storage):
                 self.folder_type_dict[code_hash] = "gzip"
 
         self.check_already_cached(code_hash)
-        if self.cache_type[_id] == CacheType.PRIVATE:
+        if self.cache_type[_id] == CacheID.PRIVATE:
             # first checking does is already exist under public cache directory
             cache_folder = self.private_dir
             cached_tar_fn = cache_folder / name
@@ -105,7 +105,7 @@ class GdriveClass(Storage):
                     if output == code_hash:
                         # checking is already downloaded folder's hash matches with the given hash
                         log(f"==> {name} is already cached within the private cache directory")
-                        self.cache_type[_id] = CacheType.PRIVATE
+                        self.cache_type[_id] = CacheID.PRIVATE
                         return
                 else:
                     self.download_folder(name, key, code_hash, _id, cache_folder)
@@ -123,11 +123,11 @@ class GdriveClass(Storage):
                 if output == code_hash:
                     # checking is already downloaded folder's hash matches with the given hash
                     log(f"==> {name} is already cached within the private cache directory")
-                    self.cache_type[_id] = CacheType.PRIVATE
+                    self.cache_type[_id] = CacheID.PRIVATE
                     return
                 else:
                     self.download_folder(name, key, code_hash, _id, cache_folder)
-        elif self.cache_type[_id] == CacheType.PUBLIC:
+        elif self.cache_type[_id] == CacheID.PUBLIC:
             cache_folder = self.public_dir
             cached_tar_fn = cache_folder / name
             if self.folder_type_dict[code_hash] == "gzip":

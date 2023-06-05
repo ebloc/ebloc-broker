@@ -42,6 +42,7 @@ class Base:
         get_job_code_hashes,
         get_job_info,
         get_job_info_print,
+        get_job_state,
         set_job_received_bn,
         update_job_cores,
     )

@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from sys import platform
 from web3.logs import DISCARD
 
 from broker import cfg
@@ -51,8 +52,14 @@ def pre_check(job: Job, requester):
 
     job.check_account_status(requester)
     is_bin_installed("ipfs")
-    if not is_dpkg_installed("pigz"):
-        raise Exception("E: Install [g]pigz[/g].\nsudo apt install -y pigz")
+    if platform == "linux" or platform == "linux2":
+        if not is_dpkg_installed("pigz"):
+            raise Exception("Install pigz.\nsudo apt install -y pigz")
+    elif platform == "darwin":
+        try:
+            is_bin_installed("pigz")
+        except Exception:
+            raise Exception("Install pigz.\nbrew install pigz")
 
     if not os.path.isfile(env.GPG_PASS_FILE):
         log(f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption", is_wrap=True)
@@ -95,8 +102,9 @@ def _submit(provider_addr, job, requester, targets, required_confs):
             processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             try:
                 if processed_logs:
-                    log("[y]job_info[/y]=", "bold", end="")
-                    log(vars(processed_logs[0].args))
+                    job.info = vars(processed_logs[0].args)
+                    log("[y]job_info=[/y]", end="")
+                    log(job.info)
 
                 for target in targets:
                     if ".tar.gz.gpg" in str(target):
@@ -104,6 +112,7 @@ def _submit(provider_addr, job, requester, targets, required_confs):
             except IndexError as e:
                 raise QuietExit(f"E: tx={tx_hash} is reverted") from e
 
+    job.tx_hash = tx_hash
     return tx_hash
 
 
@@ -144,7 +153,12 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                 job.code_hashes.append(code_hash)
                 job.code_hashes_str.append(code_hash.decode("utf-8"))
 
-    provider_addr = job.search_best_provider(requester)
+    print()
+    if job.search_cheapest_provider:
+        provider_addr = job.search_best_provider(requester)
+    else:
+        provider_addr = job.search_best_provider(requester, is_force=True)
+
     if is_ipfs_gpg:  # re-organize for the gpg file
         job.code_hashes = []
         job.code_hashes_str = []
@@ -185,8 +199,9 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
 def main():
     job = Job()
-    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_example.yaml"
+    # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_example.yaml"
     # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml"
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_without_data.yaml"
     job.set_config(yaml_fn)
     submit_ipfs(job)
 

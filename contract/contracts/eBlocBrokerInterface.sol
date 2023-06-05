@@ -41,7 +41,7 @@ interface eBlocBrokerInterface {
         uint8[] cacheType,
         uint16[] core,
         uint16[] runTime,
-        uint256 received,  // equal to estimated cost
+        uint256 received, // equal to estimated cost
         uint256 refunded
     );
 
@@ -59,7 +59,7 @@ interface eBlocBrokerInterface {
     // Logs source code of the registed data files
     event LogRegisterData(address indexed provider, bytes32 registeredDataHash);
     event LogRegisteredDataRequestToUse(address indexed provider, bytes32 registeredDataHash);
-    event LogDataStorageRequest(address indexed provider, address owner, bytes32 requestedHash, uint paid);
+    event LogDataStorageRequest(address indexed provider, address owner, bytes32 requestedHash, uint256 paid);
     event LogJobDescription(address indexed provider, address requester, string jobKey, string jobDesc);
     /**
        @notice

@@ -40,7 +40,8 @@ def main():
     if len(sys.argv) == 2:
         port = int(sys.argv[1])
 
-    if not is_ganache_on(8547):
+    port = 8547
+    if not is_ganache_on(port):
         run(port)
 
 
