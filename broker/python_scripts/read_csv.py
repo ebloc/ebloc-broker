@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import csv
+
+from broker import cfg
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
-from broker import cfg
 
 Ebb = cfg.Ebb
 
