@@ -4,12 +4,21 @@ import csv
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
+from broker import cfg
+
+Ebb = cfg.Ebb
 
 
 def main():
     submitJob_gas_used = {}
     submitJob_gas_used["cppr"] = 0
     submitJob_gas_used["nas"] = 0
+
+    elapsed_time = {}
+    elapsed_time_count = {}
+    #
+    completion_time = {}
+    completion_time_count = {}
     #
     processPayment_gas_used = {}
     processPayment_gas_used["cppr"] = 0
@@ -25,8 +34,8 @@ def main():
                 for i, item in enumerate(line):
                     print(f"{i} => {item}")
             else:
-                key = line[1]
-                workload = line[3]
+                key = line[2]
+                workload = line[4]
                 _type = None
                 if key[:2] == "Qm":
                     _type = "ipfs"
@@ -36,14 +45,30 @@ def main():
                     _type = "gdrive"
 
                 k = f"{workload}_{_type}"
+                k_elapsed = f"{line[0]}_{workload}"
+                if k_elapsed not in elapsed_time:
+                    elapsed_time[k_elapsed] = 0
+                    elapsed_time_count[k_elapsed] = 0
+
+                if k_elapsed not in completion_time:
+                    completion_time[k_elapsed] = 0
+
                 if k not in wait_time:
                     wait_time[k] = 0
 
-                if line[4] == "COMPLETED":
-                    log(f"({idx},{line[17]})")
-                    wait_time[k] += int(line[9])
-                    submitJob_gas_used[workload] += int(line[len(line) - 3])
-                    processPayment_gas_used[workload] += int(line[len(line) - 1])
+                if line[5] == "COMPLETED":
+                    # log(f"({idx},{line[18]})")
+                    elapsed_time[k_elapsed] += int(line[11])
+                    elapsed_time_count[k_elapsed] += 1
+                    #
+                    a = Ebb.get_block(int(line[7]))["timestamp"]
+                    b = Ebb.get_block(int(line[len(line) - 1]))["timestamp"]
+
+                    completion_time[k_elapsed] += float(format(float((b - a) / 60), ".2f"))
+
+                    wait_time[k] += int(line[10])
+                    submitJob_gas_used[workload] += int(line[len(line) - 4])
+                    processPayment_gas_used[workload] += int(line[len(line) - 2])
                     if workload == "nas":
                         count_nas += 1
                     else:
@@ -61,6 +86,15 @@ def main():
     log(processPayment_gas_used)
     log(count_nas)
     log(count_cppr)
+    ##########
+    for k, v in elapsed_time.items():
+        if k != "_workload":
+            print(k, v / elapsed_time_count[k])
+
+    print("~~~~~~~~~~~~~~~~~~")
+    for k, v in completion_time.items():
+        if k != "_workload":
+            print(k, v / elapsed_time_count[k])
 
 
 if __name__ == "__main__":
