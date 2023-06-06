@@ -11,7 +11,7 @@ from pymongo import MongoClient
 from typing import Union
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
-
+from brownie import accounts, history
 from broker import cfg
 from broker._utils._log import WHERE, ok
 from broker._utils.tools import exit_after, log, print_tb, without_keys
@@ -106,8 +106,6 @@ class Contract(Base):
 
     def brownie_load_account(self, fn="", password="alper"):
         """Load accounts from Brownie for Bloxberg."""
-        from brownie import accounts
-
         cfg = Yaml(env.LOG_DIR / ".bloxberg_account.yaml")
         if not fn:
             fn = cfg["config"]["name"]
@@ -190,6 +188,9 @@ class Contract(Base):
         """Return transaction id."""
         if env.IS_BLOXBERG:
             return tx.txid
+
+        if not tx:
+            raise Exception("E: Tx is None")
 
         return tx.hex()
 
@@ -346,6 +347,8 @@ class Contract(Base):
         self.eBlocBroker.functions.submitJob(*args).transact(self.ops)
 
         May give "warning: timeout took too long" in exit_after() functions.
+
+        __ https://blockexplorer.bloxberg.org
         """
         method = None
         try:
@@ -371,6 +374,11 @@ class Contract(Base):
                 "required_confs": self.required_confs,
             }
             try:
+                if idx > 0:
+                    # __ https://eth-brownie.readthedocs.io/en/stable/core-chain.html#core-chain-history
+                    log(f"Attempt={idx}...")
+                    log(history.filter(sender=self._from))
+
                 return self.timeout(method, *args)
             except ValueError as e:
                 try:
@@ -383,15 +391,24 @@ class Contract(Base):
                     raise QuietExit from e
 
                 if "There is another transaction with same nonce in the queue" in str(e):
-                    log(f"warning: Tx: {e}")
-                    log("#> sleeping for 15 seconds, will try again")
+                    log(f"warning: Tx: {e}", is_code=True)
+                    log("#> sleeping for 15 seconds, will try again, KeyboardInterrupt here if necessary...")
+                    log(f"sleeping -- gas_price={self.gas_price}...", end="")
                     time.sleep(15)
+                    log("done")
+
                 else:
                     log(f"E: Tx: {e}")
 
-                if "Try increasing the gas price" in str(e):
-                    self.gas_price *= 1.13
+                if ("Try increasing the gas price" in str(e)) or (
+                    "Transaction with the same hash was already imported." in str(e)
+                ):
+                    if self.gas_price < 2:
+                        self.gas_price *= 1.13
+
                     continue
+                else:
+                    self.gas_price = GAS_PRICE
 
                 if "Execution reverted" in str(e) or "Insufficient funds" in str(e):
                     print_tb(e)
@@ -411,14 +428,18 @@ class Contract(Base):
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
-                log("warning: Timeout Awaiting Transaction in the mempool")
-                self.gas_price *= 1.13
+                log(f"warning: Timeout Awaiting Transaction in the mempool -- gas_price={self.gas_price}")
+                if self.gas_price < 2:
+                    self.gas_price *= 1.13
+
                 continue
             except Exception as e:
                 log(f"Exception: {e}")
                 # brownie.exceptions.TransactionError: Tx dropped without known replacement
                 if "Tx dropped without known replacement" in str(e):
-                    self.gas_price *= 1.13
+                    if self.gas_price < 2:
+                        self.gas_price *= 1.13
+
                     log("Sleep 15 seconds, will try again...")
                     time.sleep(15)
                     continue
@@ -515,6 +536,10 @@ class Contract(Base):
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1
+        tx = self.timeout_wrapper("updateProviderInfo", *args)
+        if not tx:
+            raise Exception("E: Tx=updateProviderInfo returns None")
+
         return self.timeout_wrapper("updateProviderInfo", *args)
 
     def register_provider(self, *args) -> "TransactionReceipt":
