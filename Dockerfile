@@ -20,6 +20,7 @@ ENV PYTHONUNBUFFERED 1
 ENV PATH="/root/.pyenv/shims:/root/.pyenv/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin:$PATH"
 ARG DEBIAN_FRONTEND=noninteractive
 ARG DEBCONF_NOWARNINGS="yes"
+EXPOSE 6817 6818 6819 6820 3306
 
 COPY --from=0 /go /go
 COPY --from=0 /usr/local/bin /usr/local/bin
@@ -30,8 +31,10 @@ ENV GOPATH=/go
 ENV GOROOT=/usr/local/go
 ENV PATH /go/bin:/usr/local/go/bin:$PATH
 
-# Add Tini
-ADD https://github.com/krallin/tini/releases/download/v0.19.0/tini /tini
+## Add Tini
+## ========
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 
 # Install mongodb
@@ -47,31 +50,44 @@ RUN curl -fsSL https://www.mongodb.org/static/pgp/server-5.0.asc | tee /etc/apt/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --assume-yes apt-utils \
  && apt-get install -y --no-install-recommends --assume-yes \
-        build-essential \
-        aptitude \
-        libdbus-1-dev \
-        libdbus-glib-1-dev \
-        libgirepository1.0-dev \
-        libssl-dev \
-        gcc \
-        members \
-        pv \
-        rsync \
-        pigz \
-        zlib1g-dev \
-        make \
-        npm \
-        nodejs \
-        python3-venv \
-        sudo \
-        netcat \
-        supervisor \
-        nano \
-        less \
-        software-properties-common \
-        unzip \
-        python3-dev && \
-    apt-get clean
+    acl \
+    aptitude \
+    build-essential \
+    dbus \
+    libdbus-1-dev \
+    libdbus-glib-1-dev \
+    libgirepository1.0-dev \
+    libssl-dev \
+    members \
+    pv \
+    rsync \
+    pigz \
+    zlib1g-dev \
+    make \
+    default-mysql-server \
+    npm \
+    nodejs \
+    python3-venv \
+    sudo \
+    netcat \
+    ## required packages to install for Slurm
+    gcc \
+    munge \
+    libmunge-dev \
+    libboost-all-dev \
+    libmunge2 \
+    default-mysql-client \
+    default-mysql-server \
+    software-properties-common \
+    default-libmysqlclient-dev \
+    mailutils \
+    unzip \
+    libmariadbd-dev \
+    mariadb-server \
+    supervisor \
+    nano \
+    less \
+ && apt-get clean
 
 RUN npm config set fund false \
  && npm config set update-notifier false \
@@ -82,10 +98,39 @@ RUN npm config set fund false \
  && npm install -g ganache
 
 RUN python3 -m venv /opt/venv
-#; enable venv
+#: enable venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install ebloc-broker
+## install slurm
+RUN git config --global advice.detachedHead false
+WORKDIR /workspace
+ENV SLURM_VERSION slurm-19-05-8-1
+RUN git clone -b ${SLURM_VERSION} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
+ && cd slurm \
+ && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 \
+ && make \
+ && make -j 4 install \
+ && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
+ && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
+ && install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
+ && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
+ && cd .. \
+ && rm -rf slurm \
+ && slurmctld -V \
+ && groupadd -r slurm  \
+ && useradd -r -g slurm slurm \
+ && mkdir -p /etc/sysconfig/slurm \
+     /var/spool/slurmd \
+     /var/spool/slurmctld \
+     /var/log/slurm \
+     /var/run/slurm \
+ && chown -R slurm:slurm /var/spool/slurmd \
+    /var/spool/slurmctld \
+    /var/log/slurm \
+    /var/run/slurm
+
+## ebloc-broker
+# -=-=-=-=-=-=-
 WORKDIR /workspace
 RUN git clone https://github.com/ebloc/ebloc-broker.git
 WORKDIR /workspace/ebloc-broker
@@ -94,10 +139,11 @@ RUN git checkout dev >/dev/null 2>&1 \
  && git fetch --all --quiet >/dev/null 2>&1 \
  && git pull --all -r -v >/dev/null 2>&1 \
  && pip install --upgrade pip \
- && pip install -U pip wheel setuptools \
+ && pip install -U pip wheel setuptools  dbus-python \
  && pip install -e . --use-deprecated=legacy-resolver \
  && mkdir -p ~/.cache/black/$(pip freeze | grep black | sed 's|black==||g') \
  && eblocbroker init --base \
+ && eblocbroker >/dev/null 2>&1 \
  && ./broker/_utils/yaml.py >/dev/null 2>&1
 
 WORKDIR /workspace/ebloc-broker/empty_folder
@@ -108,77 +154,31 @@ RUN brownie init \
   && cd /workspace//ebloc-broker/contract \
   && brownie compile
 
-## finally
-RUN ipfs version \
- && ipfs init --profile=lowpower \
- && ipfs config Reprovider.Strategy roots \
- && ipfs config Routing.Type none \
- # && ganache --version \
- && gdrive version \
- && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
- && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc \
- && du -sh / 2>&1 | grep -v "cannot"
-
-## slurm
-RUN apt-get install -y --no-install-recommends --assume-yes \
-        munge \
-        libmunge-dev \
-        libboost-all-dev \
-        libmunge2 \
-        default-mysql-server \
-        default-mysql-client \
-        default-libmysqlclient-dev \
-        mariadb-server \
-        mailutils \
-        libmariadbd-dev && \
-    apt-get clean
-
-# Compile, build and install Slurm from git source
-ARG SLURM_TAG=slurm-23-02-2-1
-RUN git config --global advice.detachedHead false
-WORKDIR /workspace
-RUN git clone -b ${SLURM_TAG} --single-branch --depth 1 https://github.com/SchedMD/slurm.git \
- && cd slurm \
- && ./configure --prefix=/usr --sysconfdir=/etc/slurm --with-mysql_config=/usr/bin --libdir=/usr/lib64 --with-hdf5=no --enable-debug --enable-multiple-slurmd \
- && make \
- && make -j 4 install \
- && install -D -m644 etc/cgroup.conf.example /etc/slurm/cgroup.conf.example \
- && install -D -m644 etc/slurm.conf.example /etc/slurm/slurm.conf.example \
- && install -D -m600 etc/slurmdbd.conf.example /etc/slurm/slurmdbd.conf.example \
- && install -D -m644 contribs/slurm_completion_help/slurm_completion.sh /etc/profile.d/slurm_completion.sh \
- && cd .. \
- && rm -rf slurm \
- && slurmctld -V \
- && groupadd -r slurm \
- && useradd -r -g slurm slurm \
- && mkdir -p /etc/sysconfig/slurm \
-    /var/spool/slurmd \
-    /var/spool/slurmctld \
-    /var/log/slurm \
-    /var/run/slurm \
- && chown -R slurm:slurm /var/spool/slurmd \
-    /var/spool/slurmctld \
-    /var/log/slurm \
-    /var/run/slurm
-
-VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
-COPY --chown=slurm docker/provider/create-munge-key /sbin/
-# RUN /sbin/create-munge-key \
-#  && chown munge:munge -R /run/munge
-
+# orginize slurm files
+RUN chown root:munge -R /etc/munge /etc/munge/munge.key /var/lib/munge  # works but root is alright?
 WORKDIR /var/log/slurm
 WORKDIR /var/run/supervisor
 COPY docker/provider/supervisord.conf /etc/
 
 # mark externally mounted volumes
+VOLUME ["/var/lib/mysql", "/var/lib/slurmd", "/var/spool/slurm", "/var/log/slurm", "/run/munge"]
 COPY --chown=slurm docker/provider/slurm.conf /etc/slurm/slurm.conf
 COPY --chown=slurm docker/provider/slurmdbd.conf /etc/slurm/slurmdbd.conf
 RUN chmod 0600 /etc/slurm/slurmdbd.conf
 
-EXPOSE 3306 6001 6002 6817 6818 6819 6820
+## final operations
+RUN echo "0f8f4d5" \
+ && ipfs version \
+ && ipfs init --profile=lowpower \
+ && ipfs config Reprovider.Strategy roots \
+ && ipfs config Routing.Type none \
+ && /workspace/ebloc-broker/broker/bash_scripts/ubuntu_clean.sh >/dev/null 2>&1 \
+ # && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
+ # && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc \
+ && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc
 
-COPY docker/provider/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-# define command at startup
-ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
 WORKDIR /workspace/ebloc-broker/broker
 CMD ["/bin/bash"]
+
+COPY docker/provider/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]

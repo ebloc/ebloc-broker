@@ -651,3 +651,8 @@ def compress_folder(folder_path, is_exclude_git=False):
 def dump_dict_to_file(fn, job_keys) -> None:
     with open(fn, "w") as f:
         json.dump(job_keys, f)
+
+
+def is_docker():
+    path = "/proc/self/cgroup"
+    return os.path.exists("/.dockerenv") or os.path.isfile(path) and any("docker" in line for line in open(path))

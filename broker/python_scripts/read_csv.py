@@ -17,10 +17,8 @@ def main():
 
     elapsed_time = {}
     elapsed_time_count = {}
-    #
     completion_time = {}
-    completion_time_count = {}
-    #
+
     processPayment_gas_used = {}
     processPayment_gas_used["cppr"] = 0
     processPayment_gas_used["nas"] = 0

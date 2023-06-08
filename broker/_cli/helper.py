@@ -13,7 +13,7 @@ class Helper:
     def __init__(self):
         """Initialize helper.
 
-        ./_cli/__main__.py -h
+        ./broker/_cli/__main__.py -h
 
         activate-global-python-argcomplete --user
         eval "$(register-python-argcomplete ~/venv/bin/eblocbroker)"
@@ -36,6 +36,7 @@ class Helper:
 
         self.workflow()
 
+        self.get_transaction_receipt()
         # self.bloxberg()
         self.daemon()
         self.register()
@@ -114,6 +115,10 @@ class Helper:
         # FIXME: missing functionality
         obj = self.subparsers.add_parser("auth_orc_id", help="Authenticate orcid")
         obj.add_argument("eth_address", type=str, help="Ethereum address of the user")
+
+    def get_transaction_receipt(self):
+        obj = self.subparsers.add_parser("tx_receipt", help="Return Transaction Receipt")
+        obj.add_argument("transaction_hash", type=str, help="Transaction hash")
 
     def submit(self):
         obj = self.subparsers.add_parser("submit", help="Submit job")

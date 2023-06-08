@@ -30,6 +30,8 @@ TEST_PROVIDERS = None
 TX_LOG_VERBOSE = False
 NETWORK_ID = "bloxberg"
 
+IS_IN_DOCKER = None
+
 
 class EBB:
     def __init__(self):

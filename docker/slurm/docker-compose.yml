@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  slurm_slurm:
+    build: .
+    hostname: slurmctl
+    stdin_open: true
+    tty: true
+    volumes:
+      - ~/docker/volumes/lib:/var/lib/slurmd
+      - ~/docker/volumes/spool:/var/spool/slurm
+      - ~/docker/volumes/log:/var/log/slurm
+      - ~/docker/volumes/db:/var/lib/mysql

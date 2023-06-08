@@ -1,9 +1,0 @@
-version: '3'
-
-services:
-  requester:
-    build: .
-    stdin_open: true
-    tty: true
-    ports:
-        - "4101:4001"

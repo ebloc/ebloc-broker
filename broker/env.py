@@ -9,6 +9,11 @@ from broker._utils.yaml import Yaml
 from broker.errors import QuietExit
 
 
+def is_docker():
+    path = "/proc/self/cgroup"
+    return os.path.exists("/.dockerenv") or os.path.isfile(path) and any("docker" in line for line in open(path))
+
+
 class ENV_BASE:
     def __init__(self) -> None:
         self.HOME: Path = Path.home()
@@ -30,6 +35,9 @@ class ENV_BASE:
         elif platform == "win32":
             print("E: does not work in windows")
             sys.exit(1)
+
+        if is_docker():
+            self._HOME = Path("/") / "root"
 
         self.EBLOCPATH = Path(self.cfg["ebloc_path"])
         self.CONTRACT_PROJECT_PATH = self.EBLOCPATH / "contract"

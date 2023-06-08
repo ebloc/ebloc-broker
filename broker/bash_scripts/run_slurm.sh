@@ -5,14 +5,15 @@ alias sudo='nocorrect sudo'
 USER=$(whoami)
 # VERBOSE=true
 run_worker_slurmd_nodes () {
-    echo "#> running worker slurmd nodes"
+    echo "==> running worker slurmd nodes"
     ## https://slurm.schedmd.com/faq.html#multi_slurmd
     #             A I O T
     IFS=/ read -r _ _ _ T <<<$(command sinfo -h -o%C)
     for id in $( seq 1 $T ); do
-        echo "==> sudo slurmd -N "$(hostname -s)$id
-        sudo slurmd -N $(hostname -s)$id &
+        echo "$> sudo slurmd -N "$(hostname -s)$id
+        sudo slurmd -N $(hostname -s)$id
     done
+    echo "done"
     # When starting the slurmd daemon, include the NodeName of the node that it is
     # supposed to serve on the execute line (e.g. "slurmd -N hostname").
     # sudo /usr/local/sbin/slurmd -N $(hostname -s)1
@@ -65,7 +66,7 @@ sudo /usr/local/sbin/slurmd
 
 # sudo /usr/local/sbin/slurmd -N $(hostname -s)  # emulate mode
 sudo chown mysql:mysql -R /var/lib/mysql
-sudo slurmdbd &
+sudo slurmdbd
 sleep 2.0
 sudo -u $USER mkdir -p /tmp/slurmstate
 sudo chown -R $USER /tmp/slurmstate
@@ -74,32 +75,29 @@ sudo -u $USER /usr/local/sbin/slurmctld -ic
 sleep 1
 run_worker_slurmd_nodes
 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
-scontrol show node | sed "s/^[ \t]*//" | sed "s/^[ \t]*//"
+scontrol show node | grep NodeNam # | tr -d '\n'
+echo ""
 
 dir=$(/usr/bin/pwd)
 cd /home/"$(logname)"/ebloc-broker/broker/_slurm/
-sbatch slurm_test.sh && sleep 0.25
-sbatch slurm_test.sh && sleep 0.25
-sbatch slurm_test.sh && sleep 0.25
-sbatch slurm_test.sh && sleep 0.25
+for i in $(seq 1 4); do
+   sbatch slurm_test.sh && sleep 0.25
+done
+printf "\n"
+
 cd $dir
-
-echo ""
 /usr/local/bin/sinfo -N -l | sed "s/^[ \t]*//"
-
-echo ""
 # command ps auxww | grep -v -e grep -e emacsclient -e "/usr/bin/ps" -e "run_slurm.sh" | \
 #     grep -v unattended-upgrade-shutdown | \
 #     grep --color=auto --exclude-dir={.bzr,CVS,.git,.hg,.svn,.idea,.tox,.mypy_cache} -E "slurm";
-
+sinfo | grep idle >> /tmp/run_slurm.out
 echo ""
-sinfo | grep idle
-squeue
 echo "Sleeping for 5 seconds..."
 sleep 5
-squeue
+squeue | sed "s/^[ \t]*//"
 
-echo "done"
+# squeue
+
 #: verbose
 # sudo /usr/local/sbin/slurmctld -cDvvvvvv
 
