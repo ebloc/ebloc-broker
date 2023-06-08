@@ -1,5 +1,6 @@
+#+CAPTION: Weight space
 #+ATTR_HTML: :alt neural network :title Neural network representation :align right
-#+ATTR_HTML: :width 33% :height 33%
+#+ATTR_HTML: :width 25% :height 25%
 * [[https://github.com/ebloc/ebloc-broker/raw/dev/imgs/logo.png]] ebloc-broker
 
 =eBlocBroker= is a smart contract as an autonomous volunteer computing and sharing data resource broker based on blockchain for e-Science.

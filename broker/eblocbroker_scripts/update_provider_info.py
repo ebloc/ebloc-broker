@@ -10,6 +10,7 @@ from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.errors import QuietExit
 
 ipfs = cfg.ipfs
+cfg.NETWORK_ID = "bloxberg"
 
 
 def is_provider_info_match(self, gmail, ipfs_address, gpg_fingerprint, f_id):
@@ -64,8 +65,16 @@ if __name__ == "__main__":
     log(f"## address=[m]{env.PROVIDER_ID}", h=False)
     log(f"## gmail=[m]{env.GMAIL}", h=False)
     log(f"## gpg_fingerprint={gpg_fingerprint}")
-    log(f"## ipfs_address=[m]{ipfs_address}")
-    log(f"## fid=[m]{f_id}")
+    if ipfs_address:
+        log(f"## ipfs_address=[m]{ipfs_address}")
+    else:
+        log('## ipfs_address=""')
+
+    if f_id:
+        log(f"## fid=[m]{f_id}")
+    else:
+        log('## fid=""')
+
     try:
         cfg.ipfs.is_gpg_published(gpg_fingerprint)
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, f_id, ipfs_address)

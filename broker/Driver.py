@@ -38,6 +38,7 @@ from broker.utils import (
     check_ubuntu_packages,
     eth_address_to_md5,
     get_date,
+    is_docker,
     is_driver_on,
     is_geth_on,
     is_internet_on,
@@ -146,11 +147,12 @@ def tools(bn):
 
         if env.IS_IPFS_USE:
             if not os.path.isfile(env.GPG_PASS_FILE):
-                log(f"E: Store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs")
-                raise QuietTerminate
+                raise QuietTerminate(
+                    f"E: Store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs"
+                )
 
             if not os.path.isdir(env.IPFS_REPO):
-                raise QuietExit(f"E: {env.IPFS_REPO} does not exist")
+                raise QuietExit(f"E: {env.IPFS_REPO} repo does not exist")
 
             start_ipfs_daemon()
 
@@ -384,11 +386,19 @@ def run_driver(given_bn):
     if not env.SLURMUSER:
         raise Terminate(f"SLURMUSER is not set in {env.LOG_DIR}/cfg.yaml")
 
-    with open("/usr/local/etc/slurm.conf") as origin:
-        for line in origin:
-            if "SlurmUser=" in line:
-                real_slurm_user = line.replace("\n", "").replace("SlurmUser=", "")
-                break
+    try:
+        if is_docker():
+            slurm_conf_fn = "/etc/slurm/slurm.conf"
+        else:
+            slurm_conf_fn = "/usr/local/etc/slurm.conf"
+
+        with open(slurm_conf_fn) as origin:
+            for line in origin:
+                if "SlurmUser=" in line:
+                    real_slurm_user = line.replace("\n", "").replace("SlurmUser=", "")
+                    break
+    except Exception as e:
+        raise QuietTerminate(e)
 
     if env.SLURMUSER != real_slurm_user:
         msg = f"E: env.SLURMUSER={env.SLURMUSER} is not equal to SlurmUser={real_slurm_user} in slurm's config."
@@ -417,7 +427,12 @@ def run_driver(given_bn):
             else:
                 raise Terminate(f"deployed_block_number={deployed_block_number} is invalid")
 
-    tools(bn_temp)
+    try:
+        tools(bn_temp)
+    except Exception as e:
+        print_tb(e)
+        raise QuietTerminate()
+
     try:
         Ebb.is_contract_exists()
     except:
@@ -568,7 +583,7 @@ def _run_driver(given_bn, lock):
             continue
         finally:
             with suppress(Exception):
-                if lock:
+                if not is_docker and lock:
                     lock.close()
 
 
@@ -592,16 +607,22 @@ def main(args):
         log(f"provider_address: [cy]{env.PROVIDER_ID.lower()}", h=False)
         log(f"rootdir: {os.getcwd()}", h=False)
         log(f"logfile: {_log.DRIVER_LOG}", h=False)
-        if env.IS_IPFS_USE:
-            log(f"ipfs_id: {get_ipfs_address()}", h=False)
+        try:
+            if env.IS_IPFS_USE:
+                log(f"ipfs_id: {get_ipfs_address()}", h=False)
+        except Exception as e:
+            raise QuietTerminate(e)
 
         log(f"Attached to host RPC client listening at '{env.BLOXBERG_HOST}'", h=False)
         print()
         is_driver_on(process_count=1, is_print=False)
-        try:
-            lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
-        except PermissionError:
-            print_tb("E: PermissionError is generated for the locked file")
+        lock = None
+        if not is_docker:
+            try:
+                lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+            except PermissionError:
+                print_tb("E: PermissionError is generated for the locked file")
+
             give_rwe_access(env.WHOAMI, "/tmp/run")
             lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
     except Exception as e:

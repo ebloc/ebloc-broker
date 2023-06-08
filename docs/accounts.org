@@ -1,0 +1,19 @@
+* Create new account
+
+#+begin_src bash
+cd ~/ebloc-broker/docker/config
+geth account new
+#+end_src
+
+Link: [[https://geth.ethereum.org/docs/fundamentals/account-management]]
+
+Example output:
+
+#+begin_src bash
+INFO [06-08|18:36:15.176] Your new key was generated               address=0x7d1477746A28f6571A9f80aDcd80cDb85e19fc75
+WARN [06-08|18:36:15.176] Please backup your key file!             path=/home/alper/.ethereum/keystore/UTC--2023-06-08T18-36-11.289938189Z--7d1477746a28f6571a9f80adcd80cdb85e19fc75
+WARN [06-08|18:36:15.176] Please remember your password!
+Generated account 0x7d1477746A28f6571A9f80aDcd80cDb85e19fc75
+#+end_src
+
+Request =berg= from [[https://faucet.bloxberg.org]] for the corresponding account.

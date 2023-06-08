@@ -122,6 +122,12 @@ def providers():
         print_tb(e)
 
 
+def tx_receipt():
+    from broker.eblocbroker_scripts.get_transaction_receipt import get_transaction_receipt
+
+    get_transaction_receipt(_args.transaction_hash)
+
+
 def register_provider():
     try:
         cfg.Ebb.register_provider(_args.path)

@@ -9,7 +9,7 @@ AccessControl==6.0
 acquisition==4.6
     # via
     #   accesscontrol
-aiodns==2.0.0
+aiodns==3.0.0
 aiohttp==3.8.3
     # via
     #   eth-brownie
@@ -884,13 +884,13 @@ sortedcontainers==2.4.0
 soupsieve==2.2.1
     # via
     #   beautifulsoup4
-Sphinx==7.0.0
+Sphinx==7.0.1
     # via
     #   sphinx-autobuild
     #   sphinx-rtd-theme
 sphinx-autobuild==2021.3.14
 sphinx-rtd-dark-mode==1.2.4
-sphinx-rtd-theme==1.2.0
+sphinx-rtd-theme==1.2.2
     # via
     #   sphinx-rtd-dark-mode
 sphinxcontrib-applehelp==1.0.2

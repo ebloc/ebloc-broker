@@ -13,6 +13,7 @@ services:
       - ~/docker/volumes/spool:/var/spool/slurm
       - ~/docker/volumes/log:/var/log/slurm
       - ~/docker/volumes/db:/var/lib/mysql
+      - ./docker/config:/workspace/config
 
   # requester:
   #   build:
