@@ -409,11 +409,15 @@ class Ipfs:
         ipfs_addresses = _client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
             if (
-                "::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address
-            ) or "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address:
+                ("::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address)
+                or "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address
+                or "/ip4/127.0.0.1/tcp/4002/p2p/" in ipfs_address
+            ):
                 return ipfs_address
 
-        raise QuietExit("E: No valid ipfs address is found from output of `ipfs id`. Try opening port 4001")
+        raise QuietExit(
+            "E: No valid ipfs address is found from output of `ipfs id`. Try opening port 4001 or change it."
+        )
 
     def check_gpg_password(self, gpg_fingerprint):
         """Check passphrase of gpg from a file.

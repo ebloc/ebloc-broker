@@ -1217,6 +1217,7 @@ zope-traversing==4.4.1
 sphinx-autobuild==2021.3.14
 watchdog==3.0.0
 pydot==1.4.2
+Pyomo==6.6.1
 # graphviz==0.20.1
 # The following packages are considered to be unsafe in a requirements file:
 # pip

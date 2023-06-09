@@ -382,6 +382,11 @@ class Contract(Base):
 
                 return self.timeout(method, *args)
             except ValueError as e:
+                if "MAC mismatch" in str(e):
+                    log("Please check your Ethereum account password")
+                    print_tb(e)
+                    raise QuietExit from e
+
                 try:
                     nc(env.BLOXBERG_HOST, 8545)
                 except Exception:

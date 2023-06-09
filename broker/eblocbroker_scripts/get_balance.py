@@ -12,8 +12,8 @@ def main():
     if len(sys.argv) == 2:
         address = str(sys.argv[1])
         balance = Ebb.get_balance(address)
-        print(f"{Cent(balance)} cent ≈ {Cent(balance).to('usd')} usd")
-        log(f"{Ebb._get_balance(address)} ether")
+        log(f"[y]tokens[/y]: {Cent(balance)} cent ≈ {Cent(balance).to('usd')} usd")
+        log(f"[y]balance[/y]: {Ebb._get_balance(address)} ether")
     else:
         log("E: Provide an address as an argument")
 

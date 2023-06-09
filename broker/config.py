@@ -67,9 +67,12 @@ class ENV(ENV_BASE):
         #     accounts.load("alpy.json", "alper")
 
         self.PROGRAM_PATH = Path("/") / "var" / "ebloc-broker"
-        #
         self.GDRIVE = self.cfg["gdrive"]
-        self.DATADIR = Path(self.cfg["datadir"])
+        if "datadir" in self.cfg:
+            self.DATADIR = Path(self.cfg["datadir"])
+        else:
+            self.DATADIR = None
+
         self.LOG_DIR = Path(self.cfg["log_path"])
         try:
             self.BLOXBERG_HOST = read_network_config(cfg.NETWORK_ID)
