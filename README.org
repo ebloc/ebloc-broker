@@ -34,7 +34,6 @@ docker-compose down
 #+end_src
 
 ** Cloud Storages
-
 *** B2DROP
 **** Create B2ACCESS user account and login into B2DROP:
 
@@ -45,7 +44,6 @@ First, from [[https://b2access.eudat.eu/home/][B2ACCESS home page]]
 - [[https://b2drop.eudat.eu/][B2DROP login site]]
 
 **** Create app password
-
 =Settings= => ~Security~ => ~Create new app password~ and save it.
 
 ** How to install required packages
