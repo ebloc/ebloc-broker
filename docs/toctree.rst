@@ -17,8 +17,10 @@ ebloc-broker
 
     ..
        install.rst
+    accounts.rst
     gdrive_readme.rst
-    cost_example.rst
+    ..
+       cost_example.rst
     ..
        init.rst
        structure.rst

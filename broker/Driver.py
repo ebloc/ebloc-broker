@@ -161,7 +161,12 @@ def tools(bn):
             flag_error = False
             if provider_info_contract["f_id"] != env.OC_USER:
                 log("warning: [m]f_id[/m] does not match with the registered info.")
-                log(f"\t{provider_info_contract['f_id']} != {env.OC_USER}")
+                output = provider_info_contract["f_id"]
+                if output:
+                    log(f"\t{output} != {env.OC_USER}")
+                else:
+                    log(f'\t"" != {env.OC_USER}')
+
                 flag_error = True
 
             if env.IS_IPFS_USE:

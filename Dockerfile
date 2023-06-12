@@ -14,6 +14,8 @@ RUN git clone https://github.com/prasmussen/gdrive.git /workspace/gdrive \
  && go env -w GO111MODULE=auto \
  && go get github.com/prasmussen/gdrive
 
+FROM ethereum/client-go:latest
+
 FROM python:3.7
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
@@ -26,6 +28,8 @@ COPY --from=0 /go /go
 COPY --from=0 /usr/local/bin /usr/local/bin
 COPY --from=0 /usr/local/go /usr/local/go
 COPY --from=0 /workspace/gdrive /workspace/gdrive
+
+COPY --from=1 /usr/local/bin /usr/local/bin
 
 ENV GOPATH=/go
 ENV GOROOT=/usr/local/go
@@ -176,6 +180,8 @@ RUN echo "0f8f4d5" \
  # && echo "alias ls='ls -h --color=always -v --author --time-style=long-iso'" >> ~/.bashrc \
  # && echo "export SQUEUE_FORMAT=\"%8i %9u %5P %2t %12M %12l %5D %3C %30j\"v" >> ~/.bashrc \
  && cp /workspace/ebloc-broker/docker/bashrc ~/.bashrc
+
+COPY docker/config/*.json /root/.brownie/accounts/
 
 WORKDIR /workspace/ebloc-broker/broker
 CMD ["/bin/bash"]

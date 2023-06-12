@@ -127,11 +127,9 @@ library Lib {
     }
 
     struct ProviderInfo {
-        uint32 availableCore; // Registered core number of the provider
+        uint32 availableCore;
         uint32 commitmentBlockDur;
-        /* All the price varaibles are defined in Gwei.
-           Floating-point or fixed-point decimals have not yet been implemented in Solidity */
-        uint256 priceCoreMin; // Provider's price for core per minute
+        uint256 priceCoreMin;
         uint256 priceDataTransfer;
         uint256 priceStorage;
         uint256 priceCache;

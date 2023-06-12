@@ -11,7 +11,7 @@ from pymongo import MongoClient
 from typing import Union
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
-from brownie import accounts, history
+
 from broker import cfg
 from broker._utils._log import WHERE, ok
 from broker._utils.tools import exit_after, log, print_tb, without_keys
@@ -21,6 +21,7 @@ from broker.errors import QuietExit, Web3NotConnected
 from broker.imports import nc
 from broker.libs.mongodb import MongoBroker
 from broker.utils import ipfs_to_bytes32, terminate
+from brownie import accounts, history
 from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
@@ -381,6 +382,11 @@ class Contract(Base):
 
                 return self.timeout(method, *args)
             except ValueError as e:
+                if "MAC mismatch" in str(e):
+                    log("Please check your Ethereum account password")
+                    print_tb(e)
+                    raise QuietExit from e
+
                 try:
                     nc(env.BLOXBERG_HOST, 8545)
                 except Exception:
