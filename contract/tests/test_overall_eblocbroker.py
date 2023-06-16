@@ -1032,8 +1032,7 @@ def test_submit_jobs():
         f"received_bn={ds.received_block} | "
         f"storage_duration(block numbers)={ds.storage_duration} | "
         f"is_private={ds.is_private} |"
-        f"is_verified_Used={ds.is_verified_used}",
-        "bold",
+        f"is_verified_Used={ds.is_verified_used}"
     )
     received_deposit, *_ = ebb.getStorageInfo(provider, requester, code_hash)
     log(f"received_deposit={received_deposit}", "bold")
@@ -1199,6 +1198,7 @@ def test_submit_n_data():
     )
     gas_costs.append(tx.__dict__["gas_used"])
     log("#> submit_job data number gas differences:")
+    breakpoint()  # DEBUG
     print(gas_costs)
     for idx in range(0, 3):
         print(gas_costs[idx + 1] - gas_costs[idx])

@@ -9,7 +9,7 @@ AccessControl==6.0
 acquisition==4.6
     # via
     #   accesscontrol
-aiodns==3.0.0
+aiodns==2.0.0
 aiohttp==3.8.3
     # via
     #   eth-brownie
@@ -102,6 +102,7 @@ btrees==4.7.2
 build==0.9.0
     # via
     #   pip-tools
+cmake==3.26.4
 cached-property==1.5.2
     # via
     #   aspy-refactor-imports
@@ -137,7 +138,6 @@ click==8.1.3
     #   black
     #   eth-brownie
     #   flask
-    #   gshell
     #   ng
     #   pip-tools
     #   ppi
@@ -172,7 +172,7 @@ cryptography==39.0.1
 cycler==0.10.0
     # via
     #   matplotlib
-cytoolz==0.12.0
+cytoolz==0.12.1
     # via
     #   eth-brownie
     #   eth-keyfile
@@ -293,7 +293,6 @@ ezenv==0.91
 fasteners==0.14.1
 filelock==3.11.0
     # via
-    #   gdown
     #   tox
     #   virtualenv
 flake8==6.0.0
@@ -314,16 +313,12 @@ frozenlist==1.3.1
     #   aiohttp
     #   aiosignal
     #   eth-brownie
-gdown==4.7.1
-    # via
-    #   gshell
 git-filter-repo==2.38.0
 gitdb==4.0.2
     # via
     #   gitpython
 GitPython==3.1.31
 grip==4.5.2
-gshell==5.5.2
 gunicorn==20.0.4
 halo==0.0.31
 hexbytes==0.2.3
@@ -461,7 +456,6 @@ markupsafe==2.1.2
     #   jinja2
     #   mako
     #   wtforms
-matplotlib==3.5.0
 matplotlib-inline==0.1.3
     # via
     #   ipython
@@ -762,7 +756,6 @@ pyxdg==0.26
 pyyaml==5.4.1
     # via
     #   eth-brownie
-    #   gshell
     #   pre-commit
     #   shyaml
 readme-renderer==26.0
@@ -774,7 +767,6 @@ requests[socks]==2.28.1
     # via
     #   eth-brownie
     #   forex-python
-    #   gdown
     #   grip
     #   ipfshttpclient
     #   ng
@@ -842,7 +834,6 @@ six==1.16.0
     #   cycler
     #   eth-brownie
     #   fasteners
-    #   gdown
     #   jsonschema
     #   launchpadlib
     #   lazr-restfulclient
@@ -957,7 +948,6 @@ tox==3.24.3
 tqdm==4.64.1
     # via
     #   eth-brownie
-    #   gdown
 traitlets==5.7.1
     # via
     #   ipython
@@ -1027,7 +1017,7 @@ vulcano==0.5.3
 vvm==0.1.0
     # via
     #   eth-brownie
-vyper==0.3.7
+vyper==0.3.*
     # via
     #   eth-brownie
 wadllib==1.3.3
@@ -1074,7 +1064,7 @@ wsgiproxy2==0.4.6
 wtforms==2.3.1
 xlrd==1.2.0
 yapf==0.33.0
-yarl==1.8.1
+yarl==1.9.2
     # via
     #   aiohttp
     #   eth-brownie
@@ -1218,6 +1208,11 @@ sphinx-autobuild==2021.3.14
 watchdog==3.0.0
 pydot==1.4.2
 Pyomo==6.6.1
+# gdown==4.7.1
+    # via
+    #   gshell
+# gshell==5.5.2
+# matplotlib==3.5.0
 # graphviz==0.20.1
 # The following packages are considered to be unsafe in a requirements file:
 # pip

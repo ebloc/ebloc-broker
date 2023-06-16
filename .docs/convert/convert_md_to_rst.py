@@ -27,10 +27,10 @@ def setup(app):
             if len(fn_parts) > 1:
                 fn_ext = fn_parts[1]
                 if fn_ext == ".md":
-                    convert_md_2_rst_process(fn_parts[0])
+                    convert_md_to_rst(fn_parts[0])
 
 
-def convert_md_2_rst_process(fn_root):
+def convert_md_to_rst(fn_root):
     fn_source = fn_root + ".md"
     fn_target = fn_root + ".rst"
     print(
@@ -55,4 +55,4 @@ def convert_md_2_rst_process(fn_root):
     file_target.close()
 
 
-setup(f"{expanduser('~')}/ebloc-broker/docs/convert")
+setup(f"{expanduser('~')}/ebloc-broker/.docs/convert")

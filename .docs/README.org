@@ -1,0 +1,13 @@
+* Automize the docs
+
+__ https://stackoverflow.com/a/38229197/2402577
+
+#+begin_src bash
+cd ~/ebloc-broker/.docs
+command ls *.org | entr ./convert.sh
+#+end_src
+
+#+begin_src bash
+cd ~/ebloc-broker/docs
+sphinx-autobuild . -aE _build_html
+#+end_src

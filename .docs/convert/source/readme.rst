@@ -1,5 +1,5 @@
-https://github.com/ebloc/ebloc-broker/raw/dev/imgs/logo.png ebloc-broker
-========================================================================
+ebloc-broker
+============
 
 ``eBlocBroker`` is a smart contract as an autonomous volunteer computing
 and sharing data resource broker based on blockchain for e-Science. It
@@ -15,8 +15,8 @@ Prerequisites
 -  `Slurm <https://github.com/SchedMD/slurm>`__,
    `IPFS <https://ipfs.io>`__,
    `eth-brownie <https://github.com/eth-brownie/brownie>`__,
-   `prasmussen/gdrive <https://github.com/prasmussen/gdrive>`__,
    `owncloud/pyocclient <https://github.com/owncloud/pyocclient>`__,
+   `prasmussen/gdrive <https://github.com/prasmussen/gdrive>`__,
    `ganache-cli <https://github.com/trufflesuite/ganache>`__.
 
 Using Docker
@@ -89,7 +89,9 @@ In order to submit your job each user should already registered into
 eBlocBroker using
 ``eblocbroker register_provider ~/.ebloc-broker/cfg.yaml`` After
 registration is done, each user should authenticate their ORCID iD using
-the following http://eblocbroker.duckdns.org/.
+the following http://ebloc-broker-authenticate.duckdns.org/index.php
+using `Brave <https://brave.com>`__ browser along with
+`MetaMask <https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn>`__.
 
 .. code:: bash
 
@@ -139,7 +141,7 @@ Provider
 Each provider should run ``eblocbroker driver`` for start running the
 Python script.
 
-file:/docs/gui1.png
+.. image:: gui1.png
 
 🎬 Demonstration
 ----------------

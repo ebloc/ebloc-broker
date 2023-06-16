@@ -90,8 +90,8 @@ def is_on() -> bool:
             log("[  [red]failed[/red]  ]", "bold")
             process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
             raise Terminate(
-                f"E: [bg]{process_name}[/bg] is not running in the background. Please run:\n"
-                f"[yellow]sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh"
+                f"E: '{process_name}' is not running in the background. Please run:\n"
+                f"'sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh'"
             )
 
     output = run(["sinfo", "-N", "-l"])

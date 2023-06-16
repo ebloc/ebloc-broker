@@ -13,7 +13,7 @@ with open("requirements.txt", "r") as f:
 setup(
     name="ebloc-broker",
     packages=find_packages(),
-    setup_requires=["wheel", "eth-brownie", "ipdb", "rich", "dbus-python"],
+    setup_requires=["wheel", "eth-brownie", "ipdb", "rich"],  # "dbus-python"
     version="2.3.1",  # don't change this manually, use bumpversion instead
     license="MIT",
     description=(  # noqa: E501

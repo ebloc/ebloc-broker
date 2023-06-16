@@ -1,4 +1,4 @@
-# [https://github.com/ebloc/ebloc-broker/raw/dev/imgs/logo.png](https://github.com/ebloc/ebloc-broker/raw/dev/imgs/logo.png) ebloc-broker
+# ebloc-broker
 
 `eBlocBroker` is a smart contract as an autonomous volunteer computing and sharing data resource broker based on blockchain for e-Science.
 It applies blockchain technology to provide a market for computational and data resources to research communities.
@@ -7,7 +7,12 @@ It applies blockchain technology to provide a market for computational and data 
 For more info see: [documentation](https://ebloc-broker-readthedocs.duckdns.org/).
 
 ## Prerequisites
- * [Slurm](https://github.com/SchedMD/slurm), [IPFS](https://ipfs.io), [eth-brownie](https://github.com/eth-brownie/brownie), [prasmussen/gdrive](https://github.com/prasmussen/gdrive), [owncloud/pyocclient](https://github.com/owncloud/pyocclient), [ganache-cli](https://github.com/trufflesuite/ganache).
+ * [Slurm](https://github.com/SchedMD/slurm),
+[IPFS](https://ipfs.io),
+[eth-brownie](https://github.com/eth-brownie/brownie),
+[owncloud/pyocclient](https://github.com/owncloud/pyocclient),
+[prasmussen/gdrive](https://github.com/prasmussen/gdrive),
+[ganache-cli](https://github.com/trufflesuite/ganache).
 
 ## Using Docker
 
@@ -30,7 +35,6 @@ docker-compose down
 ```
 
 ## Cloud Storages
-
 ### B2DROP
 #### Create B2ACCESS user account and login into B2DROP:
 
@@ -41,7 +45,6 @@ First, from [B2ACCESS home page](https://b2access.eudat.eu/home/)
  * [B2DROP login site](https://b2drop.eudat.eu/)
 
 #### Create app password
-
 `Settings` => `Security` => `Create new app password` and save it.
 
 ## How to install required packages
@@ -59,7 +62,7 @@ Next, type `eblocbroker --help` for basic usage information.
 ### Submit Job
 
 In order to submit your job each user should already registered into eBlocBroker using `eblocbroker register_provider ~/.ebloc-broker/cfg.yaml`
-After registration is done, each user should authenticate their ORCID iD using the following [http://eblocbroker.duckdns.org/](http://eblocbroker.duckdns.org/).
+After registration is done, each user should authenticate their ORCID iD using the following [http://ebloc-broker-authenticate.duckdns.org/index.php](http://ebloc-broker-authenticate.duckdns.org/index.php) using [Brave](https://brave.com) browser along with [MetaMask](https://chrome.google.com/webstore/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn).
 
 ```bash
 $ eblocbroker submit job.yaml

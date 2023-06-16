@@ -11,7 +11,12 @@ It applies blockchain technology to provide a market for computational and data 
 For more info see: [[https://ebloc-broker-readthedocs.duckdns.org/][documentation]].
 
 ** Prerequisites
-- [[https://github.com/SchedMD/slurm][Slurm]], [[https://ipfs.io][IPFS]], [[https://github.com/eth-brownie/brownie][eth-brownie]], [[https://github.com/prasmussen/gdrive][prasmussen/gdrive]], [[https://github.com/owncloud/pyocclient][owncloud/pyocclient]], [[https://github.com/trufflesuite/ganache][ganache-cli]].
+- [[https://github.com/SchedMD/slurm][Slurm]],
+  [[https://ipfs.io][IPFS]],
+  [[https://github.com/eth-brownie/brownie][eth-brownie]],
+  [[https://github.com/owncloud/pyocclient][owncloud/pyocclient]],
+  [[https://github.com/prasmussen/gdrive][prasmussen/gdrive]],
+  [[https://github.com/trufflesuite/ganache][ganache-cli]].
 
 ** Using Docker
 

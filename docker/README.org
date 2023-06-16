@@ -1,12 +1,12 @@
 * NOTES
 ** PUSH
-NOTE: Now in order to push the image just make sure the path which you are using must have your
-username included in the tag, [[https://hub.docker.com/u/ebloc][docker-hub]].
+Now in order to push the image just make sure the path which you are using must have your username included in the tag, [[https://hub.docker.com/u/ebloc][docker-hub]].
 
 #+begin_src bash
 cat ~/.docker_password.txt | docker login --username ebloc --password-stdin
 docker build -t ebb:latest . --progress plain
-docker tag ebb:latest ebloc/ebloc-broker
+# docker tag ebb:latest ebloc/ebloc-broker
+docker tag ebloc-broker_slurm:latest ebloc/ebloc-broker
 docker push ebloc/ebloc-broker
 #+end_src
 
@@ -48,3 +48,8 @@ docker-compose up --build
 #+begin_src bash
 docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
 #+end_src
+
+
+- docker/Dockerfile is the base docker file
+
+__ [[https://hub.docker.com/layers/ebloc/ebloc-broker/latest/images/sha256-097c4907374172d75a5dfed59272d68e3e147330ea434969ca53816c12038235?context=explore]]
