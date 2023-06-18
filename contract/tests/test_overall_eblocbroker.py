@@ -1198,7 +1198,6 @@ def test_submit_n_data():
     )
     gas_costs.append(tx.__dict__["gas_used"])
     log("#> submit_job data number gas differences:")
-    breakpoint()  # DEBUG
     print(gas_costs)
     for idx in range(0, 3):
         print(gas_costs[idx + 1] - gas_costs[idx])

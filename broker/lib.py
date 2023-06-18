@@ -100,7 +100,8 @@ def calculate_size(path, _type="MB") -> float:
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()  # type: ignore
-    byte_size = float(p2.communicate()[0].decode("utf-8").strip())
+    output = p2.communicate()[0].decode("utf-8").strip()
+    byte_size = float(output)
     if _type == "bytes":
         return byte_size
 

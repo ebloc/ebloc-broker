@@ -50,7 +50,7 @@ def main():
         orc_id = str(sys.argv[2])
     else:
         log("E: Please provide the address and its orc_id as argument")
-        log("[bold]   ./authenticate_orc_id.py <address> <orc_id>", "mangenta")
+        log("    ./authenticate_orc_id.py <address> <orc_id>", "mangenta")
         sys.exit(1)
 
     try:

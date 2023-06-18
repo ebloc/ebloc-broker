@@ -2,9 +2,9 @@
 #+ATTR_HTML: :alt neural network :title Neural network representation :align right
 #+ATTR_HTML: :width 25% :height 25%
 * [[https://github.com/ebloc/ebloc-broker/raw/dev/imgs/logo.png]] ebloc-broker
-
-=eBlocBroker= is a smart contract as an autonomous volunteer computing and sharing data resource broker based on blockchain for e-Science.
-It applies blockchain technology to provide a market for computational and data resources to research communities.
+=eBlocBroker= is a smart contract as an autonomous volunteer computing and sharing data resource
+broker based on blockchain for e-Science.  It applies blockchain technology to provide a market for
+computational and data resources to research communities.
 
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
 
@@ -20,8 +20,7 @@ For more info see: [[https://ebloc-broker-readthedocs.duckdns.org/][documentatio
 
 ** Using Docker
 
-You can use a sandbox container provided in the [[./docker-compose.yml]] file for testing inside a Docker
-environment.
+You can use a sandbox container provided in the [[./docker-compose.yml]] file for testing inside a Docker environment.
 
 This container provides everything you need to test using a ~Python 3.7~ interpreter. Start the test environment:
 #+begin_src bash

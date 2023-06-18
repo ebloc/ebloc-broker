@@ -24,7 +24,7 @@ alabaster==0.7.12
 apipkg==1.5
 appdirs==1.4.4
 apscheduler==3.8.0
-argcomplete==2.0.0
+argcomplete==3.1.1
 aspy-refactor-imports==2.1.1
     # via
     #   seed-isort-config
@@ -786,7 +786,7 @@ RestrictedPython==6.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==13.4.1
+rich==13.4.2
 rlp==2.0.1
     # via
     #   eth-account

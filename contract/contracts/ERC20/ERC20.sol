@@ -56,20 +56,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         return _owner;
     }
 
-    /* event OwnershipTransferred(address indexed previousOwner, address indexed newOwner); */
-
-    /* /\** */
-    /*  * @dev Transfer ownership of the contract to a new account (`newOwner`). */
-    /*  * It can only be called by the current owner. */
-    /*  * @param newOwner The address to transfer ownership to. */
-    /*  *\/ */
-    /* function transferOwnership(address newOwner) public onlyOwner { */
-    /*     require(newOwner != address(0), "Zero address"); */
-    /*     emit OwnershipTransferred(_owner, newOwner); */
-    /*     _owner = newOwner; */
-    /*     // TODO: transfer owner's balance as well */
-    /* } */
-
     /**
      * @dev Sets the values for {name} and {symbol}.
      *
@@ -113,7 +99,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
      * {IERC20-balanceOf} and {IERC20-transfer}.
      *
      * A mill = $0.001 = 1/1000 of a dollar.
-     * A penny (cent) = $0.01 = 1/100 of a dollar.
+     * A cent = $0.01 = 1/100 of a dollar.
      * A dime = $0.10 = 1/10 of a dollar.
      */
     function decimals() public view virtual override returns (uint8) {
@@ -424,4 +410,18 @@ contract ERC20 is Context, IERC20, IERC20Metadata {
         address to,
         uint256 amount
     ) internal virtual {}
+
+    /* event OwnershipTransferred(address indexed previousOwner, address indexed newOwner); */
+
+    /* /\** */
+    /*  * @dev Transfer ownership of the contract to a new account (`newOwner`). */
+    /*  * It can only be called by the current owner. */
+    /*  * @param newOwner The address to transfer ownership to. */
+    /*  *\/ */
+    /* function transferOwnership(address newOwner) public onlyOwner { */
+    /*     require(newOwner != address(0), "Zero address"); */
+    /*     emit OwnershipTransferred(_owner, newOwner); */
+    /*     _owner = newOwner; */
+    /*     // TODO: transfer owner's balance as well */
+    /* } */
 }

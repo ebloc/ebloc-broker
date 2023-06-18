@@ -182,6 +182,21 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
         raise e
 
 
+def get_job_transfer(self, provider, job_key, index, received_bn=0):
+    try:
+        event_filter = self._eblocbroker.events.Transfer.createFilter(
+            fromBlock=int(self.job_info["received_bn"]),
+            toBlock=self.to_block,
+        )
+        for logged_job in event_filter.get_all_entries():
+            breakpoint()  # DEBUG
+
+        return self.job_info
+    except Exception as e:
+        log(f"E: Failed to run `get_job_code_hashes()` function\n{e}")
+        raise e
+
+
 def get_job_code_hashes(self, provider, job_key, index, received_bn=0):
     """Return code hashes of the completed job is obtained from its event."""
     # job_info["received_bn"]
@@ -216,6 +231,7 @@ def get_job_info_print(self, provider, _hash, index, received_bn, is_print=True)
                 log(f"==> result_ipfs_hash={result_ipfs_hash}")
 
         Ebb.get_job_code_hashes(provider, _hash, index, received_bn)
+        # Ebb.get_job_transfer(provider, _hash, index, received_bn)
         if is_print:
             self.analyze_data(_hash, provider)
     elif is_print:
@@ -390,7 +406,6 @@ def main():
             received_bn = int(sys.argv[5])
     else:
         log("E: Provide <[m]provider[/m], [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments", h=False)
-        # ./get_job_info.py 0x29e613b04125c16db3f3613563bfdd0ba24cb629 QmeHL7LvHwQs4xrzPqvkA8fH9T8XGya7BgiLKWb7XG6w71 0
         sys.exit(1)
 
     Ebb.get_job_info(provider, job_key, index, job_id, received_bn, is_log_print=True)

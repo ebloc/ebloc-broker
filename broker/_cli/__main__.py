@@ -76,6 +76,33 @@ def about():
         sys.exit(1)
 
 
+def run():
+    if _args.tx_receipt:
+        from broker.eblocbroker_scripts.get_transaction_receipt import get_transaction_receipt
+
+        get_transaction_receipt(_args.tx_receipt)
+    elif _args.authenticate_orcid:
+        from broker._utils.web3_tools import get_tx_status
+
+        Ebb = cfg.Ebb
+        owner_address = Ebb.get_owner()
+        address = _args.authenticate_orcid[0]
+        orcid = _args.authenticate_orcid[1]
+        tx_hash = Ebb.authenticate_orc_id(address, orcid, owner_address)
+        if tx_hash:
+            get_tx_status(tx_hash)
+    elif _args.register_provider:
+        try:
+            cfg.Ebb.register_provider(_args.register_provider)
+        except Exception as e:
+            print_tb(e)
+    elif _args.register_requester:
+        try:
+            cfg.Ebb.register_provider(_args.register_requester)
+        except Exception as e:
+            print_tb(e)
+
+
 def daemon():
     if _args.daemon_type[0] == "ipfs":
         from broker.utils import start_ipfs_daemon
@@ -128,18 +155,18 @@ def tx_receipt():
     get_transaction_receipt(_args.transaction_hash)
 
 
-def register_provider():
-    try:
-        cfg.Ebb.register_provider(_args.path)
-    except Exception as e:
-        print_tb(e)
+# def register_provider():
+#     try:
+#         cfg.Ebb.register_provider(_args.path)
+#     except Exception as e:
+#         print_tb(e)
 
 
-def register_requester():
-    try:
-        cfg.Ebb.register_requester(_args.path)
-    except Exception as e:
-        print_tb(e)
+# def register_requester():
+#     try:
+#         cfg.Ebb.register_requester(_args.path)
+#     except Exception as e:
+#         print_tb(e)
 
 
 def data():

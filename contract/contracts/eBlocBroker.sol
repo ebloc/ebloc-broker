@@ -22,7 +22,7 @@ import "./ERC20/ERC20.sol";
 contract eBlocBroker is
     eBlocBrokerInterface,
     EBlocBrokerBase,
-    ERC20 //, Token
+    ERC20
 {
     using SafeMath for uint256;
     using SafeMath32 for uint32;
@@ -81,7 +81,7 @@ contract eBlocBroker is
         uint256 core = args.core[args.jobID];
         uint256 runTime = args.runTime[args.jobID];
         if (args.finalize == 0 || args.finalize == 3) {
-            // SINGLE-JOB or BEGIN-JOB
+            // SINGLE-JOB or BEGIN-JOB of a workflow
             if (jobInfo.cacheCost > 0) {
                 //: checking data transferring cost
                 gain = info.priceCache.mul(args.dataTransferIn); // cache payment to receive
@@ -591,7 +591,7 @@ contract eBlocBroker is
 
         // sum, _dataTransferIn, storageCost, cacheCost, sumRegisterDataDeposit
         //  |          |            |          /      ___/
-        //  |          |            |         /      |
+        //  /          |            |         /      |
         (cost, dataTransferIn[0], tmp[0], tmp[1], tmp[2]) = _calculateCacheCost(
             provider,
             args,

@@ -29,9 +29,7 @@ def _ping(host) -> bool:
 
     Ex: "ping -c 1 google.com"
     """
-    cmd = ["ping", "-c", "1", host]
-    pr, output, e = popen_communicate(cmd)  # noqa
-    # print(output)
+    pr, output, e = popen_communicate(["ping", "-c", "1", host])  # noqa
     return pr.returncode == 0
 
 
