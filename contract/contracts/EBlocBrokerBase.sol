@@ -9,11 +9,13 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "./SafeMath.sol";
 import "./Lib.sol";
+import "./ERC20/IERC20.sol";
 
 contract EBlocBrokerBase {
     using SafeMath for uint256;
     using SafeMath32 for uint32;
 
+    IERC20 erc;
     address tokenAddress;
     address[] registeredProviders; // A dynamically-sized array of 'address' structs
     uint8 constant BLOCK_TIME = 6;

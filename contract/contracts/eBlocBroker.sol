@@ -9,6 +9,9 @@ import "./eBlocBrokerInterface.sol";
 import "./EBlocBrokerBase.sol";
 import "./ERC20/ERC20.sol";
 
+import "./ERC20/IERC20.sol";
+
+
 /**
    @title eBlocBroker
    @author Alper Alimoglu - @avatar-lavventura
@@ -43,15 +46,23 @@ contract eBlocBroker is
      * contract to the msg.sender and minting.
      */
     constructor(address _tokenAddress) ERC20("USDmy", "USDmy") {
+        erc = ERC20(_tokenAddress);
         tokenAddress = _tokenAddress;
-        // ERC20(tokenAddress).getOwner();
         _mint(msg.sender, 1000000000 * (10**uint256(decimals())));
     }
 
     function getAlper() external view returns (uint doo) {
-        return ERC20(tokenAddress).balanceOf(msg.sender);
+        return ERC20(tokenAddress).allowance(msg.sender, getOwner());
     }
 
+    function alper() public {
+        erc.transferFrom(msg.sender, address(this), 200);
+
+        erc.approve(msg.sender, 199);
+        ERC20(tokenAddress).increaseAllowance(msg.sender, 1);
+
+
+    }
     /**
        @dev
        * Following function is a general-purpose mechanism for performing payment withdrawal
@@ -613,9 +624,8 @@ contract eBlocBroker is
         // transfer(getOwner(), cost); // transfer cost to contract
 
 
-        /* ERC20(tokenAddress).approve(getOwner(), 2); */
-        ERC20(tokenAddress).transferFrom(msg.sender, getOwner(), 1);
-        /* ERC20(tokenAddress).transferFrom(msg.sender, getOwner(), cost); */
+        // ERC20(tokenAddress).approve(address(this), 1);
+        ERC20(tokenAddress).transfer(getOwner(), 1);
 
 
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct

@@ -75,7 +75,14 @@ def set_transfer(to, amount):
 def set_transfer_token(to, amount):
     """Empty balance and transfer given amount."""
     _cfg.TOKEN.transfer(to, Cent(amount), {"from": _cfg.OWNER})
-    _cfg.TOKEN.increaseAllowance(_cfg.OWNER, 1, {"from": to})
+    _cfg.TOKEN.approve(ebb.address, 200, {"from": to})
+    # _cfg.TOKEN.transferFrom(to, _cfg.OWNER, 1)
+    print(ebb.getAlper({"from": to}))
+    print(ebb.alper({"from": to}))
+
+    _cfg.TOKEN.transferFrom(ebb.address, to, 200, {"from": to})
+
+    breakpoint()  # DEBUG
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -132,62 +139,7 @@ def result_check(delta, spent, value, received_sum, refunded_sum):
     assert delta == 0
 
 
-def test_cost_0():
-    _prices = Prices()
-    _prices.set_core_min("0.001 usd")
-    _prices.set_data_transfer("0.0001 cent")
-    _prices.set_storage("0.0001 cent")
-    _prices.set_cache("0.0001 cent")
-    prices = _prices.get()
-    provider = accounts[1]
-    requester = accounts[2]
-    register_provider(available_core=4, prices=prices)
-    register_requester(requester)
-    for data_hash in [
-        b"dd0fbccccf7a198681ab838c67b6abcd",
-        b"dd0fbccccf7a198681ab838c67b68fbf",
-        b"45281dfec4618e5d20570812dea38760",
-    ]:
-        ebb.registerData(data_hash, Cent("0.0002 usd"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
-        assert ebb.getRegisteredDataPrice(provider, data_hash, 0)[0] == Cent("0.0002 usd")
-        mine(1)
-
-    job = Job()
-    job.code_hashes = [b"dd0fbccccf7a198681ab838c67b6abcd"]
-    job.key = job.code_hashes[0]
-    job.cores = [1]
-    job.run_time = [60]
-    job.data_transfer_ins = [10]
-    job.data_transfer_out = 5
-    job.storage_ids = [StorageID.IPFS]
-    job.cache_types = [CacheID.PUBLIC]
-    job.storage_hours = [0]
-    job.data_prices_set_block_numbers = [0]
-    job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
-    args = [
-        provider,
-        ebb.getProviderSetBlockNumbers(provider)[-1],
-        job.storage_ids,
-        job.cache_types,
-        job.data_prices_set_block_numbers,
-        job.cores,
-        job.run_time,
-        job.data_transfer_out,
-        job_price,
-    ]
-    set_transfer(requester, Cent(job_price))
-    with brownie.reverts():
-        ebb.submitJob(
-            job.key,
-            job.data_transfer_ins,
-            args,
-            job.storage_hours,
-            job.code_hashes,
-            {"from": requester},
-        )
-
-
-def test_cost_1():
+def test_cost():
     _prices = Prices()
     _prices.set_core_min("0.001 usd")
     _prices.set_data_transfer("0.0001 cent")
@@ -246,6 +198,7 @@ def test_cost_1():
 
     set_transfer_token(requester, 807650000)
     _args[6] = [60]
+    breakpoint()  # DEBUG
     tx = ebb.submitJob(
         job.key,
         job.data_transfer_ins,
@@ -397,6 +350,61 @@ def test_cost_1():
         log(log_process_payment)
 
     result_check(delta, spent, value, received_sum, refunded_sum)
+
+
+def test_cost_0():
+    _prices = Prices()
+    _prices.set_core_min("0.001 usd")
+    _prices.set_data_transfer("0.0001 cent")
+    _prices.set_storage("0.0001 cent")
+    _prices.set_cache("0.0001 cent")
+    prices = _prices.get()
+    provider = accounts[1]
+    requester = accounts[2]
+    register_provider(available_core=4, prices=prices)
+    register_requester(requester)
+    for data_hash in [
+        b"dd0fbccccf7a198681ab838c67b6abcd",
+        b"dd0fbccccf7a198681ab838c67b68fbf",
+        b"45281dfec4618e5d20570812dea38760",
+    ]:
+        ebb.registerData(data_hash, Cent("0.0002 usd"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
+        assert ebb.getRegisteredDataPrice(provider, data_hash, 0)[0] == Cent("0.0002 usd")
+        mine(1)
+
+    job = Job()
+    job.code_hashes = [b"dd0fbccccf7a198681ab838c67b6abcd"]
+    job.key = job.code_hashes[0]
+    job.cores = [1]
+    job.run_time = [60]
+    job.data_transfer_ins = [10]
+    job.data_transfer_out = 5
+    job.storage_ids = [StorageID.IPFS]
+    job.cache_types = [CacheID.PUBLIC]
+    job.storage_hours = [0]
+    job.data_prices_set_block_numbers = [0]
+    job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    args = [
+        provider,
+        ebb.getProviderSetBlockNumbers(provider)[-1],
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+        job_price,
+    ]
+    set_transfer(requester, Cent(job_price))
+    with brownie.reverts():
+        ebb.submitJob(
+            job.key,
+            job.data_transfer_ins,
+            args,
+            job.storage_hours,
+            job.code_hashes,
+            {"from": requester},
+        )
 
 
 def test_cost_2():
