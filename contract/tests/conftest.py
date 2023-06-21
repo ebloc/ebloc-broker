@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
 import pytest
+import contract.tests.cfg as _cfg
 
-YEAR = 365 * 86400
+# YEAR = 365 * 86400
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -12,6 +13,9 @@ def isolate(fn_isolation):
 
 
 @pytest.fixture(scope="module")
-def _Ebb(Lib, eBlocBroker, accounts):
+def _Ebb(USDTmy, Lib, eBlocBroker, accounts):
+    _cfg.TOKEN = tx = USDTmy.deploy({"from": accounts[0]})
+    print(tx.address)
     accounts[0].deploy(Lib)
-    yield accounts[0].deploy(eBlocBroker)
+    yield eBlocBroker.deploy(tx.address, {"from": accounts[0]})
+    # yield accounts[0].deploy(eBlocBroker)

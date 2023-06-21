@@ -42,8 +42,14 @@ contract eBlocBroker is
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender and minting.
      */
-    constructor() ERC20("USDmy", "USDmy") {
+    constructor(address _tokenAddress) ERC20("USDmy", "USDmy") {
+        tokenAddress = _tokenAddress;
+        // ERC20(tokenAddress).getOwner();
         _mint(msg.sender, 1000000000 * (10**uint256(decimals())));
+    }
+
+    function getAlper() external view returns (uint doo) {
+        return ERC20(tokenAddress).balanceOf(msg.sender);
     }
 
     /**
@@ -604,7 +610,13 @@ contract eBlocBroker is
 
         // @args.jobPrice: paid, @cost: calculated
         require(args.jobPrice >= cost);
-        transfer(getOwner(), cost); // transfer cost to contract
+        // transfer(getOwner(), cost); // transfer cost to contract
+
+
+        /* ERC20(tokenAddress).approve(getOwner(), 2); */
+        ERC20(tokenAddress).transferFrom(msg.sender, getOwner(), 1);
+        /* ERC20(tokenAddress).transferFrom(msg.sender, getOwner(), cost); */
+
 
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage jobInfo = provider.jobStatus[key].push();

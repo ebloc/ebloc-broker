@@ -46,5 +46,17 @@ Response: {
   "error": "invalid_grant",
   "error_description": "Token has been expired or revoked."
 }
+** TODO token call as a contract notes:
 
-** TODO apply reverse proxy for the docs at kama
+#+begin_src python
+from brownie import ContractA, ContractB , accounts
+
+def main():
+    acct = accounts[0]
+    container = ContractA.deploy({'from': acct})
+    ContractB.deploy(container.address, {'from': acct})
+#+end_src
+
+#+begin_src bash
+brownie console --network development
+#+end_src

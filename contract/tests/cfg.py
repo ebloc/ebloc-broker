@@ -5,3 +5,4 @@ Ebb = None
 chain = None
 ebb = None
 OWNER = None
+TOKEN = None

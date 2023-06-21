@@ -66,10 +66,16 @@ def _transfer(to, amount):
 def set_transfer(to, amount):
     """Empty balance and transfer given amount."""
     balance = ebb.balanceOf(to)
-    ebb.approve(accounts[0], balance, {"from": to})
-    ebb.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
+    ebb.approve(_cfg.OWNER, balance, {"from": to})
+    ebb.transferFrom(to, _cfg.OWNER, balance, {"from": _cfg.OWNER})
     assert ebb.balanceOf(to) == 0
     ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+
+
+def set_transfer_token(to, amount):
+    """Empty balance and transfer given amount."""
+    _cfg.TOKEN.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    _cfg.TOKEN.increaseAllowance(_cfg.OWNER, 1, {"from": to})
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -238,6 +244,7 @@ def test_cost_1():
             {"from": requester},
         )
 
+    set_transfer_token(requester, 807650000)
     _args[6] = [60]
     tx = ebb.submitJob(
         job.key,
@@ -247,6 +254,7 @@ def test_cost_1():
         job.code_hashes,
         {"from": requester},
     )
+    breakpoint()  # DEBUG
     cost = tx.events["LogJob"]["received"]
     log(f"estimated_cost={cost}")
     assert cost == job_price
