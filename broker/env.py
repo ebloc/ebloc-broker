@@ -55,6 +55,7 @@ class ENV_BASE:
             elif self.IS_EBLOCPOA:
                 _yaml = _yaml["networks"]["eblocpoa"]
 
-            self.CONTRACT_ADDRESS = _yaml["address"]
+            self.CONTRACT_ADDRESS = _yaml["eBlocBroker"]["address"]
+            self.TOKEN_CONTRACT_ADDRESS = _yaml["USDTmy"]["address"]
         except Exception as e:
             raise e

@@ -33,9 +33,8 @@ def _ping(host) -> bool:
     return pr.returncode == 0
 
 
-def read_abi_file():
+def read_abi_file(abi_file):
     try:
-        abi_file = env.EBB_SCRIPTS / "abi.json"
         return read_json(abi_file, is_dict=False)
     except Exception as e:
         raise Exception(f"unable to read the abi.json file: {abi_file}") from e
@@ -69,7 +68,7 @@ def connect_to_eblocbroker() -> None:
 
     try:
         if env.IS_EBLOCPOA:
-            config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file())
+            config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi.json"))
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
         elif env.IS_BLOXBERG and not cfg.IS_BROWNIE_TEST:
@@ -114,7 +113,14 @@ def connect_to_eblocbroker() -> None:
             config.ebb = project.eBlocBroker.at(env.CONTRACT_ADDRESS)
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
             #: required to fetch the contract's events
-            config._eblocbroker = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file())
+            config._eblocbroker = cfg.w3.eth.contract(
+                env.CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi.json")
+            )
+            #
+            config.usdtmy = project.USDTmy.at(env.TOKEN_CONTRACT_ADDRESS)
+            config._usdtmy = cfg.w3.eth.contract(
+                env.TOKEN_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_usdtmy.json")
+            )
     except Exception as e:
         print_tb(e)
         raise e

@@ -19,15 +19,19 @@ def distribute_tokens(accounts, is_verbose=False):
     for account in requesters:
         balance = Ebb.get_balance(account)
         if balance:
-            log(f"{account} = {Cent(balance).to('usd')} usd")
+            if Cent(balance).to("usd") == int(Cent(balance).to("usd")):
+                log(f"{account} = {int(Cent(balance).to('usd'))} usd")
+            else:
+                log(f"{account} = {Cent(balance).to('usd')} usd")
         else:
             log(f"{account} => balance=0")
 
-        if Cent(amount_to_send) != Cent(balance):
-            _amount = Cent(amount_to_send).__sub__(balance)
-            if _amount > 0:
-                Ebb.transfer_tokens(owner, account, _amount)
-                # log(f"{account} = {Cent(Ebb.get_balance(account)).to('usd')} usd")
+        if not balance:
+            if Cent(amount_to_send) != Cent(balance):
+                _amount = Cent(amount_to_send).__sub__(balance)
+                if _amount > 0:
+                    Ebb.transfer_tokens(owner, account, _amount)
+                    # log(f"{account} = {Cent(Ebb.get_balance(account)).to('usd')} usd")
 
         # _account = account.lower().replace("0x", "")
         # fn = Path(expanduser("~/.brownie/accounts")) / _account

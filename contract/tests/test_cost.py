@@ -65,11 +65,14 @@ def _transfer(to, amount):
 
 def set_transfer(to, amount):
     """Empty balance and transfer given amount."""
-    balance = ebb.balanceOf(to)
-    ebb.approve(accounts[0], balance, {"from": to})
-    ebb.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
-    assert ebb.balanceOf(to) == 0
-    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    balance = _cfg.TOKEN.balanceOf(to)
+    if balance:
+        _cfg.TOKEN.approve(accounts[0], balance, {"from": to})
+        _cfg.TOKEN.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
+
+    assert _cfg.TOKEN.balanceOf(to) == 0
+    _cfg.TOKEN.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    _cfg.TOKEN.approve(ebb.address, Cent(amount), {"from": to})
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -250,7 +253,7 @@ def test_cost_1():
     cost = tx.events["LogJob"]["received"]
     log(f"estimated_cost={cost}")
     assert cost == job_price
-    assert Cent(ebb.balanceOf(requester)) == 0
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == 0
     output = ebb.getJobInfo(provider, job.key, 0, 0)
     print(output)
     assert int(output[-2] / _prices.get()[-1]) >= job.data_transfer_ins[0]
@@ -266,18 +269,16 @@ def test_cost_1():
         except:
             break
 
-    # ----------------------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------
     start_ts = 1579524978
     tx = ebb.setJobStateRunning(job.code_hashes[0], 0, 0, start_ts, {"from": provider})
     elapsed = 7
     dt_in = 140
     dt_out = 0
-    #  index jobId endTimestamp
-    #      \   |       |
     _args = [
-        0,
-        0,
-        1681003991,
+        0,  # index
+        0,  # jobId
+        1681003991,  # endTimestamp
         dt_in,
         dt_out,
         elapsed,
@@ -286,12 +287,24 @@ def test_cost_1():
         JOB.TYPE["SINGLE"],
     ]
     tx = ebb.processPayment(job.code_hashes[0], _args, zero_bytes32, {"from": provider})
+    assert _cfg.TOKEN.balanceOf(provider) == 0
+    assert _cfg.TOKEN.allowance(ebb.address, provider) > 0
+    assert _cfg.TOKEN.allowance(ebb.address, requester) > 0
+
     log_process_payment = dict(tx.events["LogProcessPayment"])
     if log_process_payment["resultIpfsHash"] == _cfg.ZERO:
         del log_process_payment["resultIpfsHash"]
 
     received_sum = log_process_payment["receivedCent"]
     refunded_sum = log_process_payment["refundedCent"]
+    assert received_sum == _cfg.TOKEN.allowance(ebb.address, provider)
+    assert refunded_sum == _cfg.TOKEN.allowance(ebb.address, requester)
+    _cfg.TOKEN.transferFrom(ebb.address, provider, received_sum, {"from": provider})
+    _cfg.TOKEN.transferFrom(ebb.address, requester, refunded_sum, {"from": requester})
+
+    assert _cfg.TOKEN.balanceOf(provider) == received_sum
+    assert _cfg.TOKEN.balanceOf(requester) == refunded_sum
+
     total_spent = received_sum + refunded_sum
     spent = Cent(abs(total_spent + paid_storage)).to("cent")
     value = Cent(abs(job_price)).to("cent")
@@ -348,8 +361,7 @@ def test_cost_1():
     calculated_cache_cost = output[-2]
     assert calculated_cache_cost > 0
     assert cost == job_price
-    assert Cent(ebb.balanceOf(requester)) == 0
-
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == 0
     considered_cache = int(calculated_cache_cost / _prices.get()[-1])
     assert considered_cache >= job.data_transfer_ins[0]
     paid_storage = 0
@@ -448,7 +460,7 @@ def test_cost_2():
     cost = tx.events["LogJob"]["received"]
     log(f"estimated_cost={cost}")
     assert cost == job_price
-    assert Cent(ebb.balanceOf(requester)) == 0
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == 0
     output = ebb.getJobInfo(provider, job.key, 0, 0)
     print(output)
     assert int(output[-2] / _prices.get()[-1]) >= job.data_transfer_ins[0]
@@ -558,7 +570,7 @@ def test_cost_3():
     cost = tx.events["LogJob"]["received"]
     log(f"estimated_cost={cost}")
     assert cost == job_price
-    assert Cent(ebb.balanceOf(requester)) == 0
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == 0
     output = ebb.getJobInfo(provider, job.key, 0, 0)
     print(output)
     assert int(output[-2] / _prices.get()[-1]) >= job.data_transfer_ins[0]

@@ -1,0 +1,18 @@
+#+begin_src python
+Running 'scripts/eBlocBroker.py::main'...
+Transaction sent: 0x3a47a7971f80bf1a320a8409951a7830bf86bffb5005a65df4973c8943ec45f5
+  Gas price: 0.001 gwei   Gas limit: 966170   Nonce: 3724
+  USDTmy.constructor confirmed   Block: 20941820   Gas used: 878337 (90.91%)
+  USDTmy deployed at: 0x56B59aFC0Df1fcc1B42cf6135f94604cf7F7eb77
+
+Running 'scripts/eBlocBroker.py::main'...
+Transaction sent: 0x46b6ae46f60558706fd6f22fe247468a126b9745b5259cd44c32ebc36dbab049
+  Gas price: 0.001 gwei   Gas limit: 156777   Nonce: 3728
+  Lib.constructor confirmed   Block: 20941978   Gas used: 142525 (90.91%)
+  Lib deployed at: 0x697A670532432277270C3fdaB7FC96B17f7A909d
+
+Transaction sent: 0xf4551305fca7cf4004c4060413af271a010aa296e0f626f7d33d533c0fee5b1a
+  Gas price: 0.001 gwei   Gas limit: 5735442   Nonce: 3729
+  eBlocBroker.constructor confirmed   Block: 20941981   Gas used: 5214039 (90.91%)
+  eBlocBroker deployed at: 0x9C7570E55d6414561800D72045A72B26A5a9E639
+#+end_src

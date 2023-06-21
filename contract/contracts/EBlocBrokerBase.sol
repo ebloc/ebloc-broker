@@ -14,6 +14,8 @@ contract EBlocBrokerBase {
     using SafeMath for uint256;
     using SafeMath32 for uint32;
 
+    address public ebb_owner;
+    address public tokenAddress;
     address[] registeredProviders; // A dynamically-sized array of 'address' structs
     uint8 constant BLOCK_TIME = 6;
     uint32 constant ONE_HOUR_BLOCK_DURATION = 1 hours / BLOCK_TIME; // ~1 hour, average block time is 6 seconds

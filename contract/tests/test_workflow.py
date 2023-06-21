@@ -58,7 +58,15 @@ def append_gas_cost(func_n, tx):
 
 
 def _transfer(to, amount):
-    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    """Empty balance and transfer given amount."""
+    balance = _cfg.TOKEN.balanceOf(to)
+    if balance:
+        _cfg.TOKEN.approve(accounts[0], balance, {"from": to})
+        _cfg.TOKEN.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
+
+    assert _cfg.TOKEN.balanceOf(to) == 0
+    _cfg.TOKEN.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    _cfg.TOKEN.approve(ebb.address, Cent(amount), {"from": to})
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -119,7 +127,6 @@ def test_workflow():
 
     tx = ebb.registerData(code_hash, Cent("2 cent"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     append_gas_cost("registerData", tx)
-
     ebb.removeRegisteredData(code_hash, {"from": provider})  # should submitJob fail if it is not removed
     append_gas_cost("removeRegisteredData", tx)
     data_hash = "0x68b8d8218e730fc2957bcb12119cb204"
@@ -315,6 +322,8 @@ def test_workflow():
     log(f"#> refunded_sums={refunded_sums}")
 
     assert _refunded_sum == 0
-    assert ebb.balanceOf(provider) == received_sum
-    assert ebb.balanceOf(requester) == refunded_sum
+    _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+    _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
+    assert _cfg.TOKEN.balanceOf(provider) == received_sum
+    assert _cfg.TOKEN.balanceOf(requester) == refunded_sum
     assert job_price == received_sum + refunded_sum

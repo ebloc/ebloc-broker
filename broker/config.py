@@ -151,6 +151,7 @@ def setup_logger(log_path="", is_brownie=False):
 Ebb = cfg.Ebb
 ipfs = cfg.ipfs
 ebb: Contract = None  # ebloc-broker contract object on the blockchain
+
 contract = None
 chain = None
 w3_ebb = None
@@ -160,6 +161,8 @@ coll = None
 oc = None
 driver_cancel_process = None
 _eblocbroker = None
+usdtmy = None
+_usdtmy = None
 env: ENV
 try:
     env = ENV()

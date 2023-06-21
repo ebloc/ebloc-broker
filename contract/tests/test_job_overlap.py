@@ -47,7 +47,15 @@ chain = None
 
 
 def _transfer(to, amount):
-    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    """Empty balance and transfer given amount."""
+    balance = _cfg.TOKEN.balanceOf(to)
+    if balance:
+        _cfg.TOKEN.approve(accounts[0], balance, {"from": to})
+        _cfg.TOKEN.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
+
+    assert _cfg.TOKEN.balanceOf(to) == 0
+    _cfg.TOKEN.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    _cfg.TOKEN.approve(ebb.address, Cent(amount), {"from": to})
 
 
 @pytest.fixture(scope="module", autouse=True)

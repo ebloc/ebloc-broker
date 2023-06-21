@@ -11,8 +11,7 @@ from pymongo import MongoClient
 from typing import Union
 from web3.exceptions import TransactionNotFound
 from web3.types import TxReceipt
-
-from broker import cfg
+from broker import cfg, config
 from broker._utils._log import WHERE, ok
 from broker._utils.tools import exit_after, log, print_tb, without_keys
 from broker._utils.yaml import Yaml
@@ -103,6 +102,7 @@ class Contract(Base):
                 from broker.imports import connect
 
                 self.eBlocBroker, self.w3, self._eblocbroker = connect()
+                self.usdtmy = config.usdtmy
             except Exception as e:
                 print_tb(e)
 
@@ -204,7 +204,7 @@ class Contract(Base):
             print_tb(e)
             return False
 
-        block_number: int = self.w3.eth.get_transaction(contract["tx_hash"]).blockNumber
+        block_number: int = self.w3.eth.get_transaction(contract["eBlocBroker"]["tx_hash"]).blockNumber
         if not block_number:
             raise Exception("Contract is not available on the blockchain, is it synced?")
 
@@ -323,7 +323,7 @@ class Contract(Base):
         except Exception as e:
             raise e
 
-        contract_address = self.w3.toChecksumAddress(contract["address"])
+        contract_address = self.w3.toChecksumAddress(contract["eBlocBroker"]["address"])
         if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
             raise Exception("Empty contract")
 
@@ -339,7 +339,7 @@ class Contract(Base):
     # Timeout Tx #
     ##############
     @exit_after(EXIT_AFTER)
-    def timeout(self, func, *args):
+    def timeout(self, func, contract, *args):
         """Timeout deploy contract's functions.
 
         brownie usage:
@@ -357,7 +357,13 @@ class Contract(Base):
             if env.IS_BLOXBERG:
                 fn = self.ops["from"].lower().replace("0x", "") + ".json"
                 self.brownie_load_account(fn)
-                method = getattr(self.eBlocBroker, func)
+                if contract == "eBlocBroker":
+                    method = getattr(self.eBlocBroker, func)
+                elif contract == "USDTmy":
+                    method = getattr(self.usdtmy, func)
+                else:
+                    raise Exception()
+
                 return method(*args, self.ops)
             else:
                 method = getattr(self.eBlocBroker.functions, func)
@@ -365,7 +371,7 @@ class Contract(Base):
         except AttributeError as e:
             raise Exception(f"Method {method} is not implemented") from e
 
-    def timeout_wrapper(self, method, *args):
+    def timeout_wrapper(self, method, contract, *args):
         idx = 0
         while idx < self.max_retries:
             self.ops = {
@@ -381,7 +387,7 @@ class Contract(Base):
                     log(f"Attempt={idx}...")
                     log(history.filter(sender=self._from))
 
-                return self.timeout(method, *args)
+                return self.timeout(method, contract, *args)
             except ValueError as e:
                 if "MAC mismatch" in str(e):
                     log("Please check your Ethereum account password")
@@ -425,7 +431,7 @@ class Contract(Base):
                     if self.ops["allow_revert"]:
                         self.ops["allow_revert"] = False
                         try:
-                            return self.timeout(method, *args)
+                            return self.timeout(method, contract, *args)
                         except Exception as e1:
                             log(str(e1), is_wrap=True)
                             raise QuietExit from e1
@@ -471,7 +477,7 @@ class Contract(Base):
                 "required_confs": required_confs,
             }
             try:
-                return self.timeout(method_name, *args)
+                return self.timeout(method_name, "eBlocBroker", *args)
             except ValueError as e:
                 log(f"E: {WHERE()} {e}")
                 if "Insufficient funds" in str(e) or "Execution reverted" in str(e):
@@ -500,102 +506,104 @@ class Contract(Base):
         self.gas_price = GAS_PRICE
         self._from = self.w3.toChecksumAddress(_from)
         self.required_confs = 1
-        return self.timeout_wrapper("depositStorage", data_owner, code_hash)
+        return self.timeout_wrapper("depositStorage", "eBlocBroker", data_owner, code_hash)
 
     def _register_requester(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = _from
         self.required_confs = 1
-        return self.timeout_wrapper("registerRequester", *args)
+        return self.timeout_wrapper("registerRequester", "eBlocBroker", *args)
 
     def _refund(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = _from
         self.required_confs = 1
         # TODO: raise RPCRequestError causes driver to crash does not continue, why?
-        return self.timeout_wrapper("refund", *args)
+        return self.timeout_wrapper("refund", "eBlocBroker", *args)
 
     def _transfer_ownership(self, _from, new_owner) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = _from
         self.required_confs = 1
-        return self.timeout_wrapper("transferOwnership", new_owner)
+        return self.timeout_wrapper("transferOwnership", "eBlocBroker", new_owner)
 
     def _transfer(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = _from
         self.required_confs = 1
-        return self.timeout_wrapper("transfer", *args)
+        return self.timeout_wrapper("transfer", "USDTmy", *args)
 
     def _authenticate_orc_id(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = _from
         self.required_confs = 1
-        return self.timeout_wrapper("authenticateOrcID", *args)
+        return self.timeout_wrapper("authenticateOrcID", "eBlocBroker", *args)
 
     def _update_provider_prices(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1
-        return self.timeout_wrapper("updateProviderPrices", *args)
+        return self.timeout_wrapper("updateProviderPrices", "eBlocBroker", *args)
 
     def _update_provider_info(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1
-        tx = self.timeout_wrapper("updateProviderInfo", *args)
+        tx = self.timeout_wrapper("updateProviderInfo", "eBlocBroker", *args)
         if not tx:
             raise Exception("E: Tx=updateProviderInfo returns None")
 
-        return self.timeout_wrapper("updateProviderInfo", *args)
+        return self.timeout_wrapper("updateProviderInfo", "eBlocBroker", *args)
 
     def register_provider(self, *args) -> "TransactionReceipt":
         """Register provider."""
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1
-        return self.timeout_wrapper("registerProvider", *args)
+        return self.timeout_wrapper("registerProvider", "eBlocBroker", *args)
 
     def register_data(self, *args) -> "TransactionReceipt":
         """Register the dataset hash."""
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1
-        return self.timeout_wrapper("registerData", *args)
+        return self.timeout_wrapper("registerData", "eBlocBroker", *args)
 
     def update_data_price(self, *args) -> "TransactionReceipt":
         """Register the dataset hash."""
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1
-        return self.timeout_wrapper("updataDataPrice", *args)
+        return self.timeout_wrapper("updataDataPrice", "eBlocBroker", *args)
 
     def set_data_verified(self, *args) -> "TransactionReceipt":
         """Set data hashes as verified."""
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 0
-        return self.timeout_wrapper("setDataVerified", *args)
+        return self.timeout_wrapper("setDataVerified", "eBlocBroker", *args)
 
     def set_job_state_running(self, key, index, job_id, start_timestamp) -> "TransactionReceipt":
         """Set the job state as running."""
         _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
         self._from = _from
         self.required_confs = 1  # "1" safer to wait for confirmation
-        return self.timeout_wrapper("setJobStateRunning", key, int(index), int(job_id), int(start_timestamp))
+        return self.timeout_wrapper(
+            "setJobStateRunning", "eBlocBroker", key, int(index), int(job_id), int(start_timestamp)
+        )
 
     def _process_payment(self, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1  # "1" safer to wait for confirmation
-        return self.timeout_wrapper("processPayment", *args)
+        return self.timeout_wrapper("processPayment", "eBlocBroker", *args)
 
     def remove_registered_data(self, *args) -> "TransactionReceipt":
         """Remove registered data."""
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 0
-        return self.timeout_wrapper("removeRegisteredData", *args)
+        return self.timeout_wrapper("removeRegisteredData", "eBlocBroker", *args)
 
     ###########
     # GETTERS #
@@ -794,11 +802,11 @@ class Contract(Base):
         if not isinstance(account, (Account, LocalAccount)):
             account = self.w3.toChecksumAddress(account)
 
-        if self.eBlocBroker is not None:
+        if self.usdtmy is not None:
             if env.IS_BLOXBERG:
-                return self.eBlocBroker.balanceOf(account)
+                return self.usdtmy.balanceOf(account)
             else:
-                return self.eBlocBroker.functions.balanceOf(account).call()
+                return self.usdtmy.functions.balanceOf(account).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 

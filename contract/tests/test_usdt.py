@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
+import contract.tests.cfg as _cfg
 from broker.eblocbroker_scripts.utils import Cent
 from brownie import accounts
 
 
 def test_transfer(_Ebb):
-    token = _Ebb
+    token = _cfg.TOKEN
     c = Cent("1 usd")  # dummy object
     total_supply = Cent("1000000000 usd")
     assert token.totalSupply() == c.usdt("1000000000") == total_supply

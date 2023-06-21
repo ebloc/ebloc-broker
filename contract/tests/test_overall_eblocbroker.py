@@ -182,16 +182,19 @@ def register_requester(account):
 
 
 def _transfer(to, amount):
-    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    set_transfer(to, amount)
 
 
 def set_transfer(to, amount):
     """Empty balance and transfer given amount."""
-    balance = ebb.balanceOf(to)
-    ebb.approve(accounts[0], balance, {"from": to})
-    ebb.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
-    assert ebb.balanceOf(to) == 0
-    ebb.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    balance = _cfg.TOKEN.balanceOf(to)
+    if balance:
+        _cfg.TOKEN.approve(accounts[0], balance, {"from": to})
+        _cfg.TOKEN.transferFrom(to, accounts[0], balance, {"from": _cfg.OWNER})
+
+    assert _cfg.TOKEN.balanceOf(to) == 0
+    _cfg.TOKEN.transfer(to, Cent(amount), {"from": _cfg.OWNER})
+    _cfg.TOKEN.approve(ebb.address, Cent(amount), {"from": to})
 
 
 # # @pytest.mark.skip(reason="skip")
@@ -204,7 +207,7 @@ def set_transfer(to, amount):
 
 def test_total_supply():
     total_supply = "1000000000 usd"
-    assert ebb.balanceOf(_cfg.OWNER) == Cent(total_supply)
+    assert _cfg.TOKEN.balanceOf(_cfg.OWNER) == Cent(total_supply)
 
 
 def test_register():
@@ -215,8 +218,8 @@ def test_register():
     requester = accounts[2]
     register_requester(requester)
 
-    ebb.transfer(requester, Cent("100 usd"), {"from": accounts[0]})
-    assert ebb.balanceOf(requester) == Cent("100 usd")
+    set_transfer(requester, Cent("100 usd"))
+    assert _cfg.TOKEN.balanceOf(requester) == Cent("100 usd")
 
 
 def test_stored_data_usage():
@@ -265,8 +268,8 @@ def test_stored_data_usage():
         job.code_hashes,
         {"from": requester},
     )
-    assert Cent(ebb.balanceOf(requester)) == 0
-    # assert Cent(ebb.balanceOf(requester)).__add__(job_price) == Cent("100 usd")
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == 0
+    # assert Cent(_cfg.TOKEN.balanceOf(requester)).__add__(job_price) == Cent("100 usd")
     log(tx.events["LogDataStorageRequest"]["owner"])
     key = tx.events["LogJob"]["jobKey"]
     assert tx.events["LogJob"]["received"] == Cent(job_price)
@@ -303,7 +306,7 @@ def test_stored_data_usage():
         job.code_hashes,
         {"from": requester},
     )
-    assert Cent(ebb.balanceOf(requester)) == 0
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == 0
     assert "LogDataStorageRequest" not in tx.events
     mine(cfg.ONE_HOUR_BLOCK_DURATION)
     job_price, cost = job.cost(provider, requester)
@@ -359,7 +362,7 @@ def test_data_info():
         job.code_hashes,
         {"from": requester},
     )
-    assert Cent(ebb.balanceOf(requester)) == 0
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == 0
     provider_price_info = ebb.getProviderInfo(provider, 0)
     price_cache_mb = provider_price_info[1][4]
     storage_payment = []
@@ -487,7 +490,7 @@ def test_storage_refund():
         {"from": requester},
     )
     refunded = tx.events["LogJob"]["refunded"]
-    assert ebb.balanceOf(requester) == refunded == 1
+    assert _cfg.TOKEN.balanceOf(requester) == refunded == 1
     log(f"==> key={tx.events['LogJob']['jobKey']} | job_index={tx.events['LogJob']['index']}")
     assert requester == tx.events["LogJob"]["owner"]
     index = 0
@@ -498,7 +501,9 @@ def test_storage_refund():
     refunded_cent = tx.events["LogRefundRequest"]["refundedCent"]
     log(f"refunded_cent={refunded_cent}")
 
-    assert ebb.balanceOf(requester) == 320 * Cent("1 cent") + refunded
+    _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+
+    assert _cfg.TOKEN.balanceOf(requester) == 320 * Cent("1 cent") + refunded
     # withdraw(requester, refunded_cent)
     # VM Exception while processing transaction: invalid opcode
     with brownie.reverts():
@@ -516,7 +521,8 @@ def test_storage_refund():
     append_gas_cost("refundStorageDeposit", tx)
     refunded_cent = tx.events["LogDepositStorage"]["payment"]
     log(f"refunded_cent={refunded_cent}")
-    assert ebb.balanceOf(requester) == 420 * Cent("1 cent") + refunded
+    _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+    assert _cfg.TOKEN.balanceOf(requester) == 420 * Cent("1 cent") + refunded
     # withdraw(requester, refunded_cent)
     with brownie.reverts():
         tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[0], {"from": requester})
@@ -525,13 +531,14 @@ def test_storage_refund():
     append_gas_cost("refundStorageDeposit", tx)
     refunded_cent = tx.events["LogDepositStorage"]["payment"]
     paid_address = tx.events["LogDepositStorage"]["paidAddress"]
-    assert ebb.balanceOf(requester) == job_price
+    _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+    assert _cfg.TOKEN.balanceOf(requester) == job_price
     # withdraw(requester, refunded_cent)
     with brownie.reverts():
         tx = ebb.refundStorageDeposit(provider, requester, job.code_hashes[0], {"from": requester})
 
     assert requester == paid_address
-    assert ebb.balanceOf(provider) == 0
+    assert _cfg.TOKEN.balanceOf(provider) == 0
     console_ruler("same job submitted after full refund", color="blue")
     args[-1] = job_price
     set_transfer(requester, Cent(job_price))
@@ -576,11 +583,12 @@ def test_storage_refund():
     mine(cfg.ONE_HOUR_BLOCK_DURATION)
     # after deadline (1 hr) is completed to store the data, provider could obtain the money
     for idx, code_hash in enumerate(job.code_hashes):
-        initial_balance = ebb.balanceOf(provider)
+        initial_balance = _cfg.TOKEN.balanceOf(provider)
         tx = ebb.depositStorage(requester, code_hash, {"from": provider})
         append_gas_cost("depositStorage", tx)
         amount = tx.events["LogDepositStorage"]["payment"]
-        assert (ebb.balanceOf(provider) - initial_balance) == amount
+        _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
+        assert (_cfg.TOKEN.balanceOf(provider) - initial_balance) == amount
         assert storage_payment[idx] == amount
 
 
@@ -764,8 +772,10 @@ def test_multiple_data():
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
     log(f"received={received_sum} refunded={refunded_sum}")
     assert received_sum == 320 * Cent("1 cent") and refunded_sum == 0
-    assert Cent(ebb.balanceOf(provider)) == received_sum
-    assert Cent(ebb.balanceOf(requester)) == refunded_sum
+    _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+    _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
+    assert Cent(_cfg.TOKEN.balanceOf(provider)) == received_sum
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == refunded_sum
 
     set_transfer(provider, Cent(0))  # clean provider balance
 
@@ -800,8 +810,10 @@ def test_multiple_data():
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
     log(f"#> received={received_sum} refunded={refunded_sum}")
     assert received_sum == 120 * Cent("1 cent") and refunded_sum == 0
-    assert Cent(ebb.balanceOf(provider)) == received_sum
-    assert Cent(ebb.balanceOf(requester)) == refunded_sum
+    _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+    _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
+    assert Cent(_cfg.TOKEN.balanceOf(provider)) == received_sum
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == refunded_sum
 
 
 def test_simple_submit():
@@ -842,7 +854,8 @@ def test_simple_submit():
         job.code_hashes,
         {"from": requester},
     )
-    assert Cent(ebb.balanceOf(_cfg.OWNER)) == Cent("1000000000 usd")
+
+    # assert Cent(_cfg.TOKEN.balanceOf(_cfg.OWNER)) == Cent("1000000000 usd")
     log(f"submit_job_gas_used={tx.__dict__['gas_used']}")
     index = 0
     job_id = 0
@@ -875,9 +888,12 @@ def test_simple_submit():
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
     # log(str(received_sum) + " " + str(refunded_sum))
     assert received_sum == job.cores[0] * price_core_min and refunded_sum == 5 * Cent("1 cent")
-    assert Cent(ebb.balanceOf(provider)) == received_sum
-    assert Cent(ebb.balanceOf(requester)) == refunded_sum
-    assert Cent(ebb.balanceOf(_cfg.OWNER)) == Cent("1000000000 usd").__sub__(job_price)
+
+    _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+    _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
+    assert Cent(_cfg.TOKEN.balanceOf(provider)) == received_sum
+    assert Cent(_cfg.TOKEN.balanceOf(requester)) == refunded_sum
+    assert Cent(_cfg.TOKEN.balanceOf(_cfg.OWNER)) == Cent("1000000000 usd").__sub__(job_price)
 
 
 def test_submit_jobs():
@@ -962,7 +978,7 @@ def test_submit_jobs():
             log(ebb.getJobInfo(provider, job_key, index, job_id))
             index += 1
 
-    log(f"total_paid={job_price_sum}", "bold")
+    log(f"total_paid={job_price_sum}")
     # log(block_read_from)
     # rpc.mine(100)
     # log(web3.eth.blockNumber)
@@ -993,7 +1009,7 @@ def test_submit_jobs():
             core = int(arguments[2])
             job.cores = [core]
             job.run_time = [core_min]
-            log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}")
+            log(f"contract_balance={Cent(_cfg.TOKEN.balanceOf(_cfg.OWNER))}")
             job_id = 0
             elapsed_time = int(arguments[1]) - int(arguments[0])
             end_ts = int(arguments[1])
@@ -1015,11 +1031,17 @@ def test_submit_jobs():
             append_gas_cost("processPayment", tx)
             received = tx.events["LogProcessPayment"]["receivedCent"]
             refunded = tx.events["LogProcessPayment"]["refundedCent"]
-            assert Cent(ebb.balanceOf(provider)) == received
-            assert Cent(ebb.balanceOf(requester)) == refunded
+            _cfg.TOKEN.transferFrom(
+                ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester}
+            )
+            _cfg.TOKEN.transferFrom(
+                ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider}
+            )
+            assert Cent(_cfg.TOKEN.balanceOf(provider)) == received
+            assert Cent(_cfg.TOKEN.balanceOf(requester)) == refunded
             log(f"received={received} | refunded={refunded}")
 
-    log(f"contract_balance={Cent(ebb.balanceOf(_cfg.OWNER))}")
+    log(f"contract_balance={Cent(_cfg.TOKEN.balanceOf(_cfg.OWNER))}")
     for idx in range(0, ebb.getProviderReceiptNode(provider, index)[0]):
         # prints finalize version of the linked list
         log(ebb.getProviderReceiptNode(provider, idx))

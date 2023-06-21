@@ -21,8 +21,7 @@ import "./ERC20/ERC20.sol";
  */
 contract eBlocBroker is
     eBlocBrokerInterface,
-    EBlocBrokerBase,
-    ERC20
+    EBlocBrokerBase
 {
     using SafeMath for uint256;
     using SafeMath32 for uint32;
@@ -42,8 +41,18 @@ contract eBlocBroker is
      * @dev eBlocBroker constructor that sets the original `owner` of the
      * contract to the msg.sender and minting.
      */
-    constructor() ERC20("USDmy", "USDmy") {
-        _mint(msg.sender, 1000000000 * (10**uint256(decimals())));
+    constructor(address _tokenAddress) {
+        tokenAddress = _tokenAddress;
+        ebb_owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == ebb_owner); // dev: Sender must be owner
+        _;
+    }
+
+    function getOwner() public view virtual returns (address) {
+        return ebb_owner;
     }
 
     /**
@@ -139,7 +148,8 @@ contract eBlocBroker is
             jobInfo.received = 0;
             jobInfo.receivedRegisteredDataFee = 0;
             // pay back newOwned(jobInfo.received) back to the requester, which is full refund
-            _distributeTransfer(jobInfo.jobOwner, _refund);
+            // _distributeTransfer(jobInfo.jobOwner, _refund);
+            ERC20(tokenAddress).increaseAllowance(jobInfo.jobOwner, _refund);
             _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, 0, _refund);
             return;
         }
@@ -156,10 +166,12 @@ contract eBlocBroker is
         jobInfo.receivedRegisteredDataFee = 0;
         if (_refund > 0) {
             // unused core and bandwidth is refunded back to the client
-            _distributeTransfer(jobInfo.jobOwner, _refund);
+            // _distributeTransfer(jobInfo.jobOwner, _refund);
+            ERC20(tokenAddress).increaseAllowance(jobInfo.jobOwner, _refund);
         }
 
-        _distributeTransfer(msg.sender, gain); // transfer gained amount to the provider
+        // _distributeTransfer(msg.sender, gain); // transfer gained amount to the provider
+        ERC20(tokenAddress).increaseAllowance(msg.sender, gain);
         _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
         return;
     }
@@ -213,7 +225,8 @@ contract eBlocBroker is
             //: balance is zeroed out before the transfer
             jobInfo.received = 0;
             jobInfo.receivedRegisteredDataFee = 0;
-            _distributeTransfer(jobInfo.jobOwner, amount); // transfer cost to job owner
+            // _distributeTransfer(jobInfo.jobOwner, amount); // transfer cost to job owner
+            ERC20(tokenAddress).increaseAllowance(jobInfo.jobOwner, amount);
         } else if (job.stateCode == Lib.JobStateCodes.RUNNING) {
             job.stateCode = Lib.JobStateCodes.CANCELLED;
         } else {
@@ -237,7 +250,8 @@ contract eBlocBroker is
         // required remaining time to cache should be 0
         require(jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
         _cleanJobStorage(jobSt);
-        _distributeTransfer(requester, payment);
+        // _distributeTransfer(requester, payment);
+        ERC20(tokenAddress).increaseAllowance(requester, payment);
         emit LogDepositStorage(requester, payment);
         return true;
     }
@@ -249,7 +263,8 @@ contract eBlocBroker is
         require(jobSt.isVerifiedUsed && jobSt.receivedBlock.add(jobSt.storageDuration) < block.number);
         uint256 payment = storageInfo.received;
         storageInfo.received = 0;
-        _distributeTransfer(msg.sender, payment);
+        // _distributeTransfer(msg.sender, payment);
+        ERC20(tokenAddress).increaseAllowance(msg.sender, payment);
         _cleanJobStorage(jobSt);
         emit LogDepositStorage(msg.sender, payment);
         return true;
@@ -604,8 +619,8 @@ contract eBlocBroker is
 
         // @args.jobPrice: paid, @cost: calculated
         require(args.jobPrice >= cost);
-        transfer(getOwner(), cost); // transfer cost to contract
-
+        /* transfer(getOwner(), cost); // transfer cost to contract */
+        ERC20(tokenAddress).transferFrom(msg.sender, address(this), cost);
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage jobInfo = provider.jobStatus[key].push();
         jobInfo.cacheCost = tmp[1];
@@ -760,7 +775,8 @@ contract eBlocBroker is
             if (temp > 0 && jobSt.receivedBlock + jobSt.storageDuration < block.number) {
                 storageInfo.received = 0;
                 address _provider = args.provider;
-                _distributeTransfer(_provider, temp);
+                // _distributeTransfer(_provider, temp);
+                ERC20(tokenAddress).increaseAllowance(_provider, temp);
                 // balances[_provider] += temp; // refund storage deposit back to provider
                 _cleanJobStorage(jobSt);
                 emit LogDepositStorage(args.provider, temp);
