@@ -278,7 +278,7 @@ class Job:
 
                 if is_data_hash and not is_data_registered(self.provider_addr, data_hash):
                     d = data_hash.decode("utf-8")
-                    raise QuietExit(f"Requested data={d} is not registered into the provider.")
+                    raise QuietExit(f"Requested data={d} is not registered into the provider={self.provider_addr}.")
 
         self.cores = []
         self.run_time = []

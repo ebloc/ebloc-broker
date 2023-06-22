@@ -27,7 +27,7 @@ Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 cfg.TX_LOG_VERBOSE = False
-IS_MINI_TEST = False
+IS_MINI_TEST = True
 
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])

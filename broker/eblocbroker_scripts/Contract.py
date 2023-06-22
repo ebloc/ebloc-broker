@@ -335,6 +335,11 @@ class Contract(Base):
         print(f"#> address={self.eBlocBroker.contract_address}")
         print(f"#> deployed_block_number={self.get_deployed_block_number()}")
 
+    def approve(self, _from, amount):
+        fn = self.ops["from"].lower().replace("0x", "") + ".json"
+        self.brownie_load_account(fn)
+        Ebb.usdtmy.approve(env.CONTRACT_ADDRESS, amount, {"from": _from})
+
     ##############
     # Timeout Tx #
     ##############
@@ -477,6 +482,7 @@ class Contract(Base):
                 "required_confs": required_confs,
             }
             try:
+                tx = self.approve(requester, job_price)
                 return self.timeout(method_name, "eBlocBroker", *args)
             except ValueError as e:
                 log(f"E: {WHERE()} {e}")
@@ -680,6 +686,16 @@ class Contract(Base):
                 committed_block_num = self.eBlocBroker.functions.getRequesterCommittmedBlock(requester).call()
 
             return committed_block_num, self.get_user_orcid(requester)
+        else:
+            raise Exception("Contract object's eBlocBroker variable is None")
+
+    def allowance(self, _from, to):
+        """Return the owner of ebloc-broker."""
+        if self.usdtmy is not None:
+            if env.IS_BLOXBERG:
+                return self.usdtmy.allowance(_from, to)
+            else:
+                return self.eBlocBroker.functions.allowance().call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 

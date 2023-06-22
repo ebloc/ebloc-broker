@@ -2,7 +2,7 @@
 
 import sys
 from typing import Any, Union  # noqa
-
+from broker.lib import JOB
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
@@ -61,7 +61,7 @@ def process_payment(
         else:
             result_ipfs_hash = ipfs_to_bytes32(result_ipfs_hash)
 
-        # final_job = True  # true only for the final job
+        job_type = JOB.TYPE["SINGLE"]
         args = [
             int(index),
             int(job_id),
@@ -70,8 +70,8 @@ def process_payment(
             int(data_transfer_out),
             int(elapsed_time),
             core,
-            run_time
-            # final_job,
+            run_time,
+            job_type,
         ]
         tx = self._process_payment(job_key, args, result_ipfs_hash)
     except Exception as e:
