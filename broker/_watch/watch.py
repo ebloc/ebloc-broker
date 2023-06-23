@@ -23,24 +23,27 @@ from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.lib import state
 
+VERBOSE = False
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cfg.NETWORK_ID = "bloxberg"
 Ebb = cfg.Ebb
 columns_size = 30
 is_provider = True
-is_while = False  # to fetch on-going results
 
-#: fetch results into google-sheets and analyze
-EXPORT_CSV = False
+#: if True: fetch results into google-sheets and analyze
+is_export_csv = False
 
 sum_submitJob_gas_used = sum_processPayment_gas_used = 0
 counter_submitJob_gas_used = counter_processPayment_gas_used = 0
 
-VERBOSE = True
+is_while = False  # to fetch on-going results
 if VERBOSE:
-    EXPORT_CSV = True
+    is_export_csv = True
     is_while = False
+else:
+    is_while = True  # to fetch on-going results
 
-if EXPORT_CSV:
+if is_export_csv:
     is_while = False
     analyze_long_test = True
     #: used to investigate delta changes between spent and paid
@@ -268,7 +271,7 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
 
         _hash = _job["job_key"]
         _index = _job["index"]
-        if EXPORT_CSV:
+        if is_export_csv:
             print_in_csv_format(_job, idx, state_val, workload_type, _hash, _index, title_flag)
             title_flag = False
         else:
@@ -288,7 +291,7 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
 
     if is_while:
         job_full = f"{header}\n{job_full}".rstrip()
-    elif not EXPORT_CSV:
+    elif not is_export_csv:
         job_ruler = "[g]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/g]"
         job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
 
@@ -296,10 +299,10 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
     if is_while:
         _console_clear()
 
-    if not EXPORT_CSV:
+    if not is_export_csv:
         open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
 
-    if EXPORT_CSV:
+    if is_export_csv:
         log()
 
     log(f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}")
@@ -347,7 +350,7 @@ def main():
     else:
         eth_address = None
 
-    from_block = 20401501
+    from_block = 20968607
     to_block = "latest"
     # to_block = 20070624
 

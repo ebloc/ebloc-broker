@@ -533,6 +533,11 @@ class Contract(Base):
         self.required_confs = 1
         return self.timeout_wrapper("transferOwnership", "eBlocBroker", new_owner)
 
+    def transfer_from(self, _from, to, amount):
+        fn = to.lower().replace("0x", "") + ".json"
+        self.brownie_load_account(fn)
+        self.usdtmy.transferFrom(_from, to, amount, {"from": to})
+
     def _transfer(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         self._from = _from

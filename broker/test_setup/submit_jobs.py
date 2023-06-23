@@ -27,7 +27,7 @@ Ebb = cfg.Ebb
 cfg.IS_FULL_TEST = True
 cfg.IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 cfg.TX_LOG_VERBOSE = False
-IS_MINI_TEST = True
+IS_MINI_TEST = False
 
 mc = MongoClient()
 ebb_mongo = BaseMongoClass(mc, mc["ebloc_broker"]["tests"])
@@ -308,7 +308,7 @@ def main():
 
     bn = Ebb.get_block_number()
     console_ruler(f"test session starts -- bn={bn}", color="white")
-    log(f"networ_id={cfg.NETWORK_ID}")
+    log(f"network_id={cfg.NETWORK_ID}")
     log(f"{datetime.now().strftime('%Y-%m-%d %H:%M')}", h=False)
     if not is_process_on("mongod", is_print=False):
         raise Exception("mongodb is not running in the background")
