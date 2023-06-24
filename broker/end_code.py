@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import socket
 import base64
 import getpass
 import os
@@ -178,7 +179,11 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.modified_date = None
         self.encoded_share_tokens: Dict[str, str] = {}
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
-        os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
+        if socket.gethostname() == "homevm":
+            os.environ["IPFS_PATH"] = "/mnt/hgfs/ggh/.ipfs"
+        else:
+            os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
+
         _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}.log"
         self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "blue", is_code=True)
@@ -572,7 +577,6 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         try:
             tx_hash = self.process_payment_tx()
         except Exception as e:
-            breakpoint()  # DEBUG
             print_tb(e)
             raise e
 

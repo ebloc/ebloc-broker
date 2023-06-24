@@ -332,7 +332,7 @@ class Ipfs:
         :param is_hidden: boolean if it is true hidden files/foders are included such as .git
         """
         if os.path.isdir(path):
-            cmd = ["ipfs", "add", "-r", "--quieter", "--progress", "--offline", path]
+            cmd = ["/usr/local/bin/ipfs", "add", "-r", "--quieter", "--progress", "--offline", path]
             if is_hidden:
                 # include files that are hidden such as .git/.
                 # Only takes effect on recursive add
@@ -346,7 +346,7 @@ class Ipfs:
             try:
                 result_ipfs_hash = constantly_print_popen(cmd)
                 if not result_ipfs_hash and not self.is_valid(result_ipfs_hash):
-                    log(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
+                    log(f"E: Generated new hash string returned empty. Trying again. Try count: {attempt}")
                     time.sleep(5)
                 elif not self.is_valid(result_ipfs_hash):
                     log(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")

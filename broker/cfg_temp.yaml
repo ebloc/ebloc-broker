@@ -4,6 +4,7 @@ cfg:
   gmail: ""
   whoami: username
   home_dir: /home/username
+  ipfs_repo_dir: ~/.ipfs
   datadir: ~/.eblocpoa
   log_path: ~/.ebloc-broker
   ebloc_path: ~/ebloc-broker

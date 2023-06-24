@@ -561,10 +561,6 @@ class Contract(Base):
         self.gas_price = GAS_PRICE
         self._from = env.PROVIDER_ID
         self.required_confs = 1
-        tx = self.timeout_wrapper("updateProviderInfo", "eBlocBroker", *args)
-        if not tx:
-            raise Exception("E: Tx=updateProviderInfo returns None")
-
         return self.timeout_wrapper("updateProviderInfo", "eBlocBroker", *args)
 
     def register_provider(self, *args) -> "TransactionReceipt":

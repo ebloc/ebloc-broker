@@ -350,7 +350,7 @@ def main():
     else:
         eth_address = None
 
-    from_block = 20974065
+    from_block = 20978404
     to_block = "latest"
     # to_block = 20070624
 

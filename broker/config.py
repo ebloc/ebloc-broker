@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import socket
 import logging
 import threading
 from logging import Filter
@@ -85,6 +86,9 @@ class ENV(ENV_BASE):
         self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_REPO = self._HOME.joinpath(".ipfs")
+        if socket.gethostname() == "homevm":
+            self.IPFS_REPO = "/mnt/hgfs/ggh/.ipfs"
+
         self.IPFS_LOG = self.LOG_DIR.joinpath("ipfs.out")
         self.GANACHE_LOG = self.LOG_DIR.joinpath("ganache.out")
         self.OWNCLOUD_PATH = Path("/mnt/oc")

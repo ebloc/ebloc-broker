@@ -4,6 +4,7 @@ import daemon
 import os
 import sys
 from pathlib import Path
+import socket
 
 from broker import cfg, config
 from broker._utils._log import ok
@@ -23,12 +24,15 @@ def _run():
     __ https://stackoverflow.com/a/8375012/2402577
     __ https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c#gistcomment-4022998
     """
-    if not os.path.isdir(Path.home() / ".ipfs"):
+    IPFS_BIN = "/usr/local/bin/ipfs"
+    ipfs_init_folder = Path.home().joinpath(".ipfs")
+    if socket.gethostname() == "homevm":
+        ipfs_init_folder = "/mnt/hgfs/ggh/.ipfs"
+
+    if not os.path.isdir(ipfs_init_folder):
         output = run(["ipfs", "init"])
         print(output)
 
-    IPFS_BIN = "/usr/local/bin/ipfs"
-    ipfs_init_folder = Path.home().joinpath(".ipfs")
     if not os.path.isfile(config.env.IPFS_LOG):
         open(config.env.IPFS_LOG, "a").close()
 

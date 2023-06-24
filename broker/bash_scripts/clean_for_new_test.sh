@@ -46,7 +46,7 @@ clean_gdrive () {
 pkill -f ipfs
 ipfs_update
 ipfs repo stat && echo ""
-ipfs refs local| tail -n1
+ipfs refs local | tail -n1
 
 # ~/personalize/bin/swap_space.sh >/dev/null 2>&1
 
@@ -120,7 +120,15 @@ rm -f /var/ebloc-broker/cache/*.tar.gz
 # unpin and remove all IPFS content from my machine
 # ipfs pin ls --type recursive | cut -d' ' -f1 | ifne xargs -n1 ipfs pin rm
 # ipfs repo gc
-rm -rf ~/.ipfs/badgerds
+
+if [ "$(hostname)" = "homevm" ]; then
+    rm -rf /mnt/hgfs/ggh/.ipfs/badgerds
+    sudo umount -l ~/.ipfs >/dev/null 2>&1
+    sudo mount --bind /mnt/hgfs/ggh/.ipfs ~/.ipfs
+    ls ~/.ipfs
+else
+    rm -rf ~/.ipfs/badgerds
+fi
 
 systemctl status mongod && \
     ~/ebloc-broker/broker/libs/mongodb.py --delete-all
