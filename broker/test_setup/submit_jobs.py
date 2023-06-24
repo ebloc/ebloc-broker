@@ -244,12 +244,17 @@ def run_job(counter, cycleid) -> None:
             print("                                                                                                   ")
 
         if selected_benchmark == "nas":
-            log(f"{_ruler} Submitting the job from [c]NAS Benchmark[/c] to [g]{provider_addr}[/g] cycle={cycleid}\t")
+            log(
+                f"{_ruler} Submitting the job from [c]NAS Benchmark[/c] to [g]{provider_addr}[/g] cycle={cycleid}  [cy]<{_date(_type='tmux')}>\t",
+            )
             check_connection()
             yaml_cfg = Yaml(nas_yaml_fn)
             benchmark_name = create_nas_job_script()
         elif selected_benchmark == "cppr":
-            log(f"{_ruler} Submitting [c]job[/c] with [c]cppr datasets[/c] data_set_idx={idx} cycle={cycleid}\t")
+            log(
+                f"{_ruler} Submitting [c]job[/c] with [c]cppr datasets[/c] data_set_idx={idx} cycle={cycleid}  [cy]<{_date(_type='tmux')}>\t",
+                h=False,
+            )
             check_connection()
             # log(f" * Attempting to submit [cyan]job with cppr datasets[/cyan] to_provider=[g]{provider_addr}")
             yaml_cfg = Yaml(cppr_yam_fn)

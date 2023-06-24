@@ -469,6 +469,7 @@ class Contract(Base):
     ################
     # Transactions #
     ################
+    @exit_after(300)
     def _submit_job(self, required_confs, requester, job_price, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
         method_name = "submitJob"

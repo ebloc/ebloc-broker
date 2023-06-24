@@ -1,8 +1,8 @@
 config:
-  requester_address: '0x382f1e1fe7680315053ea1c489b4fc003ff9ad64'
+  requester_address: '0x3d50f068445c457c0c38d52980a5e6442e780d89'
   provider_address: '0xe2e146d6b456760150d78819af7d276a1223a6d4'
   source_code:
-    storage_id: ipfs
+    storage_id: b2drop
     cache_type: public
     path: ~/test_eblocbroker/NPB3.3-SER_source_code
     storage_hours: 0
