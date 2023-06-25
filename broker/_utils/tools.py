@@ -480,8 +480,8 @@ def without_keys(d, keys):
 
 
 def quit_function(fn_name) -> None:
-    print("warning: {0} function took too long".format(fn_name), file=sys.stderr)
-    # breakpoint()  # DEBUG
+    print("warning: _utils/tools.py: '{0}' function took too long\t\t\t".format(fn_name), file=sys.stderr)
+    # raise Exception(f" {fn_name} function took too long")
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
 

@@ -61,15 +61,15 @@ def collect_all_into_base():
     log(f"## base_account={Ebb._get_balance(base_account)}")
 
 
-def transfer_eth(accounts, value):
+def transfer_eth(accounts, value, is_force=False):
     for account in accounts:
         _account = account.lower().replace("0x", "")
         fn = Path(expanduser("~/.brownie/accounts")) / _account
         print(fn)
         account = Ebb.brownie_load_account(str(fn), "alper")
-        if Ebb._get_balance(account, "gwei") == 0:
+        if Ebb._get_balance(account, "gwei") == 0 or is_force:
             try:
-                log(Ebb.transfer(value, _base_account, account, required_confs=0))
+                log(Ebb.transfer(value, _base_account, account, required_confs=1))
             except Exception as e:
                 log(str(e))
                 breakpoint()  # DEBUG
@@ -85,11 +85,12 @@ def main():
     log(f"ower_balance ({owner.lower()})=", "bold", end="")
     balances([owner], is_verbose=True)
     balances(providers)
-    balances(requesters)
+    print("----")
+    # balances(requesters)
     #
     # collect_all_into_base()
     # transfer_eth(["0xd118b6ef83ccf11b34331f1e7285542ddf70bc49"], "0.5 ether")
-    # transfer_eth(providers, "0.4 ether")
+    # transfer_eth(providers, "0.01 ether", is_force=True)
     # transfer_eth(requesters, "0.11 ether")
     # transfer_eth(extra_users, "0.1 ether")
 

@@ -162,6 +162,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
     def __init__(self, **kwargs) -> None:
         args = " ".join(["{!r}".format(v) for k, v in kwargs.items()])
         self.job_key: str = kwargs.pop("job_key")
+        self.job_key = self.job_key.replace("\\n", "")
         self.index = int(kwargs.pop("index"))
         self.received_bn: int = kwargs.pop("received_bn")
         self.folder_name: str = kwargs.pop("folder_name")
@@ -186,7 +187,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}.log"
         self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
-        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", "blue", is_code=True)
+        log(f"{env.EBLOCPATH}/broker/end_code.py {args}", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             log("E: given key and index are equal to each other")

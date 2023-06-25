@@ -28,7 +28,7 @@ from brownie.network.transaction import TransactionReceipt
 # from brownie.network.gas.strategies import LinearScalingStrategy
 
 GAS_PRICE = 1.20  # was 1 => 1.13
-EXIT_AFTER = 180  # seconds
+EXIT_AFTER = 500  # seconds
 
 
 class Base:
@@ -418,6 +418,9 @@ class Contract(Base):
                 ):
                     if self.gas_price < 2:
                         self.gas_price *= 1.13
+                        log(f"==> new gas_price={self.gas_price}")
+                    else:
+                        idx += 1
 
                     continue
                 else:
@@ -444,6 +447,9 @@ class Contract(Base):
                 log(f"warning: Timeout Awaiting Transaction in the mempool -- gas_price={self.gas_price}")
                 if self.gas_price < 2:
                     self.gas_price *= 1.13
+                    log(f"==> new gas_price={self.gas_price}")
+                else:
+                    idx += 1
 
                 continue
             except Exception as e:
@@ -452,6 +458,9 @@ class Contract(Base):
                 if "Tx dropped without known replacement" in str(e):
                     if self.gas_price < 2:
                         self.gas_price *= 1.13
+                        log(f"==> new gas_price={self.gas_price}")
+                    else:
+                        idx += 1
 
                     log("Sleep 15 seconds, will try again...")
                     time.sleep(15)
@@ -498,7 +507,12 @@ class Contract(Base):
                     continue
 
                 if "Try increasing the gas price" in str(e):
-                    self.gas_price *= 1.13
+                    if self.gas_price < 2:
+                        self.gas_price *= 1.13
+                        log(f"==> new gas_price={self.gas_price}")
+                    else:  # if idx += 1 done it remains in an endless loop
+                        idx += 1
+
                     continue
             except KeyboardInterrupt as e:  # acts as Exception
                 if str(e):
@@ -506,7 +520,12 @@ class Contract(Base):
 
                 if "Awaiting Transaction in the mempool" in str(e):
                     log("warning: Timeout Awaiting Transaction in the mempool")
-                    self.gas_price *= 1.13
+                    if self.gas_price < 2:
+                        self.gas_price *= 1.13
+                        log(f"==> new gas_price={self.gas_price}")
+                    else:
+                        idx += 1
+
                     continue
 
             idx += 1
