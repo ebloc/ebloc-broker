@@ -341,13 +341,13 @@ def main():
     try:
         counter = 0
         for idx in range(80):
-            for _ in range(2):  # submitted as batch is faster
+            for _ in range(2):  # submitting jobs as batch is faster
                 log(f"#> latest number_of_submitted_jobs={counter}", is_write=False)
                 run_job(counter, idx)
                 counter += 1
                 countdown(20)
 
-            sleep_duration = randint(240, 480)
+            sleep_duration = randint(180, 420)
             countdown(sleep_duration)
 
         log(f"#> total number_of_submitted_jobs={counter}")

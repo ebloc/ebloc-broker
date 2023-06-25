@@ -335,11 +335,6 @@ class Contract(Base):
         print(f"#> address={self.eBlocBroker.contract_address}")
         print(f"#> deployed_block_number={self.get_deployed_block_number()}")
 
-    def approve(self, _from, amount):
-        fn = self.ops["from"].lower().replace("0x", "") + ".json"
-        self.brownie_load_account(fn)
-        Ebb.usdtmy.approve(env.CONTRACT_ADDRESS, amount, {"from": _from})
-
     ##############
     # Timeout Tx #
     ##############
@@ -469,8 +464,17 @@ class Contract(Base):
     ################
     # Transactions #
     ################
-    @exit_after(300)
     def _submit_job(self, required_confs, requester, job_price, *args) -> "TransactionReceipt":
+        try:
+            # self.approve(env.CONTRACT_ADDRESS, requester, job_price)
+            log()
+            self.gas_price = GAS_PRICE
+            self._from = requester
+            self.required_confs = 1
+            self.timeout_wrapper("approve", "USDTmy", env.CONTRACT_ADDRESS, job_price)
+        except Exception as e:
+            raise Exception(f"Approve transaction is failed, {e}")
+
         self.gas_price = GAS_PRICE
         method_name = "submitJob"
         idx = 0
@@ -483,7 +487,6 @@ class Contract(Base):
                 "required_confs": required_confs,
             }
             try:
-                tx = self.approve(requester, job_price)
                 return self.timeout(method_name, "eBlocBroker", *args)
             except ValueError as e:
                 log(f"E: {WHERE()} {e}")
@@ -507,7 +510,13 @@ class Contract(Base):
                     continue
 
             idx += 1
-        raise Exception("No valid Tx receipt is generated")
+        raise Exception("No valid Tx receipt for 'submitJob' is generated")
+
+    def approve(self, _from, to, amount) -> "TransactionReceipt":
+        self.gas_price = GAS_PRICE
+        self._from = self.w3.toChecksumAddress(to)
+        self.required_confs = 1
+        return self.timeout_wrapper("approve", "USDTmy", _from, amount)
 
     def deposit_storage(self, data_owner, code_hash, _from) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
