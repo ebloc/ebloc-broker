@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import socket
 import base64
 import getpass
 import os
 import psutil
 import shutil
+import socket
 import sys
 import time
 from contextlib import suppress

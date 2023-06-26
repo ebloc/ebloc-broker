@@ -665,3 +665,22 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
         return wrapper
 
     return decorator
+
+
+def gdrive_about_user() -> str:
+    """Return gdrive about
+
+    Example output:
+    User: Alper Alim, alper.alimoglu.test.2@gmail.com
+    Used: 10.7 MB
+    Free: 16.1 GB
+    Total: 16.1 GB
+    Max upload size: 5.2 TB
+    """
+    output = run(["gdrive", "about"])
+    for line in output.split("\n"):
+        if "User:" in line:
+            ret = line.split(", ")
+            return ret[1]
+
+    raise Exception()

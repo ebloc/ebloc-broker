@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
+from broker import cfg
 from broker.config import env
-from broker import cfg, config
-from broker._utils._log import log
 from broker.utils import print_tb
 
 

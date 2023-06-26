@@ -2,11 +2,11 @@
 
 import sys
 from typing import Any, Union  # noqa
-from broker.lib import JOB
+
 from broker import cfg
 from broker._utils.tools import log, print_tb
 from broker.config import env
-from broker.lib import state
+from broker.lib import JOB, state
 from broker.utils import StorageID, ipfs_to_bytes32
 
 

@@ -8,7 +8,6 @@ from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
 from broker.utils import StorageID, is_ipfs_on, question_yes_no
 from brownie.exceptions import TransactionError
-from broker.config import env
 
 Ebb = cfg.Ebb
 ipfs = cfg.ipfs

@@ -8,8 +8,8 @@ __ https://github.com/brownie-mix/token-mix/blob/master/tests/test_transferFrom.
 __ https://eth-brownie.readthedocs.io/en/stable/init.html#init
 """
 
-import contract.tests.cfg as _cfg
 import brownie
+import contract.tests.cfg as _cfg
 
 
 def test_sender_balance_decreases(accounts, _Ebb):

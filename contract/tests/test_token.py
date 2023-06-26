@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-import contract.tests.cfg as _cfg
 import brownie
+import contract.tests.cfg as _cfg
 
 
 def test_sender_balance_decreases(accounts, _Ebb):

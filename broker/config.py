@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import socket
 import logging
+import socket
 import threading
 from logging import Filter
 from pathlib import Path

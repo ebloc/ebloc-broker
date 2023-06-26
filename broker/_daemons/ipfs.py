@@ -2,9 +2,9 @@
 
 import daemon
 import os
+import socket
 import sys
 from pathlib import Path
-import socket
 
 from broker import cfg, config
 from broker._utils._log import ok

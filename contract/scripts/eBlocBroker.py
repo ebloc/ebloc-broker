@@ -2,7 +2,7 @@
 
 import json
 
-from brownie import USDTmy, Lib, accounts, eBlocBroker, network  # noqa
+from brownie import Lib, USDTmy, accounts, eBlocBroker, network  # noqa
 
 
 def main():

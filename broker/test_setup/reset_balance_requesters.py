@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import sys
-from broker.config import env
+
 from broker import cfg
-from broker.test_setup.user_set import requesters, providers
+from broker.config import env
+from broker.test_setup.user_set import providers, requesters
 from broker.utils import print_tb
 
 

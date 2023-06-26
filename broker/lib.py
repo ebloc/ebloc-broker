@@ -12,7 +12,7 @@ from threading import Thread
 
 from broker import cfg, config
 from broker._utils._log import WHERE, br
-from broker._utils.tools import _remove, is_process_on, log, mkdir, print_tb
+from broker._utils.tools import _remove, gdrive_about_user, is_process_on, log, mkdir, print_tb
 from broker.config import env
 from broker.errors import Terminate
 from broker.utils import byte_to_mb, popen_communicate, run
@@ -241,6 +241,10 @@ def pre_check():
     ]
     for folder in folders:
         mkdir(env.LOG_DIR / folder)
+
+    output = gdrive_about_user()
+    if "@gmail.com" in output and output != env.GMAIL:
+        raise Terminate("User at 'gdrive about' does not match with the registered gmail.")
 
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
         msg = f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}"
