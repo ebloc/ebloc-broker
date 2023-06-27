@@ -209,3 +209,13 @@ CLOSED: [2023-05-11 Thu 19:23]
 git.exc.GitCommandError: Cmd('git') failed due to: exit code(-9)
   cmdline: git commit -m update
 #+end_src
+
+* DONE Kayitli olsan gdrive ile == "gdrive about' is match? check
+CLOSED: [2023-06-26 Mon 13:43]
+:PROPERTIES:
+:ARCHIVE_TIME: 2023-06-26 Mon 13:43
+:ARCHIVE_FILE: ~/ebloc-broker/broker/TODO.org
+:ARCHIVE_OLPATH: TASKS
+:ARCHIVE_CATEGORY: TODO
+:ARCHIVE_TODO: DONE
+:END:

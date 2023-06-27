@@ -4,7 +4,7 @@ CURRENT_DIR=$(PWD)
 DIR=~/ebloc-broker/
 org-ruby --translate markdown $DIR/README.org > $DIR/.docs/convert/source/readme.md
 org-ruby --translate markdown $DIR/.docs/accounts.org > $DIR/.docs/convert/source/accounts.md
-org-ruby --translate markdown $DIR/broker/gdrive/README.org > $DIR/.docs/convert/source/gdrive_readme.md
+org-ruby --translate markdown $DIR/.docs/gdrive.org > $DIR/.docs/convert/source/gdrive_readme.md
 # cp /Users/alper/Documents/research/TSC_eBlocPOA/lkmpg/main.md $DIR/docs/convert/source/cost_example.md
 
 gsed -i "1s/.*/# ebloc-broker/" $DIR/.docs/convert/source/readme.md

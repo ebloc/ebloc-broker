@@ -1,7 +1,7 @@
 # ebloc-broker
-
-`eBlocBroker` is a smart contract as an autonomous volunteer computing and sharing data resource broker based on blockchain for e-Science.
-It applies blockchain technology to provide a market for computational and data resources to research communities.
+`eBlocBroker` is a smart contract as an autonomous volunteer computing and sharing data resource
+broker based on blockchain for e-Science.  It applies blockchain technology to provide a market for
+computational and data resources to research communities.
 
 
 For more info see: [documentation](https://ebloc-broker-readthedocs.duckdns.org/).
@@ -16,8 +16,7 @@ For more info see: [documentation](https://ebloc-broker-readthedocs.duckdns.org/
 
 ## Using Docker
 
-You can use a sandbox container provided in the [./docker-compose.yml](./docker-compose.yml) file for testing inside a Docker
-environment.
+You can use a sandbox container provided in the [./docker-compose.yml](./docker-compose.yml) file for testing inside a Docker environment.
 
 This container provides everything you need to test using a `Python 3.7` interpreter. Start the test environment:
 ```bash
