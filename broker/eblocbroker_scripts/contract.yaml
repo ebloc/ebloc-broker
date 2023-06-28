@@ -7,3 +7,13 @@ networks:
     USDTmy:
       address: '0x56B59aFC0Df1fcc1B42cf6135f94604cf7F7eb77'
       tx_hash: '0x3a47a7971f80bf1a320a8409951a7830bf86bffb5005a65df4973c8943ec45f5'
+
+networks_old:
+  bloxberg:
+    project_dir: ~/ebloc-broker/contract
+    eBlocBroker:
+      address: '0x81aF3aeACbE068e7513443572d998bC2A20A83C1'
+      tx_hash: '0x39b3fb95d0258e42f71c5da835a32e7a197cab4eee2cea9373d627d2f5593d9d'
+    USDTmy: # dummy
+      address: '0x56B59aFC0Df1fcc1B42cf6135f94604cf7F7eb77'
+      tx_hash: '0x3a47a7971f80bf1a320a8409951a7830bf86bffb5005a65df4973c8943ec45f5'

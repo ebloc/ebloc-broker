@@ -4,6 +4,7 @@ cfg:
   gmail: ""
   whoami: root
   home_dir: /root
+  ipfs_repo_dir: /root/.ipfs
   log_path: /root/.ebloc-broker
   ebloc_path: /workspace/ebloc-broker
   gdrive: /usr/local/bin/gdrive

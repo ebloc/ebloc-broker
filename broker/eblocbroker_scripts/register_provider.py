@@ -79,7 +79,7 @@ def get_ipfs_address() -> str:
             sys.exit(1)
 
 
-def register_provider_wrapper(yaml_fn):
+def register_provider_wrapper(yaml_fn, is_bare=False):
     """Register provider."""
     yaml_fn = expanduser(yaml_fn)
     if not os.path.exists(yaml_fn):
@@ -87,6 +87,7 @@ def register_provider_wrapper(yaml_fn):
         raise QuietExit
 
     args = Yaml(yaml_fn, auto_dump=False)
+    env.PROVIDER_ID = args["cfg"]["eth_address"]  # read provider address from the yaml file
     f_id = args["cfg"]["oc_username"].replace("@b2drop.eudat.eu", "")
     gmail = args["cfg"]["gmail"]
     _args = args["cfg"]["provider"]
@@ -139,7 +140,7 @@ def register_provider_wrapper(yaml_fn):
         error_list.append("gmail")
         exit_flag = True
 
-    if exit_flag:
+    if not is_bare and exit_flag:
         if len(error_list) == 1:
             log(f"E: [blue]{error_list[0]}[/blue] is empty in [m]{yaml_fn}")
         else:
@@ -165,6 +166,12 @@ def register_provider_wrapper(yaml_fn):
     if not gmail:
         log("E: Please provide a valid e-mail")
         sys.exit(1)
+
+    if is_bare:
+        gmail = ""
+        ipfs_address = ""
+        f_id = ""
+        gpg_fingerprint = ""
 
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
     args = (gpg_fingerprint, gmail, f_id, ipfs_address, available_core, prices, commitment_blk)

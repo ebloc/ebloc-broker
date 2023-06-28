@@ -14,11 +14,13 @@ from broker.lib import echo_grep_awk, run, subprocess_call
 from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, is_program_valid, log, print_tb
 
 
-def refresh_gdrive_token():
+def refresh_gdrive_token(silent=True):
     with open(Path.home() / ".gdrive" / "token_v2.json", "r") as f:
         output = json.load(f)
 
-    log("#> Running: gdrive about --refresh-token <id>", h=False, is_write=False)
+    if not silent:
+        log("#> Running: gdrive about --refresh-token <id>", h=False, is_write=False)
+
     run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
 
 

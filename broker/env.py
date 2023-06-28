@@ -33,13 +33,13 @@ class ENV_BASE:
         elif platform == "darwin":
             self._HOME = Path("/") / "Users" / self.WHOAMI
         elif platform == "win32":
-            print("E: does not work in windows")
+            print("E: does not work in Windows")
             sys.exit(1)
 
         if is_docker():
             self._HOME = Path("/") / "root"
 
-        self.EBLOCPATH = Path(self.cfg["ebloc_path"])
+        self.EBLOCPATH = self.tilda_check(Path(self.cfg["ebloc_path"]))
         self.CONTRACT_PROJECT_PATH = self.EBLOCPATH / "contract"
         self.IS_BLOXBERG = True
         if self.IS_BLOXBERG:
@@ -59,3 +59,10 @@ class ENV_BASE:
             self.TOKEN_CONTRACT_ADDRESS = _yaml["USDTmy"]["address"]
         except Exception as e:
             raise e
+
+    def tilda_check(self, _str) -> Path:
+        _str = str(_str)
+        if "~/" in _str[0:2]:
+            return Path(_str.replace("~", str(self._HOME)))
+
+        return Path(_str)

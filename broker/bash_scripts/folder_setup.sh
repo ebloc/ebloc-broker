@@ -112,14 +112,19 @@ if [ -f "$FILE" ]; then
     sudo chown $(whoami) -R $HOME/.gdrive
 fi
 
+if [[ "$1" != "$VAR" ]]; then
+    yes_or_no "Are you are a provider" && provider_setup
+fi
+
+python3 $BASE_DIR/python_scripts/input.py
+
+## --------------------------- end -------------------------------
+
 # echo -e "warning: Update the following file "$LOG_DIR"/.b2drop_client.txt' with
 # your B2DROP account's password. Best to make sure the file is not readable or
 # even listable for anyone but you. You achieve this with:
 # 'chmod 700 b2drop_password.txt'"
 # echo ""
-if [[ "$1" != "$VAR" ]]; then
-    yes_or_no "Are you are a provider" && provider_setup
-fi
 
 # LOG_DIR
 # =======

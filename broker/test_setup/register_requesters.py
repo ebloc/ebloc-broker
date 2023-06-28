@@ -10,6 +10,7 @@ from broker.utils import print_tb
 
 
 def main():
+    # yaml_fn = "~/ebloc-broker/broker/test_setup/requester_docker.yaml"
     yaml_fn = "~/ebloc-broker/broker/test_setup/requester.yaml"
     for idx, user in enumerate(requesters):
         yaml_user = Yaml(yaml_fn)

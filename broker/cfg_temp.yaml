@@ -15,8 +15,8 @@ cfg:
     is_bloxberg: true
     is_thread: true
     is_ipfs_use: true
-    is_b2drop_use: true
-    is_gdrive_use: true
+    is_b2drop_use: false
+    is_gdrive_use: false
     available_core: 4
     prices:
       commitment_blk: 600

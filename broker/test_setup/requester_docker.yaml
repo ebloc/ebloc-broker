@@ -1,0 +1,12 @@
+cfg:
+  eth_address: "0x4aae9220409e1c4d74ac95ba14edb0684a431379"
+  oc_username: ""
+  gmail: ""
+  provider:
+    available_core: 2
+    prices:
+      commitment_blk: 600
+      price_core_min: 0.001 usd
+      price_data_transfer: 0.0001 cent
+      price_storage: 0.0001 cent
+      price_cache: 0.0001 cent

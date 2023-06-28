@@ -152,7 +152,12 @@ def tools(bn):
                 )
 
             if not os.path.isdir(env.IPFS_REPO):
-                raise QuietExit(f"E: {env.IPFS_REPO} repo does not exist")
+                log(f"warning: {env.IPFS_REPO} repo does not exist")
+                try:
+                    output = run(["ipfs", "init"])
+                    print(output)
+                except Exception:
+                    raise QuietExit(f"E: {env.IPFS_REPO} repo does not exist")
 
             start_ipfs_daemon()
 
@@ -615,6 +620,7 @@ def main(args):
         try:
             if env.IS_IPFS_USE:
                 log(f"ipfs_id: {get_ipfs_address()}", h=False)
+                log(f"ipfs_repo_dir: {env.IPFS_REPO}", h=False)
         except Exception as e:
             raise QuietTerminate(e)
 

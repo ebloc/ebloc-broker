@@ -7,7 +7,7 @@ services:
     stdin_open: true
     tty: true
     ports:
-      - "4001:4001" # public IPFS Port
+      - "4002:4001" # public IPFS Port
     volumes:
       - ~/docker/volumes/lib:/var/lib/slurmd
       - ~/docker/volumes/spool:/var/spool/slurm

@@ -9,7 +9,6 @@ from broker._utils._log import log
 from broker._utils.tools import is_byte_str_zero, print_tb
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
-from broker.config import env
 from broker.errors import QuietExit
 from broker.utils import question_yes_no, start_ipfs_daemon
 
@@ -32,19 +31,27 @@ def register_requester(self, yaml_fn, is_question=True):
         log(f"E: yaml_fn({yaml_fn}) does not exist")
         raise QuietExit
 
-    args = Yaml(yaml_fn)
     ipfs_address = ipfs.get_ipfs_address(client)
-    gmail = env.GMAIL
-    gpg_fingerprint = ipfs.get_gpg_fingerprint(gmail)
-    try:
-        ipfs.is_gpg_published(gpg_fingerprint)
-        ipfs.publish_gpg(gpg_fingerprint)
-    except Exception as e:
-        raise e
+    args = Yaml(yaml_fn)
+    gmail = args["cfg"]["gmail"]
+    gpg_fingerprint = ""
+    if gmail:
+        gpg_fingerprint = ipfs.get_gpg_fingerprint(gmail)
+
+    if gpg_fingerprint:
+        try:
+            ipfs.is_gpg_published(gpg_fingerprint)
+            ipfs.publish_gpg(gpg_fingerprint)
+        except Exception as e:
+            raise e
 
     account = args["cfg"]["eth_address"].lower()
     gmail = args["cfg"]["gmail"]
-    f_id = args["cfg"]["oc_username"].replace("@b2drop.eudat.eu", "")
+    if args["cfg"]["oc_username"]:
+        f_id = args["cfg"]["oc_username"].replace("@b2drop.eudat.eu", "")
+    else:
+        f_id = ""
+
     log(f"==> registering {account} as requester")
     if is_byte_str_zero(account):
         log(f"E: account={account} is not valid, change it in [m]~/.ebloc-broker/cfg.yaml")
@@ -56,8 +63,9 @@ def register_requester(self, yaml_fn, is_question=True):
     if len(gmail) >= 128:
         raise Exception("gmail is more than 128")
 
-    if len(gpg_fingerprint) != 40:
-        raise Exception("gpg_fingerprint should be 40 characters")
+    if gpg_fingerprint:
+        if len(gpg_fingerprint) != 40:
+            raise Exception("gpg_fingerprint should be 40 characters")
 
     if account == Ebb.get_owner():
         raise Exception("Address cannot be same as owner's")

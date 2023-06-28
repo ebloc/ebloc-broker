@@ -117,6 +117,18 @@ extra_requesters = [
     "0x85fa5e6dd9843cce8f67f4797a96a156c3c79c25",
 ]
 
+docker_users = [
+    "0x06fc1d63e677e736b193645fd5b587fc78460b92"
+    "0x672b4a29441264fd94b30d747ca969b2c59ccb35"
+    "0xd4ae606f40693975aa98e300814fde874edadc4b"
+    "0x1deeb2371d202f2e19755bfedacc8f847bf33b53"
+    "0x648273f38ba6d0bc1765f30714a43c6b321c4e68"
+    "0x0b4a64c2f2ea66bd6a07d2b2222e64a520364732"
+    "0xe7f9bd1d4ac1fb76f466eb350a861b0229401d5c"
+    "0xa7d48fedf22b40e034b7f7ae62579164a1a081be"
+    "0xf1ef1f9e40ceddd563621b0cb65b4618f08d71fa"
+    "0x6c9de6bd9ceb3154ab14c0aafe38108f0ca6bb58"
+]
 for provider in providers:
     if provider in requesters:
         raise Exception(f"provider={provider}, is in the requester list fix it")
