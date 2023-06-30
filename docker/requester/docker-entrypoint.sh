@@ -13,7 +13,6 @@ function check_running_status {
     done
 }
 
-
 function start_service {
     echo "## Starting $1"
     /usr/bin/supervisorctl start $1

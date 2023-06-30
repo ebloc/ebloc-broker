@@ -10,7 +10,7 @@ cfg:
   gdrive: /usr/local/bin/gdrive
   bloxberg_host: https://core.bloxberg.org
   provider:
-    slurm_user: slurm
+    slurm_user: root # was: slurm
     is_bloxberg: true
     is_thread: true
     is_ipfs_use: true

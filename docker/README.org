@@ -4,7 +4,7 @@ Now in order to push the image just make sure the path which you are using must 
 
 #+begin_src bash
 cat ~/.docker_password.txt | docker login --username ebloc --password-stdin
-docker build -t ebb:latest . --progress plain
+# docker build -t ebb:latest . --progress plain
 # docker tag ebb:latest ebloc/ebloc-broker
 docker tag ebloc-broker_slurm:latest ebloc/ebloc-broker
 docker push ebloc/ebloc-broker

@@ -6,8 +6,11 @@ services:
     hostname: slurmctl
     stdin_open: true
     tty: true
+    privileged: true
     ports:
-      - "4002:4001" # public IPFS Port
+      - "4003:4001"
+      - "5003:5001"
+      - "8083:8080"
     volumes:
       - ~/docker/volumes/lib:/var/lib/slurmd
       - ~/docker/volumes/spool:/var/spool/slurm

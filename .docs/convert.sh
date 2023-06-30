@@ -5,6 +5,8 @@ DIR=~/ebloc-broker/
 org-ruby --translate markdown $DIR/README.org > $DIR/.docs/convert/source/readme.md
 org-ruby --translate markdown $DIR/.docs/accounts.org > $DIR/.docs/convert/source/accounts.md
 org-ruby --translate markdown $DIR/.docs/gdrive.org > $DIR/.docs/convert/source/gdrive_readme.md
+org-ruby --translate markdown $DIR/.docs/quickstart.org > $DIR/.docs/convert/source/quickstart.md
+
 # cp /Users/alper/Documents/research/TSC_eBlocPOA/lkmpg/main.md $DIR/docs/convert/source/cost_example.md
 
 gsed -i "1s/.*/# ebloc-broker/" $DIR/.docs/convert/source/readme.md
@@ -18,6 +20,7 @@ gsed -i "s/file:\/docs\//\.\.\ image\:\:\ /" source/readme.rst
 rsync --checksum source/readme.rst $DIR/docs/index.rst
 rsync --checksum source/accounts.rst $DIR/docs/
 rsync --checksum source/gdrive_readme.rst $DIR/docs/
+rsync --checksum source/quickstart.rst $DIR/docs/
 
 # cp source/cost_example.rst $DIR/docs/
 

@@ -511,15 +511,24 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         self.requester_gpg_fingerprint = self.requester_info["gpg_fingerprint"]
         log("\njob owner's info\n================", "green")
-        log(f"==> gmail={self.requester_info['gmail']}", h=False)
-        log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
-        log(f"==> ipfs_address={self.requester_info['ipfs_address']}")
-        log(f"==> f_id={self.requester_info['f_id']}")
+        if "gmail" in self.requester_info:
+            log(f"==> gmail={self.requester_info['gmail']}", h=False)
+
+        if self.requester_gpg_fingerprint:
+            log(f"==> gpg_fingerprint={self.requester_gpg_fingerprint}")
+
+        if self.requester_info["ipfs_address"]:
+            log(f"==> ipfs_address={self.requester_info['ipfs_address']}")
+
+        if self.requester_info["f_id"]:
+            log(f"==> f_id={self.requester_info['f_id']}")
+
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
             self.get_job_info()
             log(":beer: job is already completed and its money is received", "green")
             raise QuietExit
 
+        log()
         run_time = self.job_info["run_time"]
         log(f"==> requested_run_time={run_time[self.job_id]} minutes")
         try:

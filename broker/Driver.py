@@ -422,7 +422,7 @@ def run_driver(given_bn):
     except Exception as e:
         raise QuietTerminate(e)
 
-    if env.SLURMUSER != real_slurm_user:
+    if env.SLURMUSER not in real_slurm_user:
         msg = f"E: env.SLURMUSER={env.SLURMUSER} is not equal to SlurmUser={real_slurm_user} in slurm's config."
         raise QuietTerminate(msg)
 

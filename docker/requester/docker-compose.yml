@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   requester:
@@ -6,4 +6,10 @@ services:
     stdin_open: true
     tty: true
     ports:
-      - "4002:4002" # Public IPFS Port
+      - "4101:4001"
+      - "5101:5001"
+      - "8181:8080"
+      - "6822:6817"
+      - "6823:6818"
+      - "6824:6819"
+      - "6825:6820"

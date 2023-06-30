@@ -1,0 +1,14 @@
+config:
+  requester_address: ""
+  provider_address: "0x08b003717bfab7a80b17b51c32223460fe9efe2a"
+  search_cheapest_provider: false
+  source_code:
+    cache_type: public
+    path: /workspace/ebloc-broker/.test_eblocbroker/source_code_without_data/
+    storage_hours: 0
+    storage_id: ipfs
+  data_transfer_out: 1
+  jobs:
+    job1:
+      cores: 1
+      run_time: 1
