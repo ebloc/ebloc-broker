@@ -6,7 +6,7 @@ ebloc-broker
     :maxdepth: 2
 
     Overview <index.rst>
-    quickstart_alper.rst
+    quickstart.rst
     ..
        quickstart.rst
 

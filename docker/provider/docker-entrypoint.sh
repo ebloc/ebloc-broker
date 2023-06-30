@@ -85,7 +85,7 @@ echo "#> Starting supervisord process manager..."
 /usr/bin/supervisord --configuration /etc/supervisord.conf
 
 munged -F &
-for service in mysqld slurmdbd slurmctld slurmd mongod
+for service in mysqld slurmdbd slurmctld slurmd mongod ipfsd
 do
     start_service $service
 done

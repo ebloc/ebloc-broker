@@ -6,7 +6,7 @@ from broker._utils.tools import log, print_tb
 from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
 from broker.errors import QuietExit
-from broker.utils import StorageID, is_ipfs_on, question_yes_no
+from broker.utils import StorageID, is_docker, is_ipfs_on, question_yes_no
 from brownie.exceptions import TransactionError
 
 Ebb = cfg.Ebb
@@ -88,12 +88,13 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
         if not is_ipfs_on():
             raise Exception("ipfs daemon is not running in the background")
 
-        try:
-            ipfs.swarm_connect(provider_info["ipfs_address"])
-        except Exception as e:
-            log(f"E: [g]{e}")
-            if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
-                raise QuietExit from e
+        if not is_docker():
+            try:
+                ipfs.swarm_connect(provider_info["ipfs_address"])
+            except Exception as e:
+                log(f"E: [g]{e}")
+                if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
+                    raise QuietExit from e
 
     for idx, source_code_hash in enumerate(job.code_hashes_str):
         if source_code_hash == "":

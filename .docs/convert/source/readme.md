@@ -18,7 +18,8 @@ For more info see: [documentation](https://ebloc-broker-readthedocs.duckdns.org/
 
 You can use a sandbox container provided in the [./docker-compose.yml](./docker-compose.yml) file for testing inside a Docker environment.
 
-This container provides everything you need to test using a `Python 3.7` interpreter. Start the test environment:
+This container provides everything you need to test using a `Python 3.7` interpreter.
+Start the test environment:
 ```bash
 docker-compose up -d
 ```
@@ -44,7 +45,7 @@ First, from [B2ACCESS home page](https://b2access.eudat.eu/home/)
  * [B2DROP login site](https://b2drop.eudat.eu/)
 
 #### Create app password
-`Settings` => `Security` => `Create new app password` and save it.
+`Settings` => `Security` => `Create new app password` and save it onto ~~/.ebloc-broker/.b2drop_client.txt~ file.
 
 ## How to install required packages
 

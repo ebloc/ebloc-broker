@@ -80,7 +80,9 @@ class IpfsClass(Storage):
         if not is_ipfs_on():
             return False
 
-        log(f"==> Is ipfs_hash={self.job_key} locally_cached={cfg.ipfs.is_hash_locally_cached(self.job_key)}")
+        log(f"#> Is ipfs_hash={self.job_key} locally_cached: ", end="")
+        output = cfg.ipfs.is_hash_locally_cached(self.job_key)  # may take long time
+        print(f"{output}")
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -116,6 +118,7 @@ class IpfsClass(Storage):
 
             is_storage_paid = False  # TODO: should be set before by user input
             self.ipfs_get(ipfs_hash, target, is_storage_paid)
+            log("[ok]")
             if idx > 0:
                 # https://stackoverflow.com/a/31814223/2402577
                 dst_fn = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))

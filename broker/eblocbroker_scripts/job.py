@@ -203,7 +203,12 @@ class Job:
             raise QuietExit
 
         self.cfg = Yaml(fn)
-        self.requester_addr = self.cfg["config"]["requester_address"]
+        if "requester_address" in self.cfg["config"] and self.cfg["config"]["requester_address"]:
+            self.requester_addr = self.cfg["config"]["requester_address"]
+        else:
+            log(f"#> requester_address={env.PROVIDER_ID}")
+            self.requester_addr = env.PROVIDER_ID
+
         self.provider_addr = self.cfg["config"]["provider_address"]
         if "search_cheapest_provider" in self.cfg["config"]:
             self.search_cheapest_provider = self.cfg["config"]["search_cheapest_provider"]

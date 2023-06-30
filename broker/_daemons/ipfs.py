@@ -9,7 +9,7 @@ from pathlib import Path
 from broker import cfg, config
 from broker._utils._log import ok
 from broker._utils.tools import print_tb, run
-from broker.utils import is_ipfs_on, log, popen_communicate
+from broker.utils import is_ipfs_on, log, popen_communicate, is_docker
 
 
 def mount_ipfs():
@@ -42,7 +42,11 @@ def _run():
         else:
             env = {"IPFS_PATH": ipfs_init_folder}
 
-        cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc", "--routing=none"]
+        if is_docker():
+            cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc"]
+        else:
+            cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc", "--routing=none"]
+
         popen_communicate(cmd, stdout_fn=config.env.IPFS_LOG, env=env)
 
     # mount_ipfs()

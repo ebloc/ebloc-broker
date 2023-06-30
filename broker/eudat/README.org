@@ -1,10 +1,9 @@
 * B2DROP
 
-** B2DROP-support: https://eudat.eu/support-request?service=B2DROP
+** B2DROP-support: [[https://eudat.eu/support-request?service=B2DROP]]
 __ [[https://eudat.eu/services/userdoc/b2drop]]
 
 ** Linux mount
-
 ~se /etc/davfs2/davfs2.conf~  => add ~use_locks       0~ line
 
 #+begin_src bash

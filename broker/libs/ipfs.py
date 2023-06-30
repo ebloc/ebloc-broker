@@ -307,6 +307,7 @@ class Ipfs:
             if is_ipfs_on():
                 raise IpfsNotConnected
 
+        log(f"$ ipfs get {ipfs_hash} --output={path}", is_code=True)
         output = constantly_print_popen(["ipfs", "get", ipfs_hash, f"--output={path}"])
         log(output)
         if is_storage_paid:

@@ -16,13 +16,14 @@ from broker._utils import _log
 from broker._utils._log import ok
 from broker._utils.tools import mkdir, read_json, squeue
 from broker.config import ThreadFilter, env, logging
-from broker.lib import calculate_size, log, subprocess_call
+from broker.lib import calculate_size, log, run, subprocess_call
 from broker.libs import slurm
 from broker.libs.slurm import remove_user
 from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
 from broker.link import Link
 from broker.utils import (
+    is_docker,
     CacheID,
     bytes32_to_ipfs,
     cd,
@@ -104,15 +105,20 @@ class Storage(BaseClass):
         for _attempt in range(5):
             try:
                 cmd = f'sbatch -n {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
-                with cd(self.results_folder):
-                    try:
-                        job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
-                        return job_id
-                    except Exception as e:
-                        if "Invalid account" in str(e):
-                            remove_user(env.SLURMUSER)
-                            add_user_to_slurm(env.SLURMUSER)
+                if is_docker():  # user is already 'root'
+                    # log(cmd, is_code=True)
+                    output = run(["sbatch", "-n", f"{job_core_num}", f"{sbatch_file_path}"])
+                    return output
+                else:
+                    with cd(self.results_folder):
+                        try:
                             job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
+                            return job_id
+                        except Exception as e:
+                            if "Invalid account" in str(e):
+                                remove_user(env.SLURMUSER)
+                                add_user_to_slurm(env.SLURMUSER)
+                                job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
 
                 time.sleep(2)  # wait 2 second for slurm idle core to be updated
             except Exception as e:
@@ -315,7 +321,7 @@ class Storage(BaseClass):
         """Run sbatch on the cluster.
 
         * unshare: work fine for terminal programs.
-        cmd: `unshare -r -n ping google.com`
+        cmd: 'unshare -r -n ping google.com'
 
         __ https://askubuntu.com/a/600996/660555
         """
@@ -368,7 +374,7 @@ class Storage(BaseClass):
             time.sleep(0.25)
 
         # seperator character is *
-        run_file = f"{self.results_folder}/run.sh"
+        file_to_run = f"{self.results_folder}/run.sh"
         #: separator "~"
         sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}.sh"
         with open(f"{self.results_folder}/run_wrapper.sh", "w") as f:
@@ -376,7 +382,10 @@ class Storage(BaseClass):
             f.write("#SBATCH -o slurm.out  # STDOUT\n")
             f.write("#SBATCH -e slurm.err  # STDERR\n")
             f.write("#SBATCH --mail-type=ALL\n\n")
-            f.write(f"/usr/bin/unshare -r -n {run_file}")
+            if not is_docker():
+                f.write(f"/usr/bin/unshare -r -n {file_to_run}")
+            else:
+                f.write(file_to_run)
 
         copyfile(f"{self.results_folder}/run_wrapper.sh", sbatch_file_path)
         job_core_num = str(job_info["core"][job_id])

@@ -18,7 +18,7 @@ def git_init():
     log("Creating an empty Git repository using 'git init'", end="")
     run(["git", "init", "--quiet"])
     run(["git", "reflog", "expire", "--all", "--expire=now"])
-    run(["git", "gc", "--prune=now", "--aggressive"])  # takes few seconds but saves space
+    run(["git", "gc", "--prune=now", "--aggressive", "--force"])  # takes few seconds but saves space
     log(ok())
 
 

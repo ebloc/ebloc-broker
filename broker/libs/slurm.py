@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
+import re
 import time
-
+from contextlib import suppress
 from broker._utils._log import log, ok
 from broker._utils.tools import is_process_on
 from broker.config import env
 from broker.errors import BashCommandsException, QuietExit, Terminate
 from broker.lib import run
-from broker.utils import popen_communicate
+from broker.utils import popen_communicate, is_docker
 
 
 def add_account_to_slurm(user):
     cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
-    if p.returncode > 0 and "Nothing new added" not in output:
+    if p.returncode > 0 and "Nothing new added" not in str(output):
         raise Exception(f"E: {' '.join(cmd)}\nsacctmgr remove error: {output}")
 
 
@@ -23,8 +24,12 @@ def add_user_to_slurm(user):
     cmd = ["sacctmgr", "add", "user", user, f"account={user}", "--immediate"]
     # cmd = ["sacctmgr", "add", "account", user, "--immediate"]
     p, output, *_ = popen_communicate(cmd)
-    if p.returncode > 0 and "Nothing new added" not in output:
-        raise Exception(f"E: {' '.join(cmd)}\nsacctmgr remove error: {output}")
+    if p.returncode > 0:
+        try:
+            if "Nothing new added" not in output:  # output could be: b''
+                raise Exception(f"E: {' '.join(cmd)}\nsacctmgr remove error: {output}")
+        except:
+            pass
 
     # try:
     #     if "Nothing new added" not in output:
@@ -110,15 +115,42 @@ def is_on() -> bool:
         return False
     else:
         log(ok())
+        if is_docker():
+            with suppress(Exception):
+                run(["sudo", "groupadd", "eblocbroker"])
+
+            with suppress(Exception):
+                run(["sacctmgr", "add", "cluster", "eblocbroker", "--immediate"])
+
+            with suppress(Exception):  # kama ipfs node
+                ipfs_id = "/ip4/195.238.122.141/tcp/4001/p2p/12D3KooWM8EsuoC5wTA6wx3Qn42UcBe98y4j9tgQQ9J4WHHvqpUy"
+                run(["ipfs", "swarm", "connect", ipfs_id])
+
         return True
+
+
+def scontrol_parse(slurm_job_id, _from, to):
+    cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
+    elapsed_time = run(cmd)
+    if not elapsed_time:
+        output = run(["scontrol", "show", f"job={slurm_job_id}"])
+        for line in output.split("\n"):
+            if _from in line:
+                # StartTime=2023-07-01T19:05:54 EndTime=2023-07-01T19:06:44 Deadline=N/A
+                result = re.search(f"{_from}(.*){to}", line)
+                return result.group(1)  # type: ignore
 
 
 def get_elapsed_time(slurm_job_id) -> int:
     try:
         cmd = ["sacct", "-n", "-X", "-j", slurm_job_id, "--format=Elapsed"]
         elapsed_time = run(cmd)
+        if not elapsed_time:
+            elapsed_time = scontrol_parse(slurm_job_id, "RunTime=", " TimeLimit=")
     except Exception as e:
-        raise QuietExit from e
+        elapsed_time = scontrol_parse(slurm_job_id, "RunTime=", " TimeLimit=")
+        if not elapsed_time:
+            raise QuietExit from e
 
     log(f"==> elapsed_time={elapsed_time} => ", end="")
     elapsed_time = elapsed_time.split(":")
@@ -139,8 +171,10 @@ def get_job_end_timestamp(slurm_job_id) -> int:
     """Return the end time of the job in universal time."""
     end_timestamp = run(["sacct", "-n", "-X", "-j", slurm_job_id, "--format=End"])
     if end_timestamp == "":
-        log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.")
-        raise QuietExit
+        end_timestamp = scontrol_parse(slurm_job_id, "EndTime=", " Deadline=")
+        if not end_timestamp:
+            log(f"E: slurm_load_jobs error: Invalid job_id ({slurm_job_id}) specified.")
+            raise QuietExit
 
     try:  # cmd: date -d 2018-09-09T21:50:51 + "%s"
         end_timestamp = run(["date", "-d", end_timestamp, "+'%s'"])

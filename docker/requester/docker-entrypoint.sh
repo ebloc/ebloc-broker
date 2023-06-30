@@ -13,7 +13,6 @@ function check_running_status {
     done
 }
 
-
 function start_service {
     echo "## Starting $1"
     /usr/bin/supervisorctl start $1
@@ -22,7 +21,7 @@ function start_service {
 
 echo "#> Starting supervisord process manager"
 /usr/bin/supervisord --configuration /etc/supervisord.conf
-for service in mongod_r
+for service in mongod_r ipfsd
 do
     start_service $service
 done
