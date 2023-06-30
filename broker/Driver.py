@@ -117,7 +117,9 @@ def tools(bn):
             eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
 
         gmail = provider_info_contract["gmail"]
-        log(f"==> [y]provider_gmail[/y]=[m]{gmail}", h=False)
+        if gmail:
+            log(f"==> [y]provider_gmail[/y]=[m]{gmail}", h=False)
+
         if env.IS_GDRIVE_USE:
             is_program_valid(["gdrive", "version"])
             try:
@@ -146,7 +148,7 @@ def tools(bn):
                 raise Terminate(e)
 
         if env.IS_IPFS_USE:
-            if not os.path.isfile(env.GPG_PASS_FILE):
+            if not is_docker() and not os.path.isfile(env.GPG_PASS_FILE):
                 raise QuietTerminate(
                     f"E: Store your gpg password in the {env.GPG_PASS_FILE}\nfile for decrypting using ipfs"
                 )
@@ -175,7 +177,14 @@ def tools(bn):
                 flag_error = True
 
             if env.IS_IPFS_USE:
-                gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
+                if not provider_info_contract["ipfs_address"]:
+                    log("warning: [m]ipfs_address[/m] is empty.")
+                    if is_docker():
+                        log(
+                            "Please run /workspace/ebloc-broker/broker/eblocbroker_scripts/update_provider_info.py to update."
+                        )
+                    raise QuietExit()
+
                 _ipfs_address = get_ipfs_address()
                 if provider_info_contract["ipfs_address"] != _ipfs_address:
                     if provider_info_contract["ipfs_address"].split("p2p", 1)[1] != _ipfs_address.split("p2p", 1)[1]:
@@ -183,16 +192,19 @@ def tools(bn):
                         log(f"\t{provider_info_contract['ipfs_address']} != {_ipfs_address}")
                         flag_error = True
 
-                if provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper():
-                    log("warning: [m]gpg_fingerprint[/m] does not match with the registered info.")
-                    log(f"\t{provider_info_contract['gpg_fingerprint']} != {gpg_fingerprint.upper()}")
-                    flag_error = True
+                if not is_docker():
+                    gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
+                    if provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper():
+                        log("warning: [m]gpg_fingerprint[/m] does not match with the registered info.")
+                        log(f"\t{provider_info_contract['gpg_fingerprint']} != {gpg_fingerprint.upper()}")
+                        flag_error = True
 
             if flag_error:
                 raise QuietExit(exception_msg)
         except Exception as e:
-            log(f"E: [green]{e}", is_err=True)
-            raise QuietExit from e
+            # log(f"[green]{e}", is_err=True)
+            raise e
+            # raise QuietExit from e
     except QuietExit as e:
         raise e
 

@@ -8,6 +8,7 @@ from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.errors import QuietExit
+from broker.utils import is_docker
 
 ipfs = cfg.ipfs
 cfg.NETWORK_ID = "bloxberg"
@@ -43,7 +44,7 @@ def update_provider_info(self, gpg_fingerprint, gmail, f_id, ipfs_address):
         log(f"gpg_fingerprint={gpg_fingerprint} should not start with 0x")
         raise QuietExit
 
-    if len(gpg_fingerprint) != 40:
+    if not is_docker() and len(gpg_fingerprint) != 40:
         log(f"gpg_fingerprint={gpg_fingerprint} length should be 40")
         raise QuietExit
 
@@ -59,12 +60,21 @@ if __name__ == "__main__":
         ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_address, flags=re.DOTALL)
 
     # ipfs_address = cfg.ipfs.local_ip_check(ipfs_address)
-    gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
-    ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
+    try:
+        gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
+        ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
+    except Exception as e:
+        if is_docker():
+            gpg_fingerprint = ""
+        else:
+            raise e
+
     f_id = env.OC_USER
     log(f"## address=[m]{env.PROVIDER_ID}", h=False)
     log(f"## gmail=[m]{env.GMAIL}", h=False)
-    log(f"## gpg_fingerprint={gpg_fingerprint}")
+    if gpg_fingerprint:
+        log(f"## gpg_fingerprint={gpg_fingerprint}")
+
     if ipfs_address:
         log(f"## ipfs_address=[m]{ipfs_address}")
     else:
@@ -76,7 +86,9 @@ if __name__ == "__main__":
         log('## fid=""')
 
     try:
-        cfg.ipfs.is_gpg_published(gpg_fingerprint)
+        if gpg_fingerprint:
+            cfg.ipfs.is_gpg_published(gpg_fingerprint)
+
         tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, f_id, ipfs_address)
         get_tx_status(tx_hash)
     except Exception as e:
