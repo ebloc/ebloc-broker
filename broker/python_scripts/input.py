@@ -40,7 +40,7 @@ def main():
         _env.cfg["eth_address"] = get_valid_eth_address("Ethereum Address: ")
     else:
         while True:
-            msg = f"#> Do you want to change Ethereum address {_env.cfg['eth_address']} [Y/n]: "
+            msg = f"==> Do you want to change Ethereum address {_env.cfg['eth_address']} [Y/n]: "
             log(msg, end="", is_write=False)
             answer = input("")
             if answer.lower() in ["y", "yes"]:
@@ -56,7 +56,7 @@ def main():
         _env.cfg["gmail"] = get_valid_email("Email address: ")
     else:
         while True:
-            msg = f"#> Do you want to change your gmail {_env.cfg['gmail']} [Y/n]: "
+            msg = f"==> Do you want to change your gmail {_env.cfg['gmail']} [Y/n]: "
             answer = input(msg)
             if answer.lower() in ["y", "yes"]:
                 _env.cfg["gmail"] = get_valid_email("Email address: ")
@@ -74,6 +74,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     except QuietExit as e:
-        print(f"#> {e}")
+        print(f"==> {e}")
     except Exception as e:
         print_tb(str(e))

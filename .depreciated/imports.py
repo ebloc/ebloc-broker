@@ -60,7 +60,7 @@ def connect_to_web3() -> None:
                     end="",
                 )
                 log(f"sudo chown $(logname) {web3_ipc_fn}", "green")
-                log(f"#> running `sudo chown $(whoami) {web3_ipc_fn}`")
+                log(f"==> running `sudo chown $(whoami) {web3_ipc_fn}`")
                 run(["sudo", "chown", env.WHOAMI, web3_ipc_fn])
         else:
             break

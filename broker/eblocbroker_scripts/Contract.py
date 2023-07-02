@@ -333,8 +333,8 @@ class Contract(Base):
 
     def print_contract_info(self):
         """Print contract information."""
-        print(f"#> address={self.eBlocBroker.contract_address}")
-        print(f"#> deployed_block_number={self.get_deployed_block_number()}")
+        print(f"==> address={self.eBlocBroker.contract_address}")
+        print(f"==> deployed_block_number={self.get_deployed_block_number()}")
 
     ##############
     # Timeout Tx #
@@ -406,7 +406,7 @@ class Contract(Base):
 
                 if "There is another transaction with same nonce in the queue" in str(e):
                     log(f"warning: Tx: {e}", is_code=True)
-                    log("#> sleeping for 15 seconds, will try again, KeyboardInterrupt here if necessary...")
+                    log("==> sleeping for 15 seconds, will try again, KeyboardInterrupt here if necessary...")
                     log(f"sleeping -- gas_price={self.gas_price}...", end="")
                     time.sleep(15)
                     log("done")

@@ -121,7 +121,7 @@ class Ipfs:
                 gpg_file_link,
             ]
             run(cmd, suppress_stderr=True)
-            log(f"#> GPG decrypt {ok()}")
+            log(f"==> GPG decrypt {ok()}")
             _remove(gpg_file)
             os.unlink(gpg_file_link)
         except Exception as e:
@@ -198,7 +198,7 @@ class Ipfs:
         except Exception as e:
             print_tb(e)
             if "encryption failed: Unusable public key" in str(e):
-                log("#> Check solution: https://stackoverflow.com/a/34132924/2402577")
+                log("==> Check solution: https://stackoverflow.com/a/34132924/2402577")
 
             raise e
         finally:
@@ -232,7 +232,7 @@ class Ipfs:
                     log()
                     if "failure: dial to self attempted" in e:
                         log(f"E: [g]{e}")
-                        if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
+                        if not cfg.IS_FULL_TEST and not question_yes_no("==> Would you like to continue?"):
                             raise QuietExit
                     else:
                         log("E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001")

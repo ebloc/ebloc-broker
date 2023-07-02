@@ -436,7 +436,7 @@ def start_ipfs_daemon(_is_print=False) -> bool:
         return True
 
     log("warning: [g]IPFS[/g] does not work on the background")
-    log("#> Initializing [g]IPFS daemon[/g]...")
+    log("==> Initializing [g]IPFS daemon[/g]...")
     output = run(["python3", env.EBLOCPATH / "broker" / "_daemons" / "ipfs.py"])
     while True:
         time.sleep(1)
@@ -566,7 +566,7 @@ def question_yes_no(message, is_exit=False):
         else:
             log()
             log(
-                f"#> Please respond with [bg]{br('y')}es[/bg] or [bg]{br('n')}o[/bg]: ",
+                f"==> Please respond with [bg]{br('y')}es[/bg] or [bg]{br('n')}o[/bg]: ",
                 end="",
             )
 

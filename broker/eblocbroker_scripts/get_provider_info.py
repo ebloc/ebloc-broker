@@ -59,7 +59,7 @@ def get_provider_info(self, provider):
 
         if bn < prices_set_block_numbers[-1]:
             remaining_blk = prices_set_block_numbers[-1] - bn
-            log(f"#> remaing blocks ({remaining_blk}) for updated prices in future block: {provider_prices}")
+            log(f"==> remaing blocks ({remaining_blk}) for updated prices in future block: {provider_prices}")
             *_, provider_prices = Ebb._get_provider_info(provider)
             with suppress(Exception):
                 provider_info["block_read_from"] = prices_set_block_numbers[-2]

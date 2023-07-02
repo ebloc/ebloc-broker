@@ -19,7 +19,7 @@ def refresh_gdrive_token(silent=True):
         output = json.load(f)
 
     if not silent:
-        log("#> Running: gdrive about --refresh-token <id>", h=False, is_write=False)
+        log("==> Running: gdrive about --refresh-token <id>", h=False, is_write=False)
 
     run(["gdrive", "about", "--refresh-token", output["refresh_token"]])
 

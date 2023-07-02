@@ -165,9 +165,9 @@ def initialize_folder(folder_to_share, username) -> str:
                 except Exception as e:
                     raise e
             else:
-                log("#> folder is already created")
+                log("==> folder is already created")
         else:
-            log("#> folder is already created")
+            log("==> folder is already created")
 
     try:
         tar_dst = f"{tar_hash}_{username}/{tar_hash}.tar.gz"
@@ -263,7 +263,7 @@ def _share_folders(provider_info, username, folders_hash):
         except Exception as e:
             print_tb(e)
             log(f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}")
-            log("#> Maybe folder with same name is already shared?")
+            log("==> Maybe folder with same name is already shared?")
             raise e
 
         time.sleep(0.25)

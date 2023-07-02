@@ -295,7 +295,7 @@ def test_stored_data_usage():
         # log(dict(tx.events["LogJob"]))
         # log(tx.events["LogJob"]["received"] - tx.events["LogJob"]["refunded"])
 
-    log(f"#> measured_job_price={job_price}")
+    log(f"==> measured_job_price={job_price}")
     set_transfer(requester, Cent(job_price))
     args[-1] = job_price
     tx = ebb.submitJob(
@@ -808,7 +808,7 @@ def test_multiple_data():
     # log(tx.events['LogProcessPayment'])
     received_sum = tx.events["LogProcessPayment"]["receivedCent"]
     refunded_sum = tx.events["LogProcessPayment"]["refundedCent"]
-    log(f"#> received={received_sum} refunded={refunded_sum}")
+    log(f"==> received={received_sum} refunded={refunded_sum}")
     assert received_sum == 120 * Cent("1 cent") and refunded_sum == 0
     _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
     _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
@@ -1219,7 +1219,7 @@ def test_submit_n_data():
         {"from": requester},
     )
     gas_costs.append(tx.__dict__["gas_used"])
-    log("#> submit_job data number gas differences:")
+    log("==> submit_job data number gas differences:")
     print(gas_costs)
     for idx in range(0, 3):
         print(gas_costs[idx + 1] - gas_costs[idx])

@@ -42,6 +42,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         sys.exit(1)
     except QuietExit as e:
-        log(f"#> {e}")
+        log(f"==> {e}")
     except Exception as e:
         print_tb(str(e))

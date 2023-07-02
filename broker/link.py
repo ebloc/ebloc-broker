@@ -114,7 +114,7 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
         print()
         if not is_pass:
             question_yes_no(
-                "#> Would you like to continue with linked folder path in your `[m]run.sh[/m]` file?\n"
+                "==> Would you like to continue with linked folder path in your `[m]run.sh[/m]` file?\n"
                 "If no, please feel free to update your run.sh file and continue",
                 is_exit=True,
             )
@@ -147,7 +147,7 @@ def check_linked_data(folders_target, folder_link, source_code_path="", is_pass=
     if not is_pass:
         print("")
         question_yes_no(
-            "#> Would you like to continue with the linked folder path in your `[m]run.sh[/m]` file?\n"
+            "==> Would you like to continue with the linked folder path in your `[m]run.sh[/m]` file?\n"
             "If no, feel free to update your run.sh file and continue",
             is_exit=True,
         )

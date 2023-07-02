@@ -63,7 +63,7 @@ class B2dropClass(Storage):
                     "share_token": self.share_token,
                 }
                 if Ebb.mongo_broker.add_item_share_id(share_key, share_id, self.share_token):
-                    log(f"#> Added into mongoDB {ok()}")
+                    log(f"==> Added into mongoDB {ok()}")
                 else:
                     log("E: Something is wrong, not added into mongoDB")
 
@@ -157,14 +157,14 @@ class B2dropClass(Storage):
         program.  In that case, the only way to know the size is to download the
         data and count the bytes.
 
-        #> Thanks.  I was looking for a way to predict the size before of the
+        ==> Thanks.  I was looking for a way to predict the size before of the
         file before download aiming if the size of the data is large I halt the
         download process.  Maybe I can check the downloaded size while wget
         actively downloads it, where add a download limit to wget, hence if
         exceeds the limit stop the download process.
         """
         cached_tar_fn = f"{results_folder_prev}/{folder_name}.tar.gz"
-        log("#> downloading [g]output.zip[/g] for: ", end="")
+        log("==> downloading [g]output.zip[/g] for: ", end="")
         log(f"{folder_name} => {cached_tar_fn} ", "bold")
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         for attempt in range(5):
@@ -203,7 +203,7 @@ class B2dropClass(Storage):
             except Exception as e:
                 print_tb(e)
                 log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
-                log("#> Sleeping for 30 seconds")
+                log("==> Sleeping for 30 seconds")
                 time.sleep(30)
                 """Since config.oc.get_file is not mounted in current test
                 if config.oc.get_file(f"/{folder_name}/{folder_name}.tar.gz", cached_tar_fn):
@@ -318,7 +318,7 @@ class B2dropClass(Storage):
                 # TODO: if added before or some do nothing
                 if Ebb.mongo_broker.add_item_share_id(share_key, value["share_id"], value["share_token"]):
                     # adding into mongoDB for future usage
-                    log(f"#> [g]{share_key}[/g] is added into mongoDB {ok()}")
+                    log(f"==> [g]{share_key}[/g] is added into mongoDB {ok()}")
             except Exception as e:
                 print_tb(e)
                 log(f"E: [g]{e}")
@@ -449,7 +449,7 @@ class B2dropClass(Storage):
                 except KeyError:
                     try:
                         shared_id = Ebb.mongo_broker.find_shareid_item(key=share_key)
-                        log(f"#> reading from mongo_broker {ok()}")
+                        log(f"==> reading from mongo_broker {ok()}")
                         log(shared_id)
                     except Exception as e:
                         print_tb(e)

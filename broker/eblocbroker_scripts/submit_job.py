@@ -93,7 +93,7 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
                 ipfs.swarm_connect(provider_info["ipfs_address"])
             except Exception as e:
                 log(f"E: [g]{e}")
-                if not cfg.IS_FULL_TEST and not question_yes_no("#> Would you like to continue?"):
+                if not cfg.IS_FULL_TEST and not question_yes_no("==> Would you like to continue?"):
                     raise QuietExit from e
 
     for idx, source_code_hash in enumerate(job.code_hashes_str):

@@ -460,6 +460,7 @@ markupsafe==2.1.2
 matplotlib-inline==0.1.3
     # via
     #   ipython
+metis==0.2a5
 mccabe==0.7.0
     # via
     #   flake8

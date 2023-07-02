@@ -93,7 +93,7 @@ def register_requester(self, yaml_fn, is_question=True):
         }
         log("new_requester_info=", "yellow", end="")
         log(_requester_info)
-        if is_question and not question_yes_no("#> Would you like to update requester info?"):
+        if is_question and not question_yes_no("==> Would you like to update requester info?"):
             return
 
     try:

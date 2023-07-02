@@ -204,7 +204,7 @@ def run_storage_thread(storage_class):
     storage_thread.name = storage_class.thread_name
     # This thread dies when main thread (only non-daemon thread) exits
     storage_thread.daemon = True
-    log(f"#> thread_log_fn={storage_class.drivers_log_path}")
+    log(f"==> thread_log_fn={storage_class.drivers_log_path}")
     storage_thread.start()
     if cfg.IS_THREAD_JOIN:
         try:

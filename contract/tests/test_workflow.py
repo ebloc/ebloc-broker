@@ -50,7 +50,7 @@ def print_gas_costs():
     for k, v in gas_costs.items():
         if v:
             # print(f"{k} => {v}")
-            log(f"#> {k} => {int(sum(v) / len(v))}")
+            log(f"==> {k} => {int(sum(v) / len(v))}")
 
 
 def append_gas_cost(func_n, tx):
@@ -317,9 +317,9 @@ def test_workflow():
     _refunded_sum = Cent(refunded_sum).to_usd()
     _received_sum = Cent(received_sum).to_usd()
     job_price_str = Cent(job_price).to_usd()
-    log(f"#> received_sum={_received_sum} usd | refunded_sum={_refunded_sum} usd | job_price={job_price_str} usd")
-    log(f"#> received_sums={received_sums}")
-    log(f"#> refunded_sums={refunded_sums}")
+    log(f"==> received_sum={_received_sum} usd | refunded_sum={_refunded_sum} usd | job_price={job_price_str} usd")
+    log(f"==> received_sums={received_sums}")
+    log(f"==> refunded_sums={refunded_sums}")
 
     assert _refunded_sum == 0
     _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})

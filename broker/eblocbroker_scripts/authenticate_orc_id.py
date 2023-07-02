@@ -16,7 +16,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
     cmd: ./authenticate_orc_id.py 0x29e613B04125c16db3f3613563bFdd0BA24Cb629 0000-0001-7642-0552
     """
     address = self.w3.toChecksumAddress(address)
-    log(f"#> authenticating user={address}")
+    log(f"==> authenticating user={address}")
     if not self.w3.isAddress(_from):
         raise Exception(f"Account: {_from} is not a valid address")
 
@@ -34,7 +34,7 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         raise Exception("orc_id contains characters")
 
     if self._is_orc_id_verified(address):
-        raise Exception(f"#> address={address} that has orc_id: {orc_id} is already authenticated")
+        raise Exception(f"==> address={address} that has orc_id: {orc_id} is already authenticated")
 
     try:
         tx = self._authenticate_orc_id(_from, address, str.encode(orc_id))

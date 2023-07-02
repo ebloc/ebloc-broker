@@ -206,7 +206,7 @@ class Job:
         if "requester_address" in self.cfg["config"] and self.cfg["config"]["requester_address"]:
             self.requester_addr = self.cfg["config"]["requester_address"]
         else:
-            log(f"#> requester_address={env.PROVIDER_ID}")
+            log(f"==> requester_address={env.PROVIDER_ID}")
             self.requester_addr = env.PROVIDER_ID
 
         self.provider_addr = self.cfg["config"]["provider_address"]
@@ -378,6 +378,9 @@ class Job:
 
         log(f"[g]##[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
+
+    def get_generated_output_files(self):
+        pass
 
 
 class JobPrices:
@@ -569,6 +572,5 @@ class JobPrices:
                     log(f"{c1} out={self.to_usd(self.cost['data_transfer_out'])}")
 
             log(f"{b_close}")
-        else:
-            if self.registered_data_cost_list:
-                log(self.registered_data_cost_list)
+        elif self.registered_data_cost_list:
+            log(self.registered_data_cost_list)

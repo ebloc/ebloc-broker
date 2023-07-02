@@ -75,7 +75,7 @@ def wait_until_idle_core_is_available():
         if slurm.get_idle_cores(is_print=False) > 0:
             break
         else:
-            log("#> Slurm running node capacity is full.")
+            log("==> Slurm running node capacity is full.")
             sleep_timer(60)
 
 
@@ -162,6 +162,15 @@ def tools(bn):
                     raise QuietExit(f"E: {env.IPFS_REPO} repo does not exist")
 
             start_ipfs_daemon()
+            output = run(["ipfs", "id"])
+            flag = 0
+            for line in output:
+                if "/tcp" in output:
+                    flag = 1
+                    break
+
+            if not flag:
+                raise QuietExit(f"warning 'ipfs id' does not return connected swarm nodes.")
 
         exception_msg = "warning: Given information is not same with the provider's registered info, please update it."
         try:
@@ -440,7 +449,7 @@ def run_driver(given_bn):
         bn_temp = env.config["block_continue"]
         if not isinstance(env.config["block_continue"], int):
             log("E: block_continue variable is empty or contains an invalid character")
-            if not question_yes_no("#> Would you like to read from the contract's deployed block number?"):
+            if not question_yes_no("==> Would you like to read from the contract's deployed block number?"):
                 terminate()
 
             bn_temp = deployed_block_number

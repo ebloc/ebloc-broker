@@ -243,7 +243,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 if not pid_exists(self.job_state_running_pid):
                     break
                 else:
-                    log("#> job_state_running() is still running; sleeping for 15 seconds")
+                    log("==> job_state_running() is still running; sleeping for 15 seconds")
                     sleep(15)
 
         self.job_state_running_tx = Ebb.mongo_broker.get_job_state_running_tx(self.job_key, self.index)
@@ -280,7 +280,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 _share_token = share_ids[key]["share_token"]
                 encoded_value = base64.b64encode((f"{_share_token}:").encode("utf-8")).decode("utf-8")
 
-            log(f"## shared_tokens: {key} => {value['share_token']} | encoded=[m]{encoded_value}", h=False)
+            log(f"==> shared_tokens: {key} => {value['share_token']} | encoded=[m]{encoded_value}", h=False)
 
     def get_cloud_storage_class(self, _id):
         """Return cloud storage used for the id of the data."""

@@ -85,7 +85,6 @@ class ENV(ENV_BASE):
         self.config = Yaml(self.LOG_DIR.joinpath("config.yaml"))
         self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
-        self.IPFS_REPO = self.tilda_check(self.cfg["ipfs_repo_dir"])
         self.IPFS_LOG = self.LOG_DIR.joinpath("ipfs.out")
         self.GANACHE_LOG = self.LOG_DIR.joinpath("ganache.out")
         self.OWNCLOUD_PATH = Path("/mnt/oc")

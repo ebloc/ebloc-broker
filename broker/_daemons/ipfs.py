@@ -2,14 +2,15 @@
 
 import daemon
 import os
-import socket
 import sys
-from pathlib import Path
-
+from broker.env import ENV_BASE
 from broker import cfg, config
 from broker._utils._log import ok
 from broker._utils.tools import print_tb, run
 from broker.utils import is_ipfs_on, log, popen_communicate, is_docker
+
+
+_env = ENV_BASE()
 
 
 def mount_ipfs():
@@ -25,10 +26,7 @@ def _run():
     __ https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c#gistcomment-4022998
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
-    ipfs_init_folder = Path.home().joinpath(".ipfs")
-    if socket.gethostname() == "homevm":
-        ipfs_init_folder = "/mnt/hgfs/ggh/.ipfs"
-
+    ipfs_init_folder = _env.IPFS_REPO
     if not os.path.isdir(ipfs_init_folder):
         output = run(["ipfs", "init"])
         print(output)
@@ -42,10 +40,9 @@ def _run():
         else:
             env = {"IPFS_PATH": ipfs_init_folder}
 
-        if is_docker():
-            cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc"]
-        else:
-            cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc", "--routing=none"]
+        cmd = [IPFS_BIN, "daemon", "--migrate=True", "--enable-gc"]
+        if not is_docker():
+            cmd += ["--routing=none"]
 
         popen_communicate(cmd, stdout_fn=config.env.IPFS_LOG, env=env)
 

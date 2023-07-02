@@ -39,6 +39,7 @@ class ENV_BASE:
         if is_docker():
             self._HOME = Path("/") / "root"
 
+        self.IPFS_REPO = self.tilda_check(self.cfg["ipfs_repo_dir"])
         self.EBLOCPATH = self.tilda_check(Path(self.cfg["ebloc_path"]))
         self.CONTRACT_PROJECT_PATH = self.EBLOCPATH / "contract"
         self.IS_BLOXBERG = True
@@ -47,7 +48,7 @@ class ENV_BASE:
             self.IS_GETH_TUNNEL = False
 
         self.EBB_SCRIPTS = self.EBLOCPATH / "broker" / "eblocbroker_scripts"
-        self.CONTRACT_YAML_FILE = self.EBLOCPATH / "broker" / "eblocbroker_scripts" / "contract.yaml"
+        self.CONTRACT_YAML_FILE = self.EBB_SCRIPTS / "contract.yaml"
         try:
             _yaml = Yaml(self.CONTRACT_YAML_FILE)
             if self.IS_BLOXBERG:

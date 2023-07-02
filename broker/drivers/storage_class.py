@@ -406,5 +406,5 @@ class Storage(BaseClass):
             job_ids = squeue()
             job_ids.remove("JOBID")
 
-        log(f"#> ongoing_job_ids={job_ids}")
+        log(f"==> ongoing_job_ids={job_ids}")
         return True

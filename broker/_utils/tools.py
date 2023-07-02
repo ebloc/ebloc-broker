@@ -169,7 +169,7 @@ def _remove(path: str, is_verbose=False) -> None:
             return
 
         if is_verbose:
-            log(f"#> {WHERE(1)} following path:\n[m]{path}[/m] is removed")
+            log(f"==> {WHERE(1)} following path:\n[m]{path}[/m] is removed")
     except OSError as e:
         # Suppress the exception if it is a file not found error.
         # Otherwise, re-raise the exception.
@@ -223,7 +223,7 @@ def _sys_exit(msg="") -> None:
         else:
             log(msg)
 
-    log(f"#> Exiting {_date()}[w]...")
+    log(f"==> Exiting {_date()}[w]...")
     sys.exit()
 
 
@@ -243,7 +243,7 @@ def _exit(msg="") -> None:
         else:
             log(msg)
 
-        log("#> exiting")
+        log("Exiting")
 
     os._exit(0)
 

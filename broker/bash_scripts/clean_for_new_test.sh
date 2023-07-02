@@ -37,7 +37,7 @@ iterative_clean_gdrive () {
 }
 
 clean_gdrive () {
-    echo "#> Running: ~/ebloc-broker/broker/python_scripts/clean_gdrive.py"
+    echo "==> Running: ~/ebloc-broker/broker/python_scripts/clean_gdrive.py"
     for i in {1..2}; do ~/ebloc-broker/broker/python_scripts/clean_gdrive.py; done
     echo "[  OK  ]"
     iterative_clean_gdrive
@@ -52,9 +52,9 @@ ipfs refs local | tail -n1
 
 # update block.continue.txt with the current block number
 python3 -uB $HOME/ebloc-broker/broker/eblocbroker_scripts/get_block_number.py True >/dev/null 2>&1
-echo "#> eblocbroker_scripts/get_block_number.py done"
+echo "==> eblocbroker_scripts/get_block_number.py done"
 
-printf "#> kill squeue ... "
+printf "==> kill squeue ... "
 timeout 2 squeue | tail -n+2 | awk '{print $1}' | xargs scancel 2> /dev/null
 echo "done"
 
@@ -134,7 +134,7 @@ systemctl status mongod && \
     ~/ebloc-broker/broker/libs/mongodb.py --delete-all
 
 if [ "$(hostname)" = "homevm" ]; then
-    echo "#> ln datasets for homevm"
+    echo "==> ln datasets for homevm"
     ~/ebloc-broker/broker/bash_scripts/ln_medium_data.sh
 fi
 

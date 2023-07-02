@@ -26,7 +26,7 @@ def pre_check_data(provider):
 
 def is_data_registered(provider, registered_data_hash) -> bool:
     if not isinstance(registered_data_hash, bytes):
-        raise QuietExit(f"#> requested data={registered_data_hash} is not in `bytes` instance")
+        raise QuietExit(f"==> requested data={registered_data_hash} is not in `bytes` instance")
 
     with suppress(Exception):
         cfg.Ebb.get_registered_data_price(provider, registered_data_hash, 0)

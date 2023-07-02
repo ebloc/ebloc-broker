@@ -795,3 +795,4 @@ data_transfer_in=232 MB -> rounded=232 MB da sorun var 0 olunca calisiyor gdirve
 ~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py \
           916f36db95f06fa1407a285998342cdc 0 0 2 "" '[3, 3, 2, 2]' 1687811273 232 0 '[1]' '[60]'
 #+end_src
+** TODO ipfs id should return string containing ="/tcp"=

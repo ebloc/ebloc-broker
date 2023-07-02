@@ -211,7 +211,7 @@ if __name__ == "__main__":
     try:
         main()
     except QuietExit as e:
-        log(f"#> {e}")
+        log(f"==> {e}")
     except KeyboardInterrupt:
         pass
     except Exception as e:

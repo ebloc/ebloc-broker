@@ -35,7 +35,7 @@ def username_check(username):
     """Check whether username exists."""
     try:
         pwd.getpwnam(username)
-        log(f"## user [blue]{username}[/blue] exists")
+        log(f"## user=[blue]{username}[/blue] exists")
         return False
     except KeyError:
         log(f"user {username} does not exist. Continuing...")

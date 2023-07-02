@@ -60,7 +60,7 @@ def print_prices(hashes):
 
 
 def register_data_files(data_price, hashes):
-    log(f"#> registering data {len(hashes)} files", h=False)
+    log(f"==> registering data {len(hashes)} files", h=False)
     for code_hash in hashes:
         with suppress(Exception):
             _register_data(code_hash, data_price, commitment_dur=600)

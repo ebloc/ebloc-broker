@@ -24,6 +24,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         pass
     except QuietExit as e:
-        print(f"#> {e}")
+        print(f"==> {e}")
     except Exception as e:
         print_tb(str(e))

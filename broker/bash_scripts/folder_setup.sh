@@ -4,7 +4,7 @@ GREEN="\033[1;32m"; NC="\033[0m"; VAR="base"
 
 yes_or_no () {
     while true; do
-        string="$GREEN#>$NC $* [Y/n]:"
+        string="$GREEN==>$NC $* [Y/n]:"
         read -p "$(echo -e $string) " yn
         case $yn in
             [Yy]*) return 0  ;;
@@ -116,7 +116,7 @@ if [[ "$1" != "$VAR" ]]; then
     yes_or_no "Are you are a provider" && provider_setup
 fi
 
-python3 $BASE_DIR/python_scripts/input.py
+# python3 $BASE_DIR/python_scripts/input.py
 
 ## --------------------------- end -------------------------------
 

@@ -14,7 +14,7 @@ def main():
         print("Please provide transaction hash as an argument")
         sys.exit(1)
 
-    print(f"#> is_transaction_passed={Ebb.is_transaction_passed(tx_hash)}")
+    print(f"==> is_transaction_passed={Ebb.is_transaction_passed(tx_hash)}")
 
 
 if __name__ == "__main__":

@@ -58,7 +58,7 @@ tx={
 │   'transactionHash': HexBytes('0x6dad5e2461aec1f284ba899c6287f0f8f553c3d899011f335c3e2cf54c070048'),
 │   'transactionIndex': 0
 }
-#> Is transaction successfully deployed?  [ok]
+==> Is transaction successfully deployed?  [ok]
 #+end_src
 
 Followed by =eblocbroker driver --no-thread=.

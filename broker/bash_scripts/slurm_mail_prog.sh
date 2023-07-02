@@ -3,7 +3,7 @@
 # Link: https://stackoverflow.com/questions/43449165/could-slurm-trigger-a-scriptimplemented-by-the-frontend-slurm-user-when-any-jo
 
 _HOME="/home/username"  # may differ for each providerget from the file name
-EMAIL=""
+# EMAIL=""
 VENV_PATH=${_HOME}"/venv"
 BROKER_PATH=${_HOME}"/ebloc-broker/broker"
 LOG_FILE=${_HOME}"/.ebloc-broker/slurm_script.log"
@@ -13,7 +13,7 @@ b=$1
 c=$2
 event=$(echo $c | awk '{print $8}')
 msg="==> [$(date)] $a $b $c \n$event"
-echo $msg | mail -s "Message Subject" $EMAIL
+# echo $msg | mail -s "Message Subject" $EMAIL
 echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-" >> $LOG_FILE
 echo $msg >> $LOG_FILE
 slurm_job_id=$(echo "$c" | grep -o -P '(?<=Job_id=).*(?= Name)')
@@ -23,10 +23,10 @@ if [[ $c == *" Began, "* ]]; then
     arg1=$(echo $name | cut -d "$SEP" -f 2)  # index
     msg="JOB_STARTED fn=$name\n"
     msg="${msg}${BROKER_PATH}/start_code.py $arg0 $arg1 $slurm_job_id"
-    echo $msg | mail -s "Message Subject" $EMAIL
+    # echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
-        source $VENV_PATH/bin/activate
+        . $VENV_PATH/bin/activate
         nohup $BROKER_PATH/start_code.py $arg0 $arg1 $slurm_job_id >/dev/null 2>&1
     fi
 fi
@@ -47,10 +47,10 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     arg2=$(echo $name | cut -d "$SEP" -f 3)  # received_bn
     msg="$state fn=$name\n"
     msg="${msg}${BROKER_PATH}/end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
-    echo $msg | mail -s "Message Subject" $EMAIL
+    # echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
-        source $VENV_PATH/bin/activate
+        . $VENV_PATH/bin/activate
         nohup $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id >/dev/null 2>&1
     fi
 fi
@@ -62,10 +62,10 @@ if [[ $event == *"TIMEOUT"* ]]; then
     arg2=$(echo $name | cut -d "$SEP" -f 3)  # received_bn
     msg="TIMEOUT fn=$name\n"
     msg="${msg}${BROKER_PATH}/end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
-    echo $msg | mail -s "Message Subject" $EMAIL
+    # echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
-        source $VENV_PATH/bin/activate
+        . $VENV_PATH/bin/activate
         $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id
     fi
 fi
@@ -77,10 +77,10 @@ if [[ $event == *"CANCELLED"* ]]; then
     arg2=$(echo $name | cut -d "$SEP" -f 3)  # received_bn
     msg="CANCELLED fn=$name\n"
     msg="${msg}${BROKER_PATH}/end_code.py $arg0 $arg1 $arg2 \"$name\" $slurm_job_id"
-    echo $msg | mail -s "Message Subject" $EMAIL
+    # echo $msg | mail -s "Message Subject" $EMAIL
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
-        source $VENV_PATH/bin/activate
+        . $VENV_PATH/bin/activate
         nohup $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $name $slurm_job_id >/dev/null 2>&1
     fi
 fi

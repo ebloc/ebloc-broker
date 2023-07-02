@@ -48,7 +48,7 @@ def start_call(key, index, slurm_job_id) -> None:
     date = p3.communicate()[0].decode("utf-8").strip()
     start_ts = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
     log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {job_id} {start_ts}", is_code=True)
-    log(f"#> pid={pid}")
+    log(f"==> pid={pid}")
     for attempt in range(10):
         if attempt > 0:
             log(f"warning: sleeping for {cfg.BLOCK_DURATION * 2} ...")
@@ -66,7 +66,7 @@ def start_call(key, index, slurm_job_id) -> None:
             log(f"tx_hash={tx_hash}")
             d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log(f"==> set_job_state_running_started {start_ts} | attempt_date={d}")
-            log("## mongo.set_job_state_running_tx", end="")
+            log("==> mongo.set_job_state_running_tx", end="")
             if Ebb.mongo_broker.set_job_state_running_tx(str(key), int(index), str(tx_hash)):
                 log(ok())
             else:
@@ -82,7 +82,7 @@ def start_call(key, index, slurm_job_id) -> None:
                 log(f"warning: {e}")
                 sys.exit(1)
 
-            log(f"## attempt={attempt}: {e}")
+            log(f"==> attempt={attempt}: {e}")
 
     log("E: all the attempts for the start_code() function is failed  [  [red]ABORT[/red]  ]")
     sys.exit(1)
