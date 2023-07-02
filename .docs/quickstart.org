@@ -1,6 +1,6 @@
 * Quickstart
 
-This page provides a quick overview of how to use =ebloc-broker= in Docker container.
+This page provides a quick overview of how to use =ebloc-broker= in Docker container using IPFS to share files/folders.
 
 ** Creating a New Docker Container
 
@@ -24,8 +24,11 @@ docker exec --detach-keys="ctrl-e,e" -it requester_requester_1 /bin/bash
 #+end_src
 
 *** IPFS Bridge
-In the both docker instances IPFS nodes are unable to connect to each other if the their linked ports [4003, 4101] are closed on the main node.
+In the both docker instances IPFS nodes are unable to connect to each other if the their linked ports [ =4003=, =4101= ] are closed on the main node.
 In order to overcome this, we have to install =ipfs= into main node and connect it into Ipfs node that is running on the both docker instances.
+
+In each container select one of the address from =ipfs id | grep "/tcp/" | sed -e 's/^\s*//'=.
+And connect into them from the main node using =ipfs swarm connect <address>=.
 
 ** Provider
 First run one time: =/workspace/ebloc-broker/broker/eblocbroker_scripts/update_provider_info.py=.
@@ -85,8 +88,10 @@ groupadd: group 'eblocbroker' already exists
 [  Sun 07/02 00:07:13 AM  ] waiting job events since bn=21073284 -- counter=0:02:18 ...
 #+end_src
 
+Recording: [[https://asciinema.org/a/594177]]
+
 ** Requester
-Submit hello world job:
+Submit your first job:
 
 First replace provider address in the file =/workspace/ebloc-broker/broker/ipfs/job_docker.yaml=.
 You can use =nano= as editor.
@@ -95,5 +100,3 @@ Then submit the job using:
 #+begin_src bash
 eblocbroker submit /workspace/ebloc-broker/broker/ipfs/job_docker.yaml
 #+end_src
-
-Recording: [[https://asciinema.org/a/594177]]

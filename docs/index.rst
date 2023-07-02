@@ -65,7 +65,8 @@ First, from `B2ACCESS home page <https://b2access.eudat.eu/home/>`__
 Create app password
 ^^^^^^^^^^^^^^^^^^^
 
-``Settings`` => ``Security`` => ``Create new app password`` and save it.
+``Settings`` => ``Security`` => ``Create new app password`` and save it
+onto ~\ :sub:`/.ebloc-broker/.b2drop_client.txt` file.
 
 How to install required packages
 --------------------------------

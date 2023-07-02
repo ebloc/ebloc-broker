@@ -2,7 +2,7 @@ Quickstart
 ==========
 
 This page provides a quick overview of how to use ``ebloc-broker`` in
-Docker container.
+Docker container using IPFS to share files/folders.
 
 Creating a New Docker Container
 -------------------------------
@@ -28,6 +28,18 @@ these in seperate terminals:
    docker exec --detach-keys="ctrl-e,e" -it ebloc-broker_slurm_1 /bin/bash
    docker exec --detach-keys="ctrl-e,e" -it requester_requester_1 /bin/bash
 
+IPFS Bridge
+~~~~~~~~~~~
+
+In the both docker instances IPFS nodes are unable to connect to each
+other if the their linked ports [ ``4003``, ``4101`` ] are closed on the
+main node. In order to overcome this, we have to install ``ipfs`` into
+main node and connect it into Ipfs node that is running on the both
+docker instances.
+
+In each container select one of the address from
+``ipfs id | grep "/tcp/" | sed -e 's/^\s*//'=. And connect into them from the main node using =ipfs swarm connect <address>``.
+
 Provider
 --------
 
@@ -40,7 +52,7 @@ Example output:
    $ /workspace/ebloc-broker/broker/eblocbroker_scripts/update_provider_info.py
    ## address=0xe953A99FF799e6dA23948Ca876FCe3f264447De8
    ## gmail=
-   ## ipfs_address=/ip4/85.96.2.179/tcp/4001/p2p/12D3KooWBvXo9ycG5BreJyLK5C9oDer9UVZX8VMMdAXS4usCrKvr
+   ## ipfs_address=/ip4/x.x.x.x/tcp/4001/p2p/12D3KooWBvXo9ycG5BreJyLK5C9oDer9UVZX8VMMdAXS4usCrKvr
    ## fid=""
    Transaction sent: 0x6dad5e2461aec1f284ba899c6287f0f8f553c3d899011f335c3e2cf54c070048
      Gas price: 1.2 gwei   Gas limit: 9980000   Nonce: 168
@@ -61,30 +73,47 @@ Example output:
    }
    #> Is transaction successfully deployed?  [ok]
 
-Followed by ``eblocbroker driver``.
+Followed by ``eblocbroker driver --no-thread``.
 
 .. code:: bash
 
-   $ eblocbroker driver
-   ================================================ provider session starts =================================================
-   2023-07-01 11:34 -- is_threading=True -- pid=397 -- whoami=root -- slurm_user=slurm
-   provider_address: 0xe953a99ff799e6da23948ca876fce3f264447de8
+   $ eblocbroker driver --no-thread
+   =================================================== provider session starts ====================================================
+   2023-07-01 21:04 -- is_threading=False -- pid=2649 -- whoami=root -- slurm_user=root
+   provider_address: 0x4cd57387cc4414be8cece4e6ab84a7dd641eab25
    rootdir: /workspace/ebloc-broker
    logfile: /root/.ebloc-broker/provider.log
-   ipfs_id: /ip4/85.96.2.179/tcp/4001/p2p/12D3KooWBvXo9ycG5BreJyLK5C9oDer9UVZX8VMMdAXS4usCrKvr
+   ipfs_id: /ip4/x.x.x.x/tcp/4001/p2p/12D3KooWSp3YgCs4GxCeQWcPBE1MvG9kYZCXdATsx7zaN9Uh1Jhy
    ipfs_repo_dir: /root/.ipfs
    Attached to host RPC client listening at 'http://berg-cmpe-boun.duckdns.org:8545'
 
-   => is_web3_connected=True
-   => active_network_id=bloxberg
-   =>  left_of_block_number=20941981
-   => latest_block_number=21068056
+   ==> is_web3_connected=True
+   ==> active_network_id=bloxberg
+   ==> left_of_block_number=21072479
+   ==> latest_block_number=21073284
    🍺  Connected into bloxberg
    ## checking slurm...  [ok]
+   groupadd: group 'eblocbroker' already exists
    ==> mongod is already running on the background
    ==> contract_address=0x9c7570e55d6414561800d72045a72b26a5a9e639
-   ==> account_balance=91754976 gwei ≈ 0.09 ether
-   ==> Ebb_token_balance=1999.501458 usd
-   ==> allocated_cores=0 | idle_cores=4 | other_cores=0 | total_cores=4
+   ==> account_balance=93163688 gwei ≈ 0.09 ether
+   ==> Ebb_token_balance=1999.707556 usd
+   ==> allocated_cores=0 | idle_cores=2 | other_cores=0 | total_cores=2
+   [  Sun 07/02 00:07:13 AM  ] waiting job events since bn=21073284 -- counter=0:02:18 ...
 
 Recording: https://asciinema.org/a/594177
+
+Requester
+---------
+
+Submit your first job:
+
+First replace provider address in the file
+``/workspace/ebloc-broker/broker/ipfs/job_docker.yaml``. You can use
+``nano`` as editor.
+
+Then submit the job using:
+
+.. code:: bash
+
+   eblocbroker submit /workspace/ebloc-broker/broker/ipfs/job_docker.yaml
