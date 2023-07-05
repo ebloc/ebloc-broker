@@ -70,18 +70,18 @@ if __name__ == "__main__":
             raise e
 
     f_id = env.OC_USER
-    log(f"## address=[m]{env.PROVIDER_ID}", h=False)
-    log(f"## gmail=[m]{env.GMAIL}", h=False)
+    log(f"==> address=[m]{env.PROVIDER_ID}", h=False)
+    log(f"==> gmail=[m]{env.GMAIL}", h=False)
     if gpg_fingerprint:
-        log(f"## gpg_fingerprint={gpg_fingerprint}")
+        log(f"==> gpg_fingerprint={gpg_fingerprint}")
 
     if ipfs_address:
-        log(f"## ipfs_address=[m]{ipfs_address}")
+        log(f"==> ipfs_address=[m]{ipfs_address}")
     else:
         log('## ipfs_address=""')
 
     if f_id:
-        log(f"## fid=[m]{f_id}")
+        log(f"==> fid=[m]{f_id}")
     else:
         log('## fid=""')
 

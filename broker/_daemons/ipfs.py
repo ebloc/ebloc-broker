@@ -28,8 +28,7 @@ def _run():
     IPFS_BIN = "/usr/local/bin/ipfs"
     ipfs_init_folder = _env.IPFS_REPO
     if not os.path.isdir(ipfs_init_folder):
-        output = run(["ipfs", "init"])
-        print(output)
+        print(run(["ipfs", "init"]))
 
     if not os.path.isfile(config.env.IPFS_LOG):
         open(config.env.IPFS_LOG, "a").close()
@@ -61,7 +60,7 @@ def main():
         cfg.ipfs.remove_lock_files()
         _run()
     else:
-        log(f"## [g]IPFS[/g] daemon is already running {ok()}")
+        log(f"> [g]IPFS[/g] daemon is already running {ok()}")
         sys.exit(100)
 
 

@@ -79,12 +79,14 @@ class Job:
         self.data_transfer_out: int = 0
         self.price = 0
         self.registered_data_cost = 0
+        self.input_files = []
         self.registered_data_cost_list = {}
         self.data_transfer_ins = []
         self.registered_data_files = []
         self.paths = []
         self.data_prices_set_block_numbers = []
         self.data_paths = []
+        self.patch_ipfs_hash = ""
         self.source_code_path = None
         called_fn = os.path.basename(sys._getframe(1).f_code.co_filename)
         if called_fn.startswith("test_"):

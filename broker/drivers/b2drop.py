@@ -48,7 +48,7 @@ class B2dropClass(Storage):
         f_id = f_id.replace("@b2drop.eudat.eu", "")  # check in case
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         if not is_verbose:
-            log(f"## searching share tokens for the related source_code_folder={share_key}")
+            log(f"==> searching share tokens for the related source_code_folder={share_key}")
 
         for idx in range(len(share_list) - 1, -1, -1):
             # starts iterating from last item to the first one
@@ -70,7 +70,7 @@ class B2dropClass(Storage):
                 log(f"==> name={folder_name} | share_id={share_id} | share_token={self.share_token} {ok()}")
                 try:
                     config.oc.accept_remote_share(int(share_id))
-                    log(f"## share_id={share_id} is accepted")
+                    log(f"==> share_id={share_id} is accepted")
                 except Exception as e:
                     print_tb(e)
 
@@ -198,7 +198,7 @@ class B2dropClass(Storage):
                     _remove(download_fn)
                     self.tar_downloaded_path[folder_name] = cached_tar_fn
                     # TODO: if Folder contains zipped file like .tar.gz unzip that too // investigate
-                    log(f"## Download datafile from [blue]B2DROP[/blue] {ok()}")
+                    log(f"==> Download datafile from [blue]B2DROP[/blue] {ok()}")
                     return
             except Exception as e:
                 print_tb(e)
@@ -231,7 +231,7 @@ class B2dropClass(Storage):
     def get_file_size(self, fn, folder_name):
         # accept_given_shares()
         try:
-            log(f"## trying to get {fn} file info from B2DROP")
+            log(f"==> trying to get {fn} file info from B2DROP")
             #: DAV/Properties/getcontentlength the number of bytes of a resource
             return config.oc.file_info(fn).get_size()
         except Exception as e:
@@ -268,7 +268,7 @@ class B2dropClass(Storage):
 
     #     self.data_transfer_in_to_download_mb = bytes_to_mb(data_transfer_in_to_download)
     #     log(
-    #         f"## total size to download {data_transfer_in_to_download} bytes == "
+    #         f"==> total size to download {data_transfer_in_to_download} bytes == "
     #         f"{self.data_transfer_in_to_download_mb} MB"
     #     )
 
@@ -286,7 +286,7 @@ class B2dropClass(Storage):
                 source_fn = f"{folder_name}/{folder_name}.tar.gz"
                 if os.path.isdir(env.OWNCLOUD_PATH / f"{folder_name}"):
                     log(
-                        f"## B2DROP shared folder({folder_name}) is already accepted and "
+                        f"==> B2DROP shared folder({folder_name}) is already accepted and "
                         "exists on the B2DROP's mounted folder"
                     )
                     if os.path.isfile(f"{env.OWNCLOUD_PATH}/{source_fn}"):
@@ -383,7 +383,7 @@ class B2dropClass(Storage):
         self.start_timestamp = time.time()
         if cfg.IS_THREADING_ENABLED:
             self.thread_log_setup()
-            log(f"## Keep track from: tail -f {self.drivers_log_path}")
+            log(f"==> Keep track from: tail -f {self.drivers_log_path}")
 
         try:
             log(f" * log_path={self.drivers_log_path}")

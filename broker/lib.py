@@ -145,7 +145,7 @@ def run_stdout_to_file(cmd, path, mode="w") -> None:
         log(f"\n{_cmd}", "red")
         raise Exception(f"scontrol error:\n{output}")
 
-    # log(f"## writing into path({path})  [  OK  ]")
+    # log(f"==> writing into path({path})  [  OK  ]")
     run(["sed", "-i", "s/[ \t]*$//", path])  # remove trailing whitespaces using sed
 
 

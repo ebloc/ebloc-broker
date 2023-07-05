@@ -239,16 +239,16 @@ class Driver:
 
     def set_job_recevied_mongodb(self, key, index) -> None:
         if Ebb.mongo_broker.is_received(str(self.requester_id), key, index):
-            raise JobException("## [  mongo_db  ] job is already received")
+            raise JobException("==> [  mongo_db  ] job is already received")
 
     def is_job_received(self) -> None:
         """Prevent to download job files again."""
         job_infos = self.job_infos[0]
         if job_infos["stateCode"] == state.code["COMPLETED"]:
-            raise JobException("## job is already completed")
+            raise JobException("==> job is already completed")
 
         if job_infos["stateCode"] == state.code["REFUNDED"]:
-            raise JobException("## job is refunded")
+            raise JobException("==> job is refunded")
 
         if not job_infos["stateCode"] == state.code["SUBMITTED"]:
             raise JobException("warning: job is already captured and in process or completed")
@@ -274,7 +274,7 @@ class Driver:
         index = self.logged_job.args["index"]
         self.job_bn = self.logged_job["blockNumber"]
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
-        log(f"## job_key=[m]{job_key}[/m] | index={index}")
+        log(f"=> job_key=[m]{job_key}[/m] | index={index}")
         log(f"   received_bn={self.job_bn}")
         log(f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}")
         log(f"   provider={self.logged_job.args['provider']}")

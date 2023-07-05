@@ -70,13 +70,13 @@ def submit(_from, job):
             _dump_dict_to_file(data_files_json_path, job.keys)
             data_json = read_json(data_files_json_path)
             if data_json:
-                log("## meta_data:")
+                log("==> meta_data:")
                 log(data_json)
 
             with suppress(Exception):
                 data_json = read_json(data_files_json_path)
                 if job.keys == data_json:
-                    log(f"## meta_data.json file matches with the given data keys {ok()}")
+                    log(f"==> meta_data.json file matches with the given data keys {ok()}")
                 else:
                     log("warning: meta_data.json file does not match with the given data keys")
 
@@ -99,7 +99,7 @@ def submit(_from, job):
         _dump_dict_to_file(data_files_json_path, job.keys)
         data_json = read_json(data_files_json_path)
         if data_json:
-            log("## meta_data:")
+            log("==> meta_data:")
             log(data_json)
 
         _id = None
@@ -108,13 +108,13 @@ def submit(_from, job):
             break
 
         if _id:
-            log("## updating meta_data ", end="")
+            log("==> updating meta_data ", end="")
             update_meta_data_gdrive(_id, data_files_json_path)
             log(ok())
 
 
 def upload_folder(folder_to_share, tmp_dir, folder_key_flag=False):
-    log(f"## folder_to_share={folder_to_share}")
+    log(f"==> folder_to_share={folder_to_share}")
     key, *_, tar_hash, tar_hashes = upload(folder_to_share, tmp_dir, folder_key_flag)
     return key, tar_hash, tar_hashes
 
@@ -136,7 +136,7 @@ def upload(folder_to_share, tmp_dir, is_source_code=False):
 
     is_file_exist = _list(tar_hash, is_folder=True)
     if is_file_exist:
-        log(f"## requested folder {tar_hash} is already uploaded", "blue")
+        log(f"==> requested folder {tar_hash} is already uploaded", "blue")
         log(is_file_exist, "bg")
         key = is_file_exist.partition("\n")[0].split()[0]
         is_already_uploaded = True
@@ -346,7 +346,7 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
 
     log(f":beer: folder={md5sum}", "bg")
     byte_size = int(get_file_info(gdrive_info, "Size"))
-    log(f"## code_hashes[0] == {_source_code_hash} | size={byte_size} bytes")
+    log(f"==> code_hashes[0] == {_source_code_hash} | size={byte_size} bytes")
     if not is_cached[code_hashes[0].decode("utf-8")]:
         size_to_download += byte_size
 

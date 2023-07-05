@@ -48,7 +48,7 @@ def balance(eth_address):
     """
     t1.join()
     balance = Ebb.get_balance(eth_address)
-    log(f"## balance={balance}")
+    log(f"==> balance={balance}")
 
 
 @app.command("block_number", "Returns block number")

@@ -412,7 +412,7 @@ def is_geth_account_locked(address) -> bool:
 def is_driver_on(process_count=1, is_print=True):
     """Check whether driver runs on the background."""
     if is_process_on("python.*[e]blocbroker driver", process_count=process_count, is_print=is_print):
-        log(f"## Track output using: [blue]tail -f {_log.DRIVER_LOG}")
+        log(f"==> Track output using: [blue]tail -f {_log.DRIVER_LOG}")
         raise QuietExit
 
 

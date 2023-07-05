@@ -344,7 +344,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn]
             files_to_remove = run(cmd)
             if files_to_remove:
-                log(f"## Files to be removed: \n{files_to_remove}\n")
+                log(f"==> Files to be removed: \n{files_to_remove}\n")
         except Exception as e:
             print_tb(e)
             sys.exit()
@@ -460,7 +460,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             if self.job_info["stateCode"] == state.code["RUNNING"]:
                 # it will come here eventually, when setJob() is deployed. Wait
                 # until does values updated on the blockchain
-                log("## job has been started")
+                log("==> job has been started")
                 return
 
             if self.job_info["stateCode"] == state.code["COMPLETED"]:
@@ -543,7 +543,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             print_tb(e)
             raise e
 
-        log(f"## receive state of the running job {ok()}")
+        log(f"==> receive state of the running job {ok()}")
         try:
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(

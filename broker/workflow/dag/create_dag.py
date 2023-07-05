@@ -12,15 +12,16 @@ def main():
     G = nx.DiGraph()
 
     # jobs
-    G.add_edge(0, 5, weight=10)
-    G.add_edge(1, 5, weight=10)
-    G.add_edge(2, 5, weight=10)
-    G.add_edge(3, 5, weight=10)
-    G.add_edge(4, 5, weight=10)
-    G.add_edge(6, 0, weight=10)
-    G.add_edge(7, 0, weight=10)
-    G.add_edge(8, 7, weight=10)
-    G.add_edge(9, 7, weight=10)
+    # G.add_edge(0, 5, weight=10)
+    G.add_edge(0, 5)
+    G.add_edge(1, 5)
+    G.add_edge(2, 5)
+    G.add_edge(3, 5)
+    G.add_edge(4, 5)
+    G.add_edge(6, 0)
+    G.add_edge(7, 0)
+    G.add_edge(8, 7)
+    G.add_edge(9, 7)
 
     # saves DAG into job.dot file
     nx.nx_pydot.write_dot(G, "job.dot")
@@ -29,7 +30,7 @@ def main():
         print(set(G.predecessors(i)))
 
     nx.draw(G, with_labels=True)
-    plt.savefig("labels.png")
+    plt.savefig("job.png")
 
     sys.exit(0)
 
@@ -56,16 +57,16 @@ if __name__ == "__main__":
 # add 5 nodes, labeled 0-4:
 # map(G.add_node, range(5))
 # 1,2 depend on 0:
-G.add_edge('job0', 'job1', weight=10)
-G.add_edge('job0', 'job2', weight=10)
+G.add_edge('job0', 'job1')
+G.add_edge('job0', 'job2')
 # 3 depends on 1,2
-G.add_edge('job1', 'job3', weight=10)
-G.add_edge('job2', 'job3', weight=10)
+G.add_edge('job1', 'job3')
+G.add_edge('job2', 'job3')
 # 4 depends on 1
-G.add_edge('job1', 'job4', weight=10)
+G.add_edge('job1', 'job4')
 # 5 depends on 3 and 4
-G.add_edge('job3', 'job5', weight=10)
-G.add_edge('job4', 'job5', weight=10)
+G.add_edge('job3', 'job5')
+G.add_edge('job4', 'job5')
 """
 
 """

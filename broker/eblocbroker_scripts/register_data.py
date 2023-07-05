@@ -38,7 +38,7 @@ def _register_data(code_hash, data_price, commitment_dur):
 
             # "\nUse [blue]./update_data_price.py[/blue] to update its price"
             log(
-                f"## data([g]{code_hash}[/g]) is already registerered with price={Cent(price)._to()} usd ",
+                f"==> data([g]{code_hash}[/g]) is already registerered with price={Cent(price)._to()} usd ",
                 end="",
             )
             if price == 1:
@@ -49,7 +49,7 @@ def _register_data(code_hash, data_price, commitment_dur):
             if data_price == price or (price == 1 and data_price == 0):
                 is_exit = True
             else:
-                log(f"## updating data price with price={data_price}")
+                log(f"==> updating data price with price={data_price}")
                 is_update = True
         except Exception as e:
             print_tb(e)
@@ -60,11 +60,11 @@ def _register_data(code_hash, data_price, commitment_dur):
         raise QuietExit
 
     if price == data_price and _commitment_dur == commitment_dur:
-        log(f"## data([g]{code_hash}[/g]) is already registerered with the given values")
+        log(f"==> data([g]{code_hash}[/g]) is already registerered with the given values")
         raise QuietExit
 
     if price == 1 and data_price == 0 and _commitment_dur == commitment_dur:
-        log(f"## data([g]{code_hash}[/g]) is already registerered with the given values")
+        log(f"==> data([g]{code_hash}[/g]) is already registerered with the given values")
         raise QuietExit
 
     try:

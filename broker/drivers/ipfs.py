@@ -42,15 +42,15 @@ class IpfsClass(Storage):
         is_storage_payment_received_when_job_submitted = self.job_info["is_storage_bn_equal_when_job_submitted_bn"][
             ipfs_hash
         ]
-        log(f"# Is already stored hash={ipfs_hash} -> {is_storage_payment} ", end="")
+        log(f"> Is already stored hash={ipfs_hash} -> {is_storage_payment} ", end="")
         if not cfg.ipfs.is_hash_locally_cached(ipfs_hash):
-            if not is_storage_payment:
-                self.data_transfer_in_to_download_mb += data_size_mb
-            else:
+            if is_storage_payment:
                 if is_storage_payment_received_when_job_submitted:
                     # already stored data size should now be included
                     #: total data to be downloaded is saved
                     self.data_transfer_in_to_download_mb += data_size_mb
+            else:
+                self.data_transfer_in_to_download_mb += data_size_mb
 
         log(
             f" * data_transfer_in={data_size_mb} MB | rounded={int(data_size_mb)} MB | data_transfer_in_to_download_mb={self.data_transfer_in_to_download_mb}"
@@ -82,7 +82,7 @@ class IpfsClass(Storage):
 
         log(f"==> Is ipfs_hash={self.job_key} locally_cached: ", end="")
         output = cfg.ipfs.is_hash_locally_cached(self.job_key)  # may take long time
-        print(f"{output}")
+        print(output)
         if not os.path.isdir(self.results_folder):
             os.makedirs(self.results_folder)
 
@@ -107,7 +107,7 @@ class IpfsClass(Storage):
         # initial_folder_size = calculate_size(self.results_folder)
         for idx, ipfs_hash in enumerate(self.ipfs_hashes):
             # here scripts knows that provided IPFS hashes exists online
-            log(f"## attempting to get IPFS file: {ipfs_hash} ... ", end="")
+            log(f"> Attempt to get IPFS-hash={ipfs_hash} ... ", end="")
             cfg.ipfs.is_hash_locally_cached(ipfs_hash)
             if idx == 0:
                 target = self.results_folder

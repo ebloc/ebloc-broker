@@ -146,6 +146,9 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                 job.code_hashes.append(b"")  # dummy items added
                 job.code_hashes_str.append("")  # dummy items added
             else:
+                if idx == 0 and job.input_files:
+                    breakpoint()  # DEBUG
+
                 job = _ipfs_add(job, target, idx)
         else:
             code_hash = folder

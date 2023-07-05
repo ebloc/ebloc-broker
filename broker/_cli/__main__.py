@@ -181,7 +181,7 @@ def balance():
 
     try:
         balance = cfg.Ebb.get_balance(_args.eth_address)
-        log(f"## balance={balance}")
+        log(f"==> balance={balance}")
     except Exception as e:
         print_tb(e)
 

@@ -47,7 +47,7 @@ def _collect_all_into_base(account, min_balance_amount):
         log(tx)
         if _required_confs > 0:
             log(Ebb._get_balance(account))
-            log(f"## base_account({base_account})={Ebb._get_balance(base_account)}")
+            log(f"==> base_account({base_account})={Ebb._get_balance(base_account)}")
 
 
 def collect_all_into_base():
@@ -58,7 +58,7 @@ def collect_all_into_base():
     # for account in providers:
     #     _collect_all_into_base(account, min_balance_amount)
 
-    log(f"## base_account={Ebb._get_balance(base_account)}")
+    log(f"==> base_account={Ebb._get_balance(base_account)}")
 
 
 def transfer_eth(accounts, value, is_force=False):
@@ -80,7 +80,7 @@ def transfer_eth(accounts, value, is_force=False):
 
 
 def main():
-    log(f"## base_account_balance={Ebb._get_balance(base_account)}\n")
+    log(f"==> base_account_balance={Ebb._get_balance(base_account)}\n")
     owner = Ebb.get_owner()
     log(f"ower_balance ({owner.lower()})=", "bold", end="")
     balances([owner], is_verbose=True)

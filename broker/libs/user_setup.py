@@ -35,7 +35,7 @@ def username_check(username):
     """Check whether username exists."""
     try:
         pwd.getpwnam(username)
-        log(f"## user=[blue]{username}[/blue] exists")
+        log(f"==> user=[blue]{username}[/blue] exists")
         return False
     except KeyError:
         log(f"user {username} does not exist. Continuing...")
@@ -64,7 +64,7 @@ def set_folder_permission(path, user_name, slurm_user):
 
 def user_add(user_address, basedir, slurm_user):
     user_address = user_address.lower()
-    log(f"## adding user=[m]{user_address}[/m]", end="")
+    log(f"==> adding user=[m]{user_address}[/m]", end="")
     try:  # convert ethereum user address into 32-bits
         user_name = hashlib.md5(user_address.encode("utf-8")).hexdigest()
         log(f" | user_name={user_name}")
@@ -99,7 +99,7 @@ def user_add(user_address, basedir, slurm_user):
                 mkdir(f"{user_dir}/cache")
 
         else:
-            log(f"## [m]{user_address}[/m] => [blue]{user_name}[/blue] has already been created")
+            log(f"==> [m]{user_address}[/m] => [blue]{user_name}[/blue] has already been created")
 
 
 def main():

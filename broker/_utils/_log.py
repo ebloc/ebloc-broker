@@ -114,6 +114,9 @@ class Log:
         elif text[0:2] == "E:":
             console.print("[bold red]E:[/bold red]", end="", highlight=highlight)
             text = text[2:]
+        elif text[0:2] == "> ":
+            console.print("[green]> [/green]", end="", highlight=highlight)
+            text = text[2:]
 
         if is_bold:
             console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end, highlight=highlight)
@@ -153,6 +156,11 @@ class Log:
             is_bullet = True
             if not color:
                 color = "red"
+        elif text[:2] == "> ":
+            _len = 2
+            is_bullet = True
+            if not color:
+                color = "green"
         elif text[:2] in ["* "]:
             _len = 2
             is_bullet = True

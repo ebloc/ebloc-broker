@@ -26,13 +26,13 @@ class GdriveClass(Storage):
             is_continue = True
 
         if is_continue and not self.job_infos[0]["is_cached"][code_hash] and not output:
-            log("## Downloaded as temporary data file", "yellow")
+            log("==> Downloaded as temporary data file", "yellow")
             self.folder_path_to_download[code_hash] = self.results_folder_prev
         else:
             self.folder_path_to_download[code_hash] = cache_folder
             # self.assign_folder_path_to_download(_id, code_hash, cache_folder)
 
-        log(f"## downloading => {key}\nPath to download => {self.folder_path_to_download[code_hash]}")
+        log(f"==> downloading => {key}\nPath to download => {self.folder_path_to_download[code_hash]}")
         if self.folder_type_dict[code_hash] == "folder":
             try:
                 folder = self.folder_path_to_download[code_hash]
