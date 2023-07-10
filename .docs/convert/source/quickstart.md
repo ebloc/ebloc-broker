@@ -1,7 +1,8 @@
 # Quickstart
 
 This page provides a quick overview of how to use `ebloc-broker` in Docker container using IPFS to share files/folders.
-For this example to work, we need a linux or macOS instance that will run 2 docker instances one for requester and other for the provider.
+For this example to work, we need a linux or macOS instance that will run 2
+docker instances, one for requester and other for the provider.
 
 ## Creating a New Docker Container
 
@@ -58,7 +59,7 @@ tx={
 │   'transactionHash': HexBytes('0x6dad5e2461aec1f284ba899c6287f0f8f553c3d899011f335c3e2cf54c070048'),
 │   'transactionIndex': 0
 }
-#> Is transaction successfully deployed?  [ok]
+==> Is transaction successfully deployed?  [ok]
 ```
 
 Followed by `eblocbroker driver --no-thread`.

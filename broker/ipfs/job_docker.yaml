@@ -1,6 +1,6 @@
 config:
-  requester_address: ''
-  provider_address: '0x08b003717bfab7a80b17b51c32223460fe9efe2a'
+  requester_address: ""
+  provider_address: "0x08b003717bfab7a80b17b51c32223460fe9efe2a"
   search_cheapest_provider: false
   source_code:
     cache_type: public
