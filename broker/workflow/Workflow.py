@@ -29,6 +29,16 @@ class Workflow:
     def topological_sort(self) -> List:
         return list(nx.topological_sort(self.G))
 
+    def topological_generations(self) -> List:
+        """Take all the nodes in the DAG that don’t have any dependencies and put them in list.
+        “Remove” those nodes from the DAG.
+        Repeat the process, creating a new list at each step.
+        Thus, topological sorting is reduced to correctly stratifying the graph in this way.
+
+        __ https://networkx.org/nx-guides/content/algorithms/dag/index.html
+        """
+        return list(nx.topological_generations(self.G))
+
     def bfs_layers(self, _list) -> dict:
         """BFS Layers.
 
@@ -115,6 +125,20 @@ class Workflow:
                 return job_id
             else:
                 return random.randint(1, 101)
+
+    def generate_random_dag(self, number_nodes, number_edges):
+        G = nx.DiGraph()
+        while G.number_of_edges() < number_edges:
+            start_node, end_node = random.sample(range(number_nodes), 2)
+            #: ensure that node 0 is always a source (initial node)
+            if end_node == 0:
+                start_node, end_node = end_node, start_node
+
+            G.add_edge(start_node, end_node)
+            if not nx.is_directed_acyclic_graph(G):
+                G.remove_edge(start_node, end_node)
+
+        return G
 
 
 def main(args):
