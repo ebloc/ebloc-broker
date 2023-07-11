@@ -38,7 +38,7 @@ def add_user_to_slurm(user):
     #     raise Exception("Problem on sacctmgr create user") from e
 
 
-def remove_user(user):
+def remove_user(user) -> None:
     cmd = ["sacctmgr", "remove", "user", "where", f"user={user}", "--immediate"]
     p, output, error_msg = popen_communicate(cmd)
     if p.returncode and "Nothing deleted" not in output:
@@ -124,7 +124,7 @@ def is_on() -> bool:
 
             with suppress(Exception):  # kama ipfs node
                 ipfs_id = "/ip4/195.238.122.141/tcp/4001/p2p/12D3KooWM8EsuoC5wTA6wx3Qn42UcBe98y4j9tgQQ9J4WHHvqpUy"
-                run(["ipfs", "swarm", "connect", ipfs_id])
+                run(["ipfs", "swarm", "connect", ipfs_id], suppress_stderr=True)
 
         return True
 

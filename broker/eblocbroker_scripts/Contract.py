@@ -157,7 +157,7 @@ class Contract(Base):
         attempt = 0
         poll_latency = 3
         if is_verbose:
-            log(f"## waiting for the tx={tx_hash} receipt...", end="")
+            log(f"==> waiting for the tx={tx_hash} receipt...", end="")
 
         tx_receipt = None
         while True:
@@ -174,7 +174,7 @@ class Contract(Base):
 
             if is_verbose:
                 log()
-                log(f"## attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
+                log(f"==> attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
 
             attempt += 1
             time.sleep(poll_latency)
@@ -419,7 +419,7 @@ class Contract(Base):
                 ):
                     if self.gas_price < 2:
                         self.gas_price *= 1.13
-                        log(f"==> new gas_price={self.gas_price}")
+                        log(f"==> new_gas_price={self.gas_price}")
                     else:
                         idx += 1
 
@@ -448,7 +448,7 @@ class Contract(Base):
                 log(f"warning: Timeout Awaiting Transaction in the mempool -- gas_price={self.gas_price}")
                 if self.gas_price < 2:
                     self.gas_price *= 1.13
-                    log(f"==> new gas_price={self.gas_price}")
+                    log(f"==> new_gas_price={self.gas_price}")
                 else:
                     idx += 1
 
@@ -459,7 +459,7 @@ class Contract(Base):
                 if "Tx dropped without known replacement" in str(e):
                     if self.gas_price < 2:
                         self.gas_price *= 1.13
-                        log(f"==> new gas_price={self.gas_price}")
+                        log(f"==> new_gas_price={self.gas_price}")
                     else:
                         idx += 1
 
@@ -510,7 +510,7 @@ class Contract(Base):
                 if "Try increasing the gas price" in str(e):
                     if self.gas_price < 2:
                         self.gas_price *= 1.13
-                        log(f"==> new gas_price={self.gas_price}")
+                        log(f"==> new_gas_price={self.gas_price}")
                     else:  # if idx += 1 done it remains in an endless loop
                         idx += 1
 
@@ -523,7 +523,7 @@ class Contract(Base):
                     log("warning: Timeout Awaiting Transaction in the mempool")
                     if self.gas_price < 2:
                         self.gas_price *= 1.13
-                        log(f"==> new gas_price={self.gas_price}")
+                        log(f"==> new_gas_price={self.gas_price}")
                     else:
                         idx += 1
 

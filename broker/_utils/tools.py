@@ -355,7 +355,7 @@ def pre_cmd_set(cmd):
             return list(map(str, cmd))  # all items should be string
 
 
-def run(cmd, env=None, is_quiet=False, suppress_stderr=False) -> str:
+def run(cmd, env=None, suppress_stderr=False) -> str:
     cmd = pre_cmd_set(cmd)
     try:
         if env is None:

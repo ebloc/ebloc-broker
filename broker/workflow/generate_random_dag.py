@@ -25,6 +25,9 @@ def main():
     log(w.topological_sort())
     log(w.topological_generations())
 
+    for item in enumerate(nx.topological_generations(w.G)):
+        print(item)
+
     # log(w.bfs_layers([0, n - 1]))
 
     # map_scanned = {}

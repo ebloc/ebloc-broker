@@ -71,19 +71,23 @@ if __name__ == "__main__":
 
     f_id = env.OC_USER
     log(f"==> address=[m]{env.PROVIDER_ID}", h=False)
-    log(f"==> gmail=[m]{env.GMAIL}", h=False)
+    if env.GMAIL:
+        log(f"==> gmail=[m]{env.GMAIL}", h=False)
+    else:
+        log('==> gmail=""')
+
     if gpg_fingerprint:
         log(f"==> gpg_fingerprint={gpg_fingerprint}")
 
     if ipfs_address:
         log(f"==> ipfs_address=[m]{ipfs_address}")
     else:
-        log('## ipfs_address=""')
+        log('==> ipfs_address=""')
 
     if f_id:
         log(f"==> fid=[m]{f_id}")
     else:
-        log('## fid=""')
+        log('==> fid=""')
 
     try:
         if gpg_fingerprint:
