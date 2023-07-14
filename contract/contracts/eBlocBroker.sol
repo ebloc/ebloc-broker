@@ -604,7 +604,7 @@ contract eBlocBroker is
         //                         decreased if there is caching for specific block
         // refunded => used as receivedRegisteredDataFee due to limit for local variables
 
-        // sum, _dataTransferIn, storageCost, cacheCost, sumRegisterDataDeposit
+        // sum, _dataTransferIn, storageCost, cacheCost, sumRegisteredDataDeposit
         //  |          |            |          /      ___/
         //  /          |            |         /      |
         (cost, dataTransferIn[0], tmp[0], tmp[1], tmp[2]) = _calculateCacheCost(
@@ -826,11 +826,11 @@ contract eBlocBroker is
                 }
             }
         } // for-loop ended
-        uint256 sumRegisterDataDeposit = sum;
+        uint256 sumRegisteredDataDeposit = sum;
         // sum already contains the registered data cost fee
         sum = sum.add(info.priceDataTransfer.mul(_dataTransferIn.add(args.dataTransferOut)));
         sum = sum.add(storageCost).add(cacheCost);
-        return (sum, _dataTransferIn, storageCost, cacheCost, sumRegisterDataDeposit);
+        return (sum, _dataTransferIn, storageCost, cacheCost, sumRegisteredDataDeposit);
     }
 
     /**
