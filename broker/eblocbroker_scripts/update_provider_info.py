@@ -45,8 +45,13 @@ def update_provider_info(self, gpg_fingerprint, gmail, f_id, ipfs_address):
         raise QuietExit
 
     if not is_docker() and len(gpg_fingerprint) != 40:
-        log(f"gpg_fingerprint={gpg_fingerprint} length should be 40")
-        raise QuietExit
+        if not (len(gpg_fingerprint) == 0 and not env.GMAIL):
+            if gpg_fingerprint:
+                log(f"gpg_fingerprint={gpg_fingerprint} length should be 40")
+            else:
+                log('gpg_fingerprint="" length should be 40')
+
+            raise QuietExit
 
     return self.is_provider_info_match(gmail, ipfs_address, gpg_fingerprint, f_id)
 
@@ -61,8 +66,9 @@ if __name__ == "__main__":
 
     # ipfs_address = cfg.ipfs.local_ip_check(ipfs_address)
     try:
-        gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
-        ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
+        if env.GMAIL:
+            gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
+            ipfs.publish_gpg(gpg_fingerprint, is_verbose=False)
     except Exception as e:
         if is_docker():
             gpg_fingerprint = ""

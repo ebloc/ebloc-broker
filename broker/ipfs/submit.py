@@ -205,7 +205,7 @@ def main():
     # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_example.yaml"
     # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job.yaml"
     # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_with_data.yaml"
-    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_without_data.yaml"
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_workflow.yaml"
     job.set_config(yaml_fn)
     submit_ipfs(job)
 

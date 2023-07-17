@@ -151,8 +151,12 @@ def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
         raise e
 
 
-def sleep_timer(sleep_duration, msg=""):
-    log(f"{WHERE(1)} sleeping for {sleep_duration} seconds {msg}")
+def sleep_timer(sleep_duration, msg="", is_where=True):
+    if is_where:
+        log(f"{WHERE(1)} sleeping for {sleep_duration} seconds {msg}")
+    else:
+        log(f"==> sleeping for {sleep_duration} seconds {msg}")
+
     for remaining in range(sleep_duration, 0, -1):
         sys.stdout.write("\r")
         sys.stdout.write("{:1d} seconds remaining...".format(remaining))

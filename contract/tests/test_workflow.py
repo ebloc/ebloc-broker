@@ -31,11 +31,11 @@ cwd = os.getcwd()
 provider_gmail = "provider_test@gmail.com"
 fid = "ee14ea28-b869-1036-8080-9dbd8c6b1579@b2drop.eudat.eu"
 
-available_core = 128
-price_core_min = 1
-price_data_transfer = 1
-price_storage = 1
-price_cache = 1
+price_core_min = Cent("0.0001 usd")
+price_storage = Cent("0.00001 cent")
+price_cache = Cent("0.00001 cent")
+price_data_transfer = Cent("0.0001 cent")
+
 prices = [price_core_min, price_data_transfer, price_storage, price_cache]
 
 GPG_FINGERPRINT = "0359190A05DF2B72729344221D522F92EFA2F330"
@@ -100,20 +100,20 @@ def check_price_keys(price_keys, provider, code_hash):
             assert key in res, f"{key} does no exist in price keys={res} for the registered data{code_hash}"
 
 
-def remove_zeros_gpg_fingerprint(_gpg_fingerprint):
-    return str(_gpg_fingerprint).replace("0x000000000000000000000000", "").upper()
-
-
-def get_block_number():
+def get_bn():
     log(f"block_number={web3.eth.blockNumber} | contract_bn={web3.eth.blockNumber + 1}")
     return web3.eth.blockNumber
 
 
 def get_block_timestamp():
-    return web3.eth.getBlock(get_block_number()).timestamp
+    return web3.eth.getBlock(get_bn()).timestamp
 
 
-# @pytest.mark.skip(reason="no way of currently testing this")
+@pytest.mark.skip(reason="no way of currently testing this")
+def test_dummy():
+    pass
+
+
 def test_workflow():
     job = Job()
     provider = accounts[1]
@@ -127,7 +127,7 @@ def test_workflow():
 
     tx = ebb.registerData(code_hash, Cent("2 cent"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
     append_gas_cost("registerData", tx)
-    ebb.removeRegisteredData(code_hash, {"from": provider})  # should submitJob fail if it is not removed
+    ebb.removeRegisteredData(code_hash, {"from": provider})  # submitJob() should fail if it is not removed
     append_gas_cost("removeRegisteredData", tx)
     data_hash = "0x68b8d8218e730fc2957bcb12119cb204"
     ebb.registerData(data_hash, Cent("2 cent"), cfg.ONE_HOUR_BLOCK_DURATION, {"from": provider})
@@ -142,7 +142,7 @@ def test_workflow():
     append_gas_cost("updataDataPrice", tx)
     data_block_numbers = ebb.getRegisteredDataBlockNumbers(provider, data_hash)
     log(f"get_registered_data_block_numbers={data_block_numbers[1]}")
-    get_block_number()
+    get_bn()
     data_prices = ebb.getRegisteredDataPrice(provider, data_hash, 0)
     assert data_prices[0] == Cent("2 cent")
     output = ebb.getRegisteredDataPrice(provider, data_hash, data_block_numbers[-1])
@@ -164,7 +164,7 @@ def test_workflow():
     # job.data_prices_set_block_numbers = [0, 253]  # TODO: check this ex 253 exists or not
     job.data_prices_set_block_numbers = [0, data_block_numbers[1]]  # TODO: check this ex 253 exists or not
     check_price_keys(job.data_prices_set_block_numbers, provider, data_hash)
-    job.cores = [2, 4, 2]
+    job.cores = [1, 1, 1]
     job.run_time = [10, 15, 20]
     job.storage_ids = [StorageID.IPFS.value, StorageID.NONE.value]
     job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
@@ -181,7 +181,7 @@ def test_workflow():
         job_price,
     ]
     _transfer(requester, Cent(job_price))
-    tx = ebb.submitJob(  # first submit
+    tx = ebb.submitJob(  # first job submit
         job_key,
         job.data_transfer_ins,
         args,
@@ -320,10 +320,192 @@ def test_workflow():
     log(f"==> received_sum={_received_sum} usd | refunded_sum={_refunded_sum} usd | job_price={job_price_str} usd")
     log(f"==> received_sums={received_sums}")
     log(f"==> refunded_sums={refunded_sums}")
-
     assert _refunded_sum == 0
     _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
     _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
     assert _cfg.TOKEN.balanceOf(provider) == received_sum
     assert _cfg.TOKEN.balanceOf(requester) == refunded_sum
     assert job_price == received_sum + refunded_sum
+
+
+def test_workflow_2():
+    job = Job()
+    provider = accounts[1]
+    requester = accounts[2]
+    register_provider(available_core=4, prices=prices)
+    register_requester(requester)
+    job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
+    data_hash = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZum"
+
+    code_hash = ipfs_to_bytes32(job_key)
+    data_hash = ipfs_to_bytes32(data_hash)
+
+    job.code_hashes = [code_hash, data_hash]
+    job.storage_hours = [0, 0]
+    job.data_transfer_ins = [150, 100]
+    job.data_transfer_out = 10
+    job.data_prices_set_block_numbers = [0, 0]
+    job.cores = [1, 1, 1, 1, 1]
+    job.run_time = [100, 100, 50, 50, 50]
+    job.storage_ids = [StorageID.IPFS.value, StorageID.IPFS.value]
+    job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
+    job_price, cost = job.cost(provider, requester, is_verbose=True)
+    args = [
+        provider,
+        ebb.getProviderSetBlockNumbers(provider)[-1],
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+        job_price,
+    ]
+    _transfer(requester, Cent(job_price))
+    # TODO: datatransferout 2x considered
+    log(f"job_price={float(Cent(job_price).to('usd'))} usd")
+    tx = ebb.submitJob(  # first job submit
+        job_key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester},
+    )
+    for idx in range(0, 5):
+        log(ebb.getJobInfo(provider, job_key, 0, idx))
+
+    # console_ruler(character="-=")
+    # assert (
+    #     tx.events["LogRegisteredDataRequestToUse"][0]["registeredDataHash"]
+    #     == "0x0000000000000000000000000000000068b8d8218e730fc2957bcb12119cb204"
+    # ), "registered data should be used"
+
+    # with brownie.reverts():
+    #     log(ebb.getJobInfo(provider, job_key, 1, 2))
+    #     log(ebb.getJobInfo(provider, job_key, 0, 3))
+
+    # # setJobState for the workflow:
+    # index = 0
+    # job_id = 0
+    # start_timestamp = 10
+    # tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": provider})
+    # append_gas_cost("setJobStateRunning", tx)
+    # index = 0
+    # job_id = 1
+    # start_timestamp = 20
+    # tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": provider})
+    # append_gas_cost("setJobStateRunning", tx)
+    # # process_payment for the workflow
+    # index = 0
+    # job_id = 0
+    # elapsed_time = 10
+    # data_transfer = [100, 0]
+    # ended_timestamp = 20
+    # result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    # received_sums = []
+    # refunded_sums = []
+    # received_sum = 0
+    # refunded_sum = 0
+    # args = [
+    #     index,
+    #     job_id,
+    #     ended_timestamp,
+    #     data_transfer[0],
+    #     data_transfer[1],
+    #     elapsed_time,
+    #     job.cores,
+    #     job.run_time,
+    #     JOB.TYPE["BEGIN"],
+    # ]
+    # # print_gas_costs() #
+    # tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+    # append_gas_cost("processPayment", tx)
+    # # log(tx.events['LogProcessPayment'])
+    # received_sums.append(tx.events["LogProcessPayment"]["receivedCent"])
+    # refunded_sums.append(tx.events["LogProcessPayment"]["refundedCent"])
+    # received_sum += tx.events["LogProcessPayment"]["receivedCent"]
+    # refunded_sum += tx.events["LogProcessPayment"]["refundedCent"]
+    # log(f"received_sum={received_sum} | refunded_sum={refunded_sum}")
+    # index = 0
+    # job_id = 1
+    # elapsed_time = 15
+    # data_transfer = [0, 0]
+    # ended_timestamp = 39
+    # result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    # args = [
+    #     index,
+    #     job_id,
+    #     ended_timestamp,
+    #     data_transfer[0],
+    #     data_transfer[1],
+    #     elapsed_time,
+    #     job.cores,
+    #     job.run_time,
+    #     JOB.TYPE["BETWEEN"],
+    # ]
+    # tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+    # assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
+    # append_gas_cost("processPayment", tx)
+    # received_sums.append(tx.events["LogProcessPayment"]["receivedCent"])
+    # refunded_sums.append(tx.events["LogProcessPayment"]["refundedCent"])
+    # received_sum += tx.events["LogProcessPayment"]["receivedCent"]
+    # refunded_sum += tx.events["LogProcessPayment"]["refundedCent"]
+    # log(f"received_sum={received_sum} | refunded_sum={refunded_sum}")
+    # assert refunded_sum == 0
+    # index = 0
+    # job_id = 2
+    # elapsed_time = 20
+    # data_transfer = [0, 100]
+    # ended_timestamp = 39
+    # result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    # with brownie.reverts():  # processPayment should revert, setRunning is not called for the job=2
+    #     args = [
+    #         index,
+    #         job_id,
+    #         ended_timestamp,
+    #         data_transfer[0],
+    #         data_transfer[1],
+    #         elapsed_time,
+    #         job.cores,
+    #         job.run_time,
+    #         JOB.TYPE["BETWEEN"],
+    #     ]
+    #     tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+    #     append_gas_cost("processPayment", tx)
+
+    # index = 0
+    # job_id = 2
+    # start_timestamp = 20
+    # tx = ebb.setJobStateRunning(job_key, index, job_id, start_timestamp, {"from": provider})
+    # append_gas_cost("setJobStateRunning", tx)
+    # args = [
+    #     index,
+    #     job_id,
+    #     ended_timestamp,
+    #     data_transfer[0],
+    #     data_transfer[1],
+    #     elapsed_time,
+    #     job.cores,
+    #     job.run_time,
+    #     JOB.TYPE["FINAL"],
+    # ]
+    # tx = ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+    # assert tx.events["LogProcessPayment"]["elapsedTime"] == elapsed_time
+    # append_gas_cost("processPayment", tx)
+    # received_sums.append(tx.events["LogProcessPayment"]["receivedCent"])
+    # refunded_sums.append(tx.events["LogProcessPayment"]["refundedCent"])
+    # received_sum += tx.events["LogProcessPayment"]["receivedCent"]
+    # refunded_sum += tx.events["LogProcessPayment"]["refundedCent"]
+    # _refunded_sum = Cent(refunded_sum).to_usd()
+    # _received_sum = Cent(received_sum).to_usd()
+    # job_price_str = Cent(job_price).to_usd()
+    # log(f"==> received_sum={_received_sum} usd | refunded_sum={_refunded_sum} usd | job_price={job_price_str} usd")
+    # log(f"==> received_sums={received_sums}")
+    # log(f"==> refunded_sums={refunded_sums}")
+    # assert _refunded_sum == 0
+    # _cfg.TOKEN.transferFrom(ebb.address, requester, _cfg.TOKEN.allowance(ebb.address, requester), {"from": requester})
+    # _cfg.TOKEN.transferFrom(ebb.address, provider, _cfg.TOKEN.allowance(ebb.address, provider), {"from": provider})
+    # assert _cfg.TOKEN.balanceOf(provider) == received_sum
+    # assert _cfg.TOKEN.balanceOf(requester) == refunded_sum
+    # assert job_price == received_sum + refunded_sum

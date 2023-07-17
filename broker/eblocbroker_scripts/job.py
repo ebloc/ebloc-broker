@@ -287,6 +287,9 @@ class Job:
                     d = data_hash.decode("utf-8")
                     raise QuietExit(f"Requested data={d} is not registered into the provider={self.provider_addr}.")
 
+        if len(self.cfg["config"]["jobs"]) == 0:
+            raise QuietExit("Provided cores is empty.")
+
         self.cores = []
         self.run_time = []
         for key in self.cfg["config"]["jobs"]:
@@ -558,13 +561,17 @@ class JobPrices:
             log(f"** price_storage={self.to_usd(self.price_storage)}")
             log(f"** price_cache={self.to_usd(self.price_cache)}")
             log(f"{b_open}")
-            log(f"{straight_line} job_price={Cent(self.job_price)._to()} usd for provider={self.job.provider}")
+            log(
+                f"{straight_line} job_price={Cent(self.job_price)._to()} [blue]usd[/blue] for provider={self.job.provider}"
+            )
             c1 = f"{straight_line}       [yellow]*[/yellow]"
             for k, v in self.cost.items():
                 if k not in ("data_transfer_out", "data_transfer_in"):
                     log(f"{straight_line}   * {k}={self.to_usd(v)}")
                     if k == "storage":
-                        log(f"{c1} in={self.to_usd(self.cost['data_transfer_in'])}")
+                        if v > 0:
+                            log(f"{c1} in={self.to_usd(self.cost['data_transfer_in'])}")
+
                         if self.registered_data_cost > 0:
                             log(f"{c1} registered_data={self.to_usd(self.registered_data_cost)}")
                             log(f"{straight_line}         {self.registered_data_cost_list_usd}")

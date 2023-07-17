@@ -76,7 +76,7 @@ def wait_until_idle_core_is_available():
             break
         else:
             log("==> Slurm running node capacity is full.")
-            sleep_timer(60)
+            sleep_timer(60, is_where=False)
 
 
 def tools(bn):
@@ -201,7 +201,7 @@ def tools(bn):
                         log(f"\t{provider_info_contract['ipfs_address']} != {_ipfs_address}")
                         flag_error = True
 
-                if not is_docker():
+                if not is_docker() and env.GMAIL != "":
                     gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
                     if provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper():
                         log("warning: [m]gpg_fingerprint[/m] does not match with the registered info.")
@@ -318,6 +318,10 @@ class Driver:
                 )
 
         self.check_requested_job()
+        if len(self.job_infos[0]["core"]) > 1:
+            log(f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs received.")
+            breakpoint()  # DEBUG
+
         # self.set_job_recevied_mongodb(key, index)
 
     def sent_job_to_storage_class(self):
