@@ -19,20 +19,29 @@ def wait_till_job_is_completed(jobs):
         provider = job.info["provider"]
         key = job.info["jobKey"]
         index = job.info["index"]
-        job_id = 0
+        log(f"* job={job.info['jobKey']} index={job.info['index']}")
+        flag = False
         while True:
-            job_state = job.Ebb.get_job_state(provider, key, index, job_id)
-            state_val = state.inv_code[job_state]
-            log(
-                f"* job={job.info['jobKey']} index={job.info['index']} {state_val} {_date()}",
-                "        \t\t\t\t",
-                is_write=False,
-                end="\r",
-            )
-            if state_val == "COMPLETED":
-                break
+            completed_job_counter = 0
+            if flag:
+                log("", end="\r")
 
-            time.sleep(15)
+            log(f"<{_date()}> ", end="")
+            for _job_id, _ in enumerate(job.cores):
+                job_state = job.Ebb.get_job_state(provider, key, index, _job_id)
+                state_val = state.inv_code[job_state]
+                log(f"{_job_id}={state_val} ", is_write=False, end="")
+                flag = True
+                if state_val == "COMPLETED":
+                    completed_job_counter += 1
+                # else:
+                #     time.sleep(15)
+                #     break
+
+            if completed_job_counter == len(job.cores):
+                break
+            else:
+                time.sleep(15)
 
         log(f"* job={job.info['jobKey']} {state_val} {_date()}\t")
 
@@ -57,20 +66,21 @@ def get_input_files(jobs):
 
 
 def main():
-    # job0 = Job()
-    # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_without_data.yaml"
-    # job0.set_config(yaml_fn)
-    # submit_ipfs(job0)
-    # job0.get_generated_output_files()  # fill in
+    job0 = Job()
+    yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_workflow.yaml"
+    job0.set_config(yaml_fn)
+    submit_ipfs(job0)
+    job0.get_generated_output_files()  # fill in
 
     # job1 = Job()
-    # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_without_data.yaml"
+    # yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_workflow.yaml"
     # job1.set_config(yaml_fn)
     # submit_ipfs(job1)
 
+    jobs_to_wait = [job0]
     # jobs_to_wait = [job0, job1]
-    # wait_till_job_is_completed(jobs_to_wait)
-    # set_patch_results(jobs_to_wait)
+    wait_till_job_is_completed(jobs_to_wait)
+    set_patch_results(jobs_to_wait)
 
     job2 = Job()
     # job2.input_files = get_input_files([job0, job1])  # job2.input_files = [job0.patch_ipfs_hash, job1.patch_ipfs_hash]
@@ -90,4 +100,5 @@ if __name__ == "__main__":
     except QuietExit as e:
         print(f"==> {e}")
     except Exception as e:
+        print(e)
         print_tb(str(e))
