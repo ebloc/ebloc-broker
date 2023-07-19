@@ -275,7 +275,7 @@ if __name__ == "__main__":
         # test_2()
         # test_3()
         test_4()
-        test_4(slurm=True)
+        # test_4(slurm=True)
         # test_5()
     except KeyboardInterrupt:
         pass
