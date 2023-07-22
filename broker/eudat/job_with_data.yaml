@@ -12,6 +12,6 @@ config:
       hash: b6aaf03752dc68d625fc57b451faa2bf
   data_transfer_out: 1
   jobs:
-    job1:
+    job0:
       cores: 1
       run_time: 60

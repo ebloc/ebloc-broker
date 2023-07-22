@@ -16,6 +16,6 @@ config:
       storage_id: b2drop
   data_transfer_out: 5
   jobs:
-    job1:
+    job0:
       cores: 1
       run_time: 60

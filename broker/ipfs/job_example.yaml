@@ -15,6 +15,6 @@ config:
       storage_id: ipfs
   data_transfer_out: 2
   jobs:
-    job1:
+    job0:
       cores: 1
       run_time: 1

@@ -1,6 +1,6 @@
 config:
-  requester_address: ''
-  provider_address: '0x29e613b04125c16db3f3613563bfdd0ba24cb629'
+  requester_address: ""
+  provider_address: "0x29e613b04125c16db3f3613563bfdd0ba24cb629"
   search_cheapest_provider: false
   source_code:
     cache_type: public
@@ -9,6 +9,6 @@ config:
     storage_id: ipfs
   data_transfer_out: 1
   jobs:
-    job1:
+    job0:
       cores: 1
       run_time: 1

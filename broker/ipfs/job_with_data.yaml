@@ -1,6 +1,6 @@
 config:
-  requester_address: '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49'
-  provider_address: '0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea'
+  requester_address: "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
+  provider_address: "0x3e6ffc5ede9ee6d782303b2dc5f13afeee277aea"
   source_code:
     storage_id: ipfs
     cache_type: public
@@ -18,6 +18,6 @@ config:
       storage_id: ipfs
   data_transfer_out: 1
   jobs:
-    job1:
+    job0:
       cores: 1
       run_time: 60
