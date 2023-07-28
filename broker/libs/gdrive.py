@@ -162,7 +162,7 @@ def delete_all(_type="all"):
                 try:
                     run(["gdrive", "delete", line.split()[0]])
                 except Exception as e:
-                    log(f"E: [g]{e}")
+                    log(f"E: {e}")
 
         for line in list_all().splitlines():
             if " dir   " in line:
@@ -172,7 +172,7 @@ def delete_all(_type="all"):
                     print(output)
                 except Exception as e:
                     if str(e) != "":
-                        log(f"E: [g]{e}")
+                        log(f"E: {e}")
             # else:
             #     with suppress(Exception):
             #         run(["gdrive", "delete", line.split()[0]])

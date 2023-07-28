@@ -55,6 +55,19 @@ class Workflow:
         """Create digraph."""
         self.G = nx.drawing.nx_pydot.read_dot(fn)
 
+    def is_there_edges(self) -> bool:
+        """Check no outgoing edges in Graph or not
+
+        __ https://stackoverflow.com/a/69832091/2402577
+        """
+        for node, out_degree in self.G.out_degree():
+            if out_degree == 0:
+                pass
+            else:
+                return True
+
+        return False
+
     def print_predecessors(self):
         for i in list(self.G.nodes):
             print(f"{set(self.G.predecessors(i))} => {i}")

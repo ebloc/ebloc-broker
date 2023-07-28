@@ -15,6 +15,16 @@ def _bfs_layers(G, node, map_scanned):
             map_scanned[item] = True
 
 
+def is_there_edges(G):
+    for node, out_degree in G.out_degree():
+        if out_degree == 0:
+            pass
+        else:
+            return True
+
+    return False
+
+
 def main():
     n = 10
     edges = 15
@@ -31,6 +41,8 @@ def main():
             _G.add_node(_item)
 
         nx.nx_pydot.write_dot(_G, f"G{item[0]}.dot")
+        # (print(node) for node, out_degree in _G.out_degree() if out_degree == 0)
+        # print(is_there_edges(_G))
         # breakpoint()  # DEBUG
 
     # for item in enumerate(nx.topological_generations(wf.G)):

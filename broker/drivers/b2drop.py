@@ -245,7 +245,7 @@ class B2dropClass(Storage):
 
                     return config.oc.file_info(fn).get_size()
                 except Exception as e:
-                    log(f"E: [g]{e}")
+                    log(f"E: {e}")
                     _list = config.oc.list(".")
                     for path in _list:
                         if folder_name in path.get_name() and folder_name != path.get_name:
@@ -253,7 +253,7 @@ class B2dropClass(Storage):
 
                 return config.oc.file_info(fn).get_size()
 
-            log(f"E: [g]{e}")
+            log(f"E: {e}")
             raise Exception("failed all the attempts to get file info at B2DROP") from e
 
     # def total_size_to_download(self) -> None:
@@ -321,7 +321,7 @@ class B2dropClass(Storage):
                     log(f"==> [g]{share_key}[/g] is added into mongoDB {ok()}")
             except Exception as e:
                 print_tb(e)
-                log(f"E: [g]{e}")
+                log(f"E: {e}")
 
         for attempt in range(cfg.RECONNECT_ATTEMPTS):
             try:
@@ -354,7 +354,7 @@ class B2dropClass(Storage):
                         self.accept_flag += 1
                     except Exception as e:
                         if "warning: " not in str(e):
-                            log(f"E: [g]{e}")
+                            log(f"E: {e}")
                         else:
                             log(str(e))
 

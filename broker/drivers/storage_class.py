@@ -52,6 +52,7 @@ class Storage(BaseClass):
         self.index: int = self.logged_job.args["index"]
         self.cores = self.logged_job.args["core"]
         self.run_time: int = self.logged_job.args["runTime"]
+        self.is_workflow: bool = False  # required during sbatch job submission
         self.job_id: int = 0
         self.cache_type = self.logged_job.args["cacheType"]
         self.data_transfer_in_requested = self.job_infos[0]["data_transfer_in"]

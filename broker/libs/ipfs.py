@@ -231,7 +231,7 @@ class Ipfs:
                 else:
                     log()
                     if "failure: dial to self attempted" in e:
-                        log(f"E: [g]{e}")
+                        log(f"E: {e}")
                         if not cfg.IS_FULL_TEST and not question_yes_no("==> Would you like to continue?"):
                             raise QuietExit
                     else:

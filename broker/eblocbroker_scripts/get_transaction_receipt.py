@@ -36,7 +36,7 @@ def get_transaction_receipt(tx_hash, only_receipt=False):
             print(f"msg_value={msg_value}")
         return merged
     except Exception as e:
-        log(f"E: [g]{e}")
+        log(f"E: {e}")
 
 
 def main():

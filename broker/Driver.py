@@ -170,7 +170,7 @@ def tools(bn):
                     break
 
             if not flag:
-                raise QuietExit(f"warning 'ipfs id' does not return connected swarm nodes.")
+                raise QuietExit("warning 'ipfs id' does not return connected swarm nodes.")
 
         exception_msg = "warning: Given information is not same with the provider's registered info, please update it."
         try:
@@ -263,6 +263,9 @@ class Driver:
 
         self.is_job_received()
 
+    def is_workflow(self) -> bool:
+        return len(self.job_infos[0]["core"]) > 1
+
     def process_logged_job(self, idx):
         """Process logged job one by one."""
         self.storage_duration = []
@@ -311,17 +314,15 @@ class Driver:
 
             return
 
-        for job in range(1, len(self.job_info["core"])):
-            with suppress(Exception):
-                self.job_infos.append(  # if workflow is given then add jobs into list
-                    Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job, self.job_bn)
-                )
+        if self.is_workflow():
+            # TODO: check here do the mapping from the dot file
+            for job_id in range(1, len(self.job_info["core"])):
+                with suppress(Exception):
+                    self.job_infos.append(  # if workflow is given then add jobs into list
+                        Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job_id, self.job_bn)
+                    )
 
         self.check_requested_job()
-        if len(self.job_infos[0]["core"]) > 1:
-            log(f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs received.")
-            breakpoint()  # DEBUG
-
         # self.set_job_recevied_mongodb(key, index)
 
     def sent_job_to_storage_class(self):
@@ -349,6 +350,14 @@ class Driver:
             storage_class = B2dropClass(**kwargs)
         elif main_cloud_storage_id == StorageID.GDRIVE:
             storage_class = GdriveClass(**kwargs)
+
+        ########################
+        if self.is_workflow():
+            log(f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs is received.")
+            storage_class.is_workflow = True
+            breakpoint()  # DEBUG
+
+        ########################
 
         # run_storage_process(storage_class)
         if cfg.IS_THREADING_ENABLED:

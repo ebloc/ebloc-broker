@@ -32,7 +32,7 @@ def check_connection(is_silent=False):
         try:
             reconnect()
         except Exception as e:
-            log(f"E: [g]{e}")
+            log(f"E: {e}")
 
         if not network.is_connected():
             time.sleep(15)

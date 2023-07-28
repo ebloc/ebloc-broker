@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import git
 import gzip
 import io
@@ -31,7 +32,7 @@ def initialize_check(path):
                 git_init()
                 add_all()
             except Exception as e:
-                log(f"E: [g]{e}")
+                log(f"E: {e}")
                 raise e
 
 
@@ -248,7 +249,7 @@ def commit_changes(path):
         try:
             add_all(repo)
         except Exception as e:
-            log(f"E: [g]{e}")
+            log(f"E: {e}")
             raise e
 
 

@@ -5,14 +5,13 @@ import getpass
 import os
 import psutil
 import shutil
-import socket
 import sys
 import time
 from contextlib import suppress
 from pathlib import Path
 from time import sleep
 from typing import Dict, List
-
+from broker.env import ENV_BASE
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import WHERE, br, log, ok
@@ -45,6 +44,7 @@ from broker.utils import (
 ipfs = cfg.ipfs
 Ebb = cfg.Ebb
 connect()
+_env = ENV_BASE()
 
 
 class Common:
@@ -180,13 +180,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.modified_date = None
         self.encoded_share_tokens: Dict[str, str] = {}
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
-        if socket.gethostname() == "homevm":
-            os.environ["IPFS_PATH"] = "/mnt/hgfs/ggh/.ipfs"
-        else:
-            os.environ["IPFS_PATH"] = str(env.HOME.joinpath(".ipfs"))
-
-        _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}.log"
-        self.job_id: int = 0  # TODO: should be mapped to slurm_job_id
+        os.environ["IPFS_PATH"] = _env.IPFS_REPO
+        self.job_id: int = 0  # TODO: should be mapped somehow from slurm_job_id?
+        _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}_{self.job_id}.log"
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
@@ -209,7 +205,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             self.requester_id_address = eth_address_to_md5(requester_id)
             self.requester_info = Ebb.get_requester_info(requester_id)
         except Exception as e:
-            log(f"E: [g]{e}")
+            log(f"E: {e}")
             sys.exit(1)
 
         self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address
@@ -594,7 +590,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self._get_tx_status(tx_hash)
         self.get_job_info()
         log("SUCCESS")
-        # self.remove_job_folder()  # FIXME: TESTING also remove dependent data files
+        # self.remove_job_folder()  # FIXME: TESTING also may remove dependent data files
 
 
 if __name__ == "__main__":
