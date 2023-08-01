@@ -84,20 +84,36 @@ class Workflow:
             pass
 
     def dependency_job(self, i, slurm=False):
+        if self.job_name == "job":
+            time_limit = "0-0:2"
+        else:
+            time_limit = self.time_limits[int(i)]
+
         if not len(set(self.G.predecessors(i))):
             job_id = self.not_dependent_submit_job(i, slurm)
             self.job_ids[i] = job_id
-            print("job_id: " + str(job_id))
+            print("job_id=" + str(job_id))
+            if slurm:
+                cmd = ["scontrol", "update", f"jobid={job_id}", f"TimeLimit={time_limit}"]
+                run(cmd)
         else:
             job_id = self.dependent_submit_job(i, list(self.G.predecessors(i)), slurm)
             self.job_ids[i] = job_id
-            print("job_id: " + str(job_id))
+            print("job_id=" + str(job_id))
             print(list(self.G.predecessors(i)))
+            if slurm:
+                cmd = ["scontrol", "update", f"jobid={job_id}", f"TimeLimit={time_limit}"]
+                run(cmd)
 
     def not_dependent_submit_job(self, i, slurm):
-        log(f"$ sbatch job{i}.sh", "pink")
+        if self.job_name == "job":
+            core_num = 1
+        else:
+            core_num = self.core_numbers[int(i)]
+
+        log(f"$ sbatch -n {core_num} {self.job_name}{i}.sh", "blue", is_code=True)
         if slurm:
-            cmd = ["sbatch", f"job{i}.sh"]
+            cmd = ["sbatch", "-n", core_num, f"{self.job_name}{i}.sh"]
             output = run(cmd)
             print(output)
             job_id = int(output.split(" ")[3])
@@ -106,14 +122,29 @@ class Workflow:
             return random.randint(1, 101)
 
     def dependent_submit_job(self, i, predecessors, slurm):
+        if self.job_name == "job":
+            core_num = 1
+        else:
+            core_num = self.core_numbers[int(i)]
+
         if len(predecessors) == 1:
             if not predecessors[0] in self.job_ids:
                 #: if the required job is not submitted to Slurm, recursive call
-                self.dependency_job(predecessors[0])
+                self.dependency_job(predecessors[0], slurm)
 
-            log(f"$ sbatch --dependency=afterok:{self.job_ids[predecessors[0]]} job{i}.sh", "blue")
+            log(
+                f"$ sbatch -n {core_num} --dependency=afterok:{self.job_ids[predecessors[0]]} {self.job_name}{i}.sh",
+                "blue",
+                is_code=True,
+            )
             if slurm:
-                cmd = ["sbatch", f"--dependency=afterok:{self.job_ids[predecessors[0]]}", f"job{i}.sh"]
+                cmd = [
+                    "sbatch",
+                    "-n",
+                    core_num,
+                    f"--dependency=afterok:{self.job_ids[predecessors[0]]}",
+                    f"{self.job_name}{i}.sh",
+                ]
                 output = run(cmd)
                 print(output)
                 job_id = int(output.split(" ")[3])
@@ -129,9 +160,15 @@ class Workflow:
                 job_id_str += f"{self.job_ids[j]}:"
 
             job_id_str = job_id_str[:-1]
-            log(f"$ sbatch --dependency=afterok:{job_id_str} job{i}.sh", "blue")
+            log(f"$ sbatch -n {core_num} --dependency=afterok:{job_id_str} {self.job_name}{i}.sh", "blue", is_code=True)
             if slurm:
-                cmd = ["sbatch", f"--dependency=afterok:{job_id_str}", f"job{i}.sh"]
+                cmd = [
+                    "sbatch",
+                    "-n",
+                    core_num,
+                    f"--dependency=afterok:{job_id_str}",
+                    f"{self.job_name}{i}.sh",
+                ]
                 output = run(cmd)
                 print(output)
                 job_id = int(output.split(" ")[3])
@@ -153,11 +190,30 @@ class Workflow:
 
         return G
 
+    def sbatch_from_dot(self, dot_fn, job_key="job", index="", job_bn="", core_numbers=1, time_limits="0-0:2"):
+        self.read_dot(dot_fn)
+        if job_key == "job":
+            self.job_name = "job"
+            self.core_numbers = 1
+            self.time_limits = "0-0:2"
+        else:
+            self.job_name = f"{job_key}~{index}~{job_bn}~"
+            self.core_numbers = core_numbers
+            self.time_limits = time_limits
+
+        for idx in list(self.G.nodes):
+            depended_nodes = set(self.G.predecessors(idx))
+            if idx != "\\n" and depended_nodes:
+                print(f"{idx} => {depended_nodes}")
+
+        print()
+        for idx in list(self.G.nodes):
+            if idx != "\\n" and idx not in self.job_ids:
+                self.dependency_job(idx, slurm=True)
+
 
 def main(args):
     try:
-        print("here")
-        # args
         w = Workflow()  # noqa
     except Exception as e:
         print_tb(e, is_print_exc=False)
@@ -232,6 +288,9 @@ def test_4(slurm=False):
     nx.nx_pydot.write_dot(G, "job.dot")  # saves DAG into job.dot file
 
     w = Workflow()
+    if not slurm:
+        w.job_name = "job"
+
     w.read_dot("job.dot")
     # log(f"List of nodes={list(w.G.nodes)}")
     for idx in list(w.G.nodes):

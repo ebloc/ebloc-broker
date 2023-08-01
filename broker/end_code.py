@@ -164,6 +164,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.job_key: str = kwargs.pop("job_key")
         self.job_key = self.job_key.replace("\\n", "")
         self.index = int(kwargs.pop("index"))
+        self.jobid = int(kwargs.pop("jobid"))
         self.received_bn: int = kwargs.pop("received_bn")
         self.folder_name: str = kwargs.pop("folder_name")
         self.slurm_job_id: int = kwargs.pop("slurm_job_id")
@@ -180,9 +181,8 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.modified_date = None
         self.encoded_share_tokens: Dict[str, str] = {}
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
-        os.environ["IPFS_PATH"] = _env.IPFS_REPO
-        self.job_id: int = 0  # TODO: should be mapped somehow from slurm_job_id?
-        _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}_{self.job_id}.log"
+        os.environ["IPFS_PATH"] = str(_env.IPFS_REPO)
+        _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}_{self.jobid}.log"
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
@@ -195,7 +195,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                     env.PROVIDER_ID,
                     self.job_key,
                     self.index,
-                    self.job_id,
+                    self.jobid,
                     self.received_bn,
                 ),
                 max_retries=10,
@@ -226,8 +226,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * pwd={os.getcwd()}")
         log(f" * results_folder={self.results_folder}")
         log(f" * provider_id={env.PROVIDER_ID}")
-        log(f" * job_key={self.job_key}")
-        log(f" * index={self.index}")
+        log(f" * job_key={self.job_key} | index={self.index} | jobid={self.jobid}")
         log(f" * storage_ids={self.storage_ids}")
         log(f" * [yellow]folder_name[/yellow]={self.folder_name}", h=False)
         log(f" * requester_id_address={self.requester_id_address}")
@@ -316,7 +315,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         tx_hash = Ebb.process_payment(
             self.job_key,
             self.index,
-            self.job_id,
+            self.jobid,
             self.elapsed_time,
             self.result_ipfs_hash,
             self.storage_ids,
@@ -440,7 +439,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 env.PROVIDER_ID,
                 self.job_key,
                 self.index,
-                self.job_id,
+                self.jobid,
                 self.received_bn,
                 is_print=is_print,
                 is_log_print=is_log_print,
@@ -467,7 +466,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
             try:
                 self.job_info = Ebb.get_job_info(
-                    env.PROVIDER_ID, self.job_key, self.index, self.job_id, self.received_bn, is_print
+                    env.PROVIDER_ID, self.job_key, self.index, self.jobid, self.received_bn, is_print
                 )
                 is_print = False
             except Exception as e:
@@ -526,7 +525,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         log()
         run_time = self.job_info["run_time"]
-        log(f"==> requested_run_time={run_time[self.job_id]} minutes")
+        log(f"==> requested_run_time={run_time[self.jobid]} minutes")
         try:
             if self.job_state_running_tx:
                 Ebb._wait_for_transaction_receipt(self.job_state_running_tx)
@@ -546,7 +545,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                     env.PROVIDER_ID,
                     self.job_key,
                     self.index,
-                    # self.job_id,
+                    # self.jobid,
                     self.received_bn,
                 ),
                 max_retries=10,
@@ -560,8 +559,8 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.sacct_result()
         self.end_timestamp = slurm.get_job_end_timestamp(self.slurm_job_id)
         self.elapsed_time = slurm.get_elapsed_time(self.slurm_job_id)
-        if self.elapsed_time > int(run_time[self.job_id]):
-            self.elapsed_time = run_time[self.job_id]
+        if self.elapsed_time > int(run_time[self.jobid]):
+            self.elapsed_time = run_time[self.jobid]
 
         log(f"finalized_elapsed_time={self.elapsed_time}")
         log("==> [yellow]job_info=", end="")
@@ -576,9 +575,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f"==> data_transfer_sum={data_transfer_sum} MB -> rounded={int(data_transfer_sum)} MB")
         log(f"    ==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
         if self.data_transfer_out > 0:
-            log(f"    ==> data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
+            log(f"     ==> data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
         else:
-            log(f"    ==> data_transfer_out={self.data_transfer_out} MB")
+            log(f"     ==> data_transfer_out={self.data_transfer_out} MB")
 
         try:
             tx_hash = self.process_payment_tx()
@@ -598,8 +597,9 @@ if __name__ == "__main__":
         "job_key": sys.argv[1],
         "index": sys.argv[2],
         "received_bn": sys.argv[3],
-        "folder_name": sys.argv[4],
-        "slurm_job_id": sys.argv[5],
+        "jobid": sys.argv[4],
+        "folder_name": sys.argv[5],
+        "slurm_job_id": sys.argv[6],
     }
     try:
         cloud_storage = ENDCODE(**kwargs)

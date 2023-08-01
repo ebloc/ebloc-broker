@@ -202,7 +202,7 @@ def tools(bn):
                         flag_error = True
 
                 if not is_docker() and env.GMAIL != "":
-                    gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(gmail)
+                    gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
                     if provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper():
                         log("warning: [m]gpg_fingerprint[/m] does not match with the registered info.")
                         log(f"\t{provider_info_contract['gpg_fingerprint']} != {gpg_fingerprint.upper()}")
@@ -319,7 +319,7 @@ class Driver:
             for job_id in range(1, len(self.job_info["core"])):
                 with suppress(Exception):
                     self.job_infos.append(  # if workflow is given then add jobs into list
-                        Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job_id, self.job_bn)
+                        Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job_id, self.job_bn, is_print=False)
                     )
 
         self.check_requested_job()
@@ -353,9 +353,9 @@ class Driver:
 
         ########################
         if self.is_workflow():
-            log(f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs is received.")
+            log(f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs is received")
             storage_class.is_workflow = True
-            breakpoint()  # DEBUG
+            # breakpoint()  # DEBUG
 
         ########################
 

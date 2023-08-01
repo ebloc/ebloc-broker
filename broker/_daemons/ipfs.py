@@ -39,7 +39,7 @@ def _run():
         else:
             env = {"IPFS_PATH": ipfs_init_folder}
 
-        cmd = [IPFS_BIN, "daemon", "--migrate=True", "--enable-gc"]
+        cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc"]
         if not is_docker():
             cmd += ["--routing=none"]
 

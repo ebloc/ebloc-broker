@@ -282,6 +282,7 @@ def get_job_info(
             "job_owner": job_owner.lower(),
             "job_key": job_key,
             "index": index,
+            "jobid": job_id,
             "availableCore": job_prices[0],
             "cacheType": None,
             "stateCode": job[0],

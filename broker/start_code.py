@@ -14,7 +14,7 @@ from broker.lib import state
 from broker.utils import popen_communicate
 
 
-def start_call(key, index, slurm_job_id) -> None:
+def start_call(key, index, jobid, slurm_job_id) -> None:
     """Run when slurm job launches.
 
     * cmd1:
@@ -25,7 +25,6 @@ def start_call(key, index, slurm_job_id) -> None:
     """
     Ebb = cfg.Ebb
     pid = os.getpid()
-    job_id = 0  # TODO: should be obtained from the user's input
     #: save pid of the process as soon as possible
     Ebb.mongo_broker.set_job_state_pid(str(key), int(index), pid)
     _log.ll.LOG_FILENAME = env.LOG_DIR / "transactions" / env.PROVIDER_ID.lower() / f"{key}_{index}.txt"
@@ -47,21 +46,21 @@ def start_call(key, index, slurm_job_id) -> None:
     p2.stdout.close()  # type: ignore
     date = p3.communicate()[0].decode("utf-8").strip()
     start_ts = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
-    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {job_id} {start_ts}", is_code=True)
+    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {jobid} {start_ts}", is_code=True)
     log(f"==> pid={pid}")
     for attempt in range(10):
         if attempt > 0:
-            log(f"warning: sleeping for {cfg.BLOCK_DURATION * 2} ...")
+            log(f"warning: Sleeping for {cfg.BLOCK_DURATION * 2} ...")
             time.sleep(cfg.BLOCK_DURATION * 2)
 
-        job, *_ = Ebb._get_job_info(env.PROVIDER_ID, key, int(index), int(job_id))
+        job, *_ = Ebb._get_job_info(env.PROVIDER_ID, key, int(index), int(jobid))
         state_code = int(job[0])
         if state_code > 1:
-            log(f"warning: state is already changed state_code={state.inv_code[state_code]}({state_code})")
+            log(f"warning: State is already changed state_code={state.inv_code[state_code]}({state_code})")
             sys.exit(1)
 
         try:
-            tx = Ebb.set_job_state_running(key, index, job_id, start_ts)
+            tx = Ebb.set_job_state_running(key, index, jobid, start_ts)
             tx_hash = Ebb.tx_id(tx)
             log(f"tx_hash={tx_hash}")
             d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -89,10 +88,10 @@ def start_call(key, index, slurm_job_id) -> None:
 
 
 def main():
-    if len(sys.argv) != 4:
-        log("E: wrong number of arguments")
+    if len(sys.argv) != 5:
+        log("E: Wrong number of arguments")
     else:
-        start_call(sys.argv[1], sys.argv[2], sys.argv[3])
+        start_call(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from shutil import copyfile
 from typing import Dict, List
-
+from broker.workflow.Workflow import Workflow
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import ok
@@ -318,6 +318,22 @@ class Storage(BaseClass):
             print_tb(e)
             raise e
 
+    def run_wrapper(self, file_to_run, sbatch_file_path):
+        with open(f"{self.results_folder}/run_wrapper.sh", "w") as f:
+            f.write("#!/bin/bash\n")
+            f.write("#SBATCH -o slurm.out  # STDOUT\n")
+            f.write("#SBATCH -e slurm.err  # STDERR\n")
+            f.write("#SBATCH --mail-type=ALL\n\n")
+            if not is_docker():
+                f.write(f"/usr/bin/unshare -r -n {file_to_run}")
+            else:
+                f.write(file_to_run)
+
+        # print(sbatch_file_path)
+        #: change file name based on the "job_key~index~job_bn~job_id"
+        copyfile(f"{self.results_folder}/run_wrapper.sh", sbatch_file_path)
+        # run(["chmod", "+x", sbatch_file_path])
+
     def _sbatch_call(self) -> bool:
         """Run sbatch on the cluster.
 
@@ -374,33 +390,50 @@ class Storage(BaseClass):
 
             time.sleep(0.25)
 
-        # seperator character is *
-        file_to_run = f"{self.results_folder}/run.sh"
-        #: separator "~"
-        sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}.sh"
-        with open(f"{self.results_folder}/run_wrapper.sh", "w") as f:
-            f.write("#!/bin/bash\n")
-            f.write("#SBATCH -o slurm.out  # STDOUT\n")
-            f.write("#SBATCH -e slurm.err  # STDERR\n")
-            f.write("#SBATCH --mail-type=ALL\n\n")
-            if not is_docker():
-                f.write(f"/usr/bin/unshare -r -n {file_to_run}")
-            else:
-                f.write(file_to_run)
+        if self.is_workflow:
+            time_limit_arr = []
+            for jobid in range(len(job_info["core"])):
+                sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
+                file_to_run = f"{self.results_folder}/job{jobid}.sh"
+                self.run_wrapper(file_to_run, sbatch_file_path)
+                ##
+                execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
+                d = datetime(1, 1, 1) + execution_time_second
+                time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
+                time_limit_arr.append(time_limit)
+                # log(f"==> time_limit={time_limit}")
 
-        copyfile(f"{self.results_folder}/run_wrapper.sh", sbatch_file_path)
-        job_core_num = str(job_info["core"][job_id])
-        # client's requested seconds to run his/her job, 1 minute additional given
-        execution_time_second = timedelta(seconds=int((job_info["run_time"][job_id] + 1) * 60))
-        d = datetime(1, 1, 1) + execution_time_second
-        time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-        log(f"## time_limit={time_limit} | requested_core_num={job_core_num}")
-        # give permission to user that will send jobs to Slurm
-        subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
-        slurm_job_id = self.scontrol_update(job_core_num, sbatch_file_path, time_limit)
-        if not slurm_job_id.isdigit():
-            log("E: Detects an error on the sbatch, slurm_job_id is not a digit")
-            return False
+            w = Workflow()
+            #: give permission to user that will send jobs to Slurm
+            subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
+            w.sbatch_from_dot(
+                self.results_folder / "workflow_job.dot",
+                f"{self.results_folder}/{job_key}",
+                index,
+                job_bn,
+                core_numbers=job_info["core"],
+                time_limits=time_limit_arr,
+            )
+            breakpoint()  # DEBUG
+        else:
+            jobid = 0
+            file_to_run = f"{self.results_folder}/run.sh"
+            #: separator character is "~"
+            sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
+            self.run_wrapper(file_to_run, sbatch_file_path)
+            job_core_num = str(job_info["core"][jobid])
+            #: client's requested seconds to run his/her job, 1 minute additional given
+            execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
+            d = datetime(1, 1, 1) + execution_time_second
+            time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
+            log(f"## time_limit={time_limit} | requested_core_num={job_core_num}")
+            #: give permission to user that will send jobs to Slurm
+            subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
+            #: sbatch and update time limit
+            slurm_job_id = self.scontrol_update(job_core_num, sbatch_file_path, time_limit)
+            if not slurm_job_id.isdigit():
+                log("E: Detect an error on the sbatch, slurm_job_id is not a digit")
+                return False
 
         time.sleep(3)
         with suppress(Exception):
