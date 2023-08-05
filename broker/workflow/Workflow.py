@@ -26,6 +26,24 @@ class Workflow:
             "arrows": True,
         }
 
+    def get_start_nodes(self):
+        """Iterate over all of the nodes looking for the ones with in-degree of 0
+        and out-degree of 0 using the in_degree and out_degree functions.  (Both
+        functions return an iterator of tuples that contain (node, degree) of
+        each node in the graph.)
+
+        __ https://stackoverflow.com/a/73236905/2402577
+        """
+        output = [n for n, d in self.G.in_degree() if d == 0]
+        output.remove("\\n")
+        return output
+
+    def get_end_nodes(self):
+        # https://stackoverflow.com/a/73236905/2402577
+        output = [n for n, d in self.G.out_degree() if d == 0]
+        output.remove("\\n")
+        return output
+
     def topological_sort(self) -> List:
         return list(nx.topological_sort(self.G))
 
@@ -111,7 +129,7 @@ class Workflow:
         else:
             core_num = self.core_numbers[int(i)]
 
-        log(f"$ sbatch -n {core_num} {self.job_name}{i}.sh", "blue", is_code=True)
+        log(f"$ sbatch -n {core_num} {self.job_name}{i}.sh", "blue", is_code=True, width=250)
         if slurm:
             cmd = ["sbatch", "-n", core_num, f"{self.job_name}{i}.sh"]
             output = run(cmd)
@@ -136,6 +154,7 @@ class Workflow:
                 f"$ sbatch -n {core_num} --dependency=afterok:{self.job_ids[predecessors[0]]} {self.job_name}{i}.sh",
                 "blue",
                 is_code=True,
+                width=250,
             )
             if slurm:
                 cmd = [
@@ -160,7 +179,12 @@ class Workflow:
                 job_id_str += f"{self.job_ids[j]}:"
 
             job_id_str = job_id_str[:-1]
-            log(f"$ sbatch -n {core_num} --dependency=afterok:{job_id_str} {self.job_name}{i}.sh", "blue", is_code=True)
+            log(
+                f"$ sbatch -n {core_num} --dependency=afterok:{job_id_str} {self.job_name}{i}.sh",
+                "blue",
+                is_code=True,
+                width=250,
+            )
             if slurm:
                 cmd = [
                     "sbatch",
@@ -303,6 +327,11 @@ def test_4(slurm=False):
         if idx != "\\n" and idx not in w.job_ids:
             w.dependency_job(idx, slurm=slurm)
 
+    start_nodes = w.get_start_nodes()
+    end_nodes = w.get_end_nodes()
+
+    print("Start nodes:", start_nodes)
+    print("End nodes:", end_nodes)
     # for idx in list(G.nodes):
     #     print(idx + " " + str(job_ids[idx]))
 

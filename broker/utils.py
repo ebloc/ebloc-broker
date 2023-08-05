@@ -102,6 +102,7 @@ def raise_error(error):
 
 
 def extract_gzip(fn):
+    """Extract the given the patch file."""
     try:
         args = shlex.split(f"gunzip --force {fn}")
         run(args)

@@ -197,8 +197,8 @@ def tools(bn):
                 _ipfs_address = get_ipfs_address()
                 if provider_info_contract["ipfs_address"] != _ipfs_address:
                     if provider_info_contract["ipfs_address"].split("p2p", 1)[1] != _ipfs_address.split("p2p", 1)[1]:
-                        log("warning: [m]ipfs_address[/m] does not match with the registered info.")
-                        log(f"\t{provider_info_contract['ipfs_address']} != {_ipfs_address}")
+                        log("warning: [m]IPFS_address[/m] does not match with the registered info.")
+                        log(f"\t\"{provider_info_contract['ipfs_address']}\" != \"{_ipfs_address}\"")
                         flag_error = True
 
                 if not is_docker() and env.GMAIL != "":

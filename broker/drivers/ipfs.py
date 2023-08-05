@@ -26,10 +26,10 @@ class IpfsClass(Storage):
     def check(self, ipfs_hash) -> None:
         """Check whether ipfs-hash is online."""
         try:
-            ipfs_stat, cumulative_size = cfg.ipfs.is_hash_exists_online(
+            stat, cumulative_size = cfg.ipfs.is_hash_exists_online(
                 ipfs_hash, self.requester_info["ipfs_address"], is_verbose=True
             )
-            if "CumulativeSize" not in ipfs_stat:
+            if "CumulativeSize" not in stat:
                 raise Exception("Markle not found! Timeout for the IPFS object stat retrieve")
         except Exception as e:
             print_tb(e)
@@ -37,7 +37,7 @@ class IpfsClass(Storage):
 
         self.ipfs_hashes.append(ipfs_hash)
         self.cumulative_sizes[self.job_key] = cumulative_size
-        data_size_mb = byte_to_mb(cumulative_size)
+        size_mb = byte_to_mb(cumulative_size)
         is_storage_payment = self.job_info["is_cached"][ipfs_hash]
         is_storage_payment_received_when_job_submitted = self.job_info["is_storage_bn_equal_when_job_submitted_bn"][
             ipfs_hash
@@ -48,12 +48,12 @@ class IpfsClass(Storage):
                 if is_storage_payment_received_when_job_submitted:
                     # already stored data size should now be included
                     #: total data to be downloaded is saved
-                    self.data_transfer_in_to_download_mb += data_size_mb
+                    self.data_transfer_in_to_download_mb += size_mb
             else:
-                self.data_transfer_in_to_download_mb += data_size_mb
+                self.data_transfer_in_to_download_mb += size_mb
 
         log(
-            f" * data_transfer_in={data_size_mb} MB | rounded={int(data_size_mb)} MB | data_transfer_in_to_download_mb={self.data_transfer_in_to_download_mb}"
+            f" * data_transfer_in={size_mb} MB | rounded={int(size_mb)} MB | data_transfer_in_to_download_mb={self.data_transfer_in_to_download_mb}"
         )
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:

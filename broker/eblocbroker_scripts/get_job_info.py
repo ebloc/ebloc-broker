@@ -222,6 +222,7 @@ def get_job_info_print(self, provider, _hash, index, received_bn, is_print=True)
     result_ipfs_hash = ""
     if self.job_info["result_ipfs_hash"] != empty_bytes32 and self.job_info["result_ipfs_hash"] != "":
         result_ipfs_hash = bytes32_to_ipfs(self.job_info["result_ipfs_hash"])
+        self.job_info.update({"result_ipfs_hash_str": result_ipfs_hash})
 
     if isinstance(self.job_info, dict):
         if is_print:
@@ -304,6 +305,7 @@ def get_job_info(
             "actual_elapsed_time": None,
             "cloudStorageID": None,
             "result_ipfs_hash": "",
+            "result_ipfs_hash_str": "",
             "refunded_cent": None,
             "received_cent": None,
             "code_hashes": None,
@@ -380,6 +382,7 @@ def get_job_info(
         self.get_job_info_print(provider, job_key, index, received_bn)
         if self.job_info["result_ipfs_hash"] == b"":
             del self.job_info["result_ipfs_hash"]
+            del self.job_info["result_ipfs_hash_str"]
 
         log(self.job_info)
     elif is_fetch_code_hashes:
@@ -404,6 +407,7 @@ def main():
             job_id = int(sys.argv[4])
 
         if len(sys.argv) == 6:
+            job_id = int(sys.argv[4])
             received_bn = int(sys.argv[5])
     else:
         log("E: Provide <[m]provider[/m], [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments", h=False)

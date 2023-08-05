@@ -564,7 +564,6 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         log(f"finalized_elapsed_time={self.elapsed_time}")
         log("==> [yellow]job_info=", end="")
-
         for item in ["processPayment_bn", "processPayment_gas_used", "result_ipfs_hash"]:
             del self.job_info[item]
 

@@ -163,7 +163,7 @@ class Storage(BaseClass):
     def full_refund(self) -> str:
         """Complete refund back to the requester."""
         try:
-            log(f"## warning: full refund is in process related to job_key={self.job_key}")
+            log(f"warning: full refund is in process related to job_key={self.job_key}")
             tx_hash = self.Ebb.refund(
                 self.logged_job.args["provider"],
                 env.PROVIDER_ID,
@@ -364,10 +364,10 @@ class Storage(BaseClass):
         p2 = subprocess.Popen(["date", "+%s"], stdin=p1.stdout, stdout=subprocess.PIPE)
         p1.stdout.close()  # noqa
         timestamp = p2.communicate()[0].decode("utf-8").strip()
-        log(f"timestamp={timestamp}, ", end="")
+        log(f"timestamp={timestamp} | ", end="")
         write_to_file(self.results_folder_prev / "timestamp.txt", timestamp)
         log(f"job_received_bn={job_bn}")
-        log("## Adding recevied job into the mongoDB database")
+        log("==> Adding recevied job into the mongoDB database")
         self.Ebb.mongo_broker.add_item(
             job_key,
             self.index,
@@ -396,7 +396,6 @@ class Storage(BaseClass):
                 sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
                 file_to_run = f"{self.results_folder}/job{jobid}.sh"
                 self.run_wrapper(file_to_run, sbatch_file_path)
-                ##
                 execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
                 d = datetime(1, 1, 1) + execution_time_second
                 time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
@@ -426,7 +425,7 @@ class Storage(BaseClass):
             execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
             d = datetime(1, 1, 1) + execution_time_second
             time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-            log(f"## time_limit={time_limit} | requested_core_num={job_core_num}")
+            log(f"==> time_limit={time_limit} | requested_core_num={job_core_num}")
             #: give permission to user that will send jobs to Slurm
             subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
             #: sbatch and update time limit
