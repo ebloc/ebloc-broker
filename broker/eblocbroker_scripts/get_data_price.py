@@ -36,7 +36,7 @@ def get_data_price(provider, source_code_hash, is_verbose=True):
         log(f" * registered_data_bn_list={registered_data_bn_list}")
         log(f" *                  prices={prices}")
         if note_msg:
-            log(f"## {note_msg}")
+            log(f"==> {note_msg}")
 
     return price, commitment_block_dur
 

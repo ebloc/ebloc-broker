@@ -180,6 +180,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.end_timestamp = ""
         self.modified_date = None
         self.encoded_share_tokens: Dict[str, str] = {}
+        self.is_workflow = False
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(_env.IPFS_REPO)
         _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}_{self.jobid}.log"
@@ -232,6 +233,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * requester_id_address={self.requester_id_address}")
         log(f" * received={self.job_info['received']}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
+        if os.path.isfile(self.results_folder / "workflow_job.dot"):
+            self.is_workflow = True
+
         with suppress(Exception):
             log(psutil.Process(int(self.job_state_running_pid)))
             while True:

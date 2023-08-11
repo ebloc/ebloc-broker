@@ -42,7 +42,8 @@ interface eBlocBrokerInterface {
         uint16[] core,
         uint16[] runTime,
         uint256 received, // equal to estimated cost
-        uint256 refunded
+        uint256 refunded,
+        uint256 workflowId
     );
 
     // Records the registered providers' registered information under

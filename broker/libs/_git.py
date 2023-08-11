@@ -28,7 +28,7 @@ def initialize_check(path):
     with cd(path):
         if not is_initialized(path):
             try:
-                log(f"## git_repo_dir=\n{path}", is_code=True)
+                log(f"==> git_repo_dir=\n{path}", is_code=True)
                 git_init()
                 add_all()
             except Exception as e:

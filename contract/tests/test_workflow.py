@@ -169,6 +169,7 @@ def test_workflow():
     job.storage_ids = [StorageID.IPFS.value, StorageID.NONE.value]
     job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job_price, cost = job.cost(provider, requester)
+    workflow_id = 0
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -179,6 +180,7 @@ def test_workflow():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(  # first job submit
@@ -350,6 +352,7 @@ def test_workflow_2():
     job.storage_ids = [StorageID.IPFS.value, StorageID.IPFS.value]
     job.cache_types = [CacheID.PUBLIC.value, CacheID.PUBLIC.value]
     job_price, cost = job.cost(provider, requester, is_verbose=True)
+    workflow_id = 0
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -360,6 +363,7 @@ def test_workflow_2():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     _transfer(requester, Cent(job_price))
     # TODO: datatransferout 2x considered

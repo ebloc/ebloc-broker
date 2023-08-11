@@ -148,6 +148,7 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
     job.data_prices_set_block_numbers = [0]
     job_price, _cost = job.cost(provider, requester)
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -158,6 +159,7 @@ def submit_receipt(index, cores, start_timestamp, end_timestamp, elapsed_time, i
         job.run_time,
         job.data_transfer_out,
         Cent(job_price),
+        workflow_id,
     ]
     _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(

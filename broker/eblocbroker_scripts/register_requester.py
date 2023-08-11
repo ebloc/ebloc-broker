@@ -80,7 +80,7 @@ def register_requester(self, yaml_fn, is_question=True):
             and requester_info["f_id"] == f_id
         ):
             log(requester_info)
-            log("## Same requester information is provided, nothing to do")
+            log("==> Same requester information is provided, nothing to do")
             raise QuietExit
 
         log("registered_requester_info=", "yellow", end="")

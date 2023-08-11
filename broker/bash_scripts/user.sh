@@ -4,10 +4,10 @@ USERADDRESS=$1
 BASEDIR=$2
 SLURMUSER=$3
 
-# for testing
-## USERADDRESS="dummy"
-## BASEDIR="/var/ebloc-broker"
-## SLURMUSER="slurm"
+#: for testing
+# USERADDRESS="dummy"
+# BASEDIR="/var/ebloc-broker"
+# SLURMUSER="slurm"
 
 force_add_slurm_user () {  # force to re-add slurm user
     sacctmgr remove user where user=$_USERNAME --immediate
@@ -47,7 +47,7 @@ else
         sudo setfacl -R -m user:$SLURMUSER:rwx $USER_HOME_DIR  # give read/write/execute access to root user on the given folder
 
         echo $USERADDRESS / $_USERNAME 'is created'
-        ## force to add user to slurm
+        #: force to add user to slurm
         sacctmgr remove user where user=$_USERNAME --immediate
         sacctmgr add account $_USERNAME --immediate
         sacctmgr create user $_USERNAME defaultaccount=$_USERNAME adminlevel=[None] --immediate

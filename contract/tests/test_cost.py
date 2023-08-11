@@ -161,6 +161,7 @@ def test_cost_0():
     job.storage_hours = [0]
     job.data_prices_set_block_numbers = [0]
     job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    workflow_id = 0
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -171,6 +172,7 @@ def test_cost_0():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     with brownie.reverts():
@@ -218,6 +220,7 @@ def test_cost_1():
     job.storage_hours = [0, 1, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    workflow_id = 0
     _args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -228,6 +231,7 @@ def test_cost_1():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     with brownie.reverts():
@@ -333,6 +337,7 @@ def test_cost_1():
     job.storage_hours = [0, 1, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    workflow_id = 0
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -343,6 +348,7 @@ def test_cost_1():
         job.run_time,
         job.data_transfer_out,
         job_price + 10000,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -437,6 +443,7 @@ def test_cost_2():
     job.storage_hours = [0, 1, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    workflow_id = 0
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -447,6 +454,7 @@ def test_cost_2():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -547,6 +555,7 @@ def test_cost_3():
     job.storage_hours = [0, 1, 0, 0]
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, cost = job.cost(provider, requester, is_verbose=True, is_ruler=False)
+    workflow_id = 0
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -557,6 +566,7 @@ def test_cost_3():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(

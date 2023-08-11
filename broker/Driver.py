@@ -351,13 +351,12 @@ class Driver:
         elif main_cloud_storage_id == StorageID.GDRIVE:
             storage_class = GdriveClass(**kwargs)
 
-        ########################
+        # ~~~~~~~~~~~~~~~~~~~~~~~
         if self.is_workflow():
             log(f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs is received")
             storage_class.is_workflow = True
             # breakpoint()  # DEBUG
-
-        ########################
+        # ~~~~~~~~~~~~~~~~~~~~~~~
 
         # run_storage_process(storage_class)
         if cfg.IS_THREADING_ENABLED:

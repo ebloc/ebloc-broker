@@ -565,7 +565,7 @@ def get_ip():
 
 def countdown(seconds: int, is_verbose=False) -> None:
     if not is_verbose:
-        log(f"## sleep_time={seconds} seconds\t                                              ")
+        log(f"==> sleep_time={seconds} seconds\t                                              ")
 
     while seconds:
         mins, secs = divmod(seconds, 60)

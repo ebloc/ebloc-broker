@@ -85,7 +85,6 @@ def main():
     log(processPayment_gas_used)
     log(count_nas)
     log(count_cppr)
-    ##########
     for k, v in elapsed_time.items():
         if k != "_workload":
             print(k, v / elapsed_time_count[k])

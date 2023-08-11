@@ -21,7 +21,7 @@ def _update_data_price():
     try:
         (price, _commitment_block_duration) = cfg.Ebb.get_registered_data_price(env.PROVIDER_ID, code_hash_bytes, 0)
         if price == new_data_price and _commitment_block_duration == commitment_block_duration:
-            log(f"## data([g]{code_hash}[/g]) already registerered with the given values")
+            log(f"==> data([g]{code_hash}[/g]) already registerered with the given values")
             raise QuietExit
     except Exception as e:
         raise QuietExit from e

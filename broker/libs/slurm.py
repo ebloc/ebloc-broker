@@ -88,7 +88,7 @@ def pending_jobs_check(is_print=True):
 
 def is_on() -> bool:
     """Check whether Slurm runs on the background or not, if not runs slurm."""
-    log("## checking slurm[yellow]... ", end="")
+    log("==> Checking slurm[yellow]... ", end="")
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
     for process_name in processes:
         if not is_process_on(process_name, process_name, process_count=0, is_print=False):

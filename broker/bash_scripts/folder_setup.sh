@@ -32,7 +32,7 @@ set_gmail () {
 }
 
 provider_setup () {
-    ## configure_slurm
+    # configure_slurm
     _FILE=$DIR/slurm_mail_prog.sh
     FILE=$BASE_DIR/bash_scripts/slurm_mail_prog.sh
     GMAIL=$(cat ~/.ebloc-broker/cfg.yaml | shyaml get-value cfg.gmail)
@@ -118,7 +118,7 @@ fi
 
 # python3 $BASE_DIR/python_scripts/input.py
 
-## --------------------------- end -------------------------------
+# --------------------------- end -------------------------------
 
 # echo -e "warning: Update the following file "$LOG_DIR"/.b2drop_client.txt' with
 # your B2DROP account's password. Best to make sure the file is not readable or
@@ -163,8 +163,8 @@ fi
 # configure_oc
 # configure_ipfs
 
-## Setup
-## sudo ln -s /usr/bin/node /usr/local/bin/node
+# Setup
+# sudo ln -s /usr/bin/node /usr/local/bin/node
 # sudo chmod 700 ~/*
 
 # PATH Name

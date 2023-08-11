@@ -42,7 +42,7 @@ def add_bloxberg_config():
                 if "bloxberg" in network["name"]:
                     is_bloxberg_added = True
                     if json.loads(json.dumps(network)) == bloxberg_config:
-                        log(f"## bloxberg config is already added into {fn}")
+                        log(f"==> bloxberg config is already added into {fn}")
                     else:
                         network["name"] = bloxberg_config["name"]
                         network["id"] = bloxberg_config["id"]

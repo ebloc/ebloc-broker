@@ -7,8 +7,8 @@ from broker.utils import print_tb
 
 def main():
     try:
-        log(f"## eBlocBroker_owner={cfg.Ebb.get_owner().lower()}")
-        log(f"## USDTmy_owner={config.usdtmy.getOwner().lower()}")
+        log(f"==> eBlocBroker_owner={cfg.Ebb.get_owner().lower()}")
+        log(f"==> USDTmy_owner={config.usdtmy.getOwner().lower()}")
     except Exception as e:
         print_tb(e)
 

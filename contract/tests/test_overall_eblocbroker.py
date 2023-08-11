@@ -245,6 +245,7 @@ def test_stored_data_usage():
     job.cache_types = [CacheID.PUBLIC.value, CacheID.PRIVATE.value]
     job_price, cost = job.cost(provider, requester)
     log(f"price={float(Cent(job_price).to('usd'))} usd")
+    workflow_id = 0
     args = [
         provider,
         job.provider_price_bn,
@@ -255,6 +256,7 @@ def test_stored_data_usage():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     # first time job is submitted with the data files
     # https://stackoverflow.com/a/12468284/2402577
@@ -342,6 +344,7 @@ def test_data_info():
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -352,6 +355,7 @@ def test_data_info():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     _transfer(requester, Cent(job_price))
     ebb.submitJob(
@@ -409,6 +413,7 @@ def test_computational_refund():
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -419,6 +424,7 @@ def test_computational_refund():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -469,6 +475,7 @@ def test_storage_refund():
     job.data_prices_set_block_numbers = [0, 0]  # provider's registered data won't be used
     job_price, cost = job.cost(provider, requester)
     job_price += 1  # for test additional 1 Gwei is paid
+    workflow_id = 0
     args = [
         provider,
         job.provider_price_bn,
@@ -479,6 +486,7 @@ def test_storage_refund():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -670,6 +678,7 @@ def test_multiple_data():
     job.storage_ids = [StorageID.B2DROP.value, StorageID.IPFS.value]
     job.cache_types = [CacheID.PRIVATE.value, CacheID.PUBLIC.value]
     job_price, cost = job.cost(provider, requester)
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -680,6 +689,7 @@ def test_multiple_data():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
 
     # first time job is submitted with the data files
@@ -834,6 +844,7 @@ def test_simple_submit():
     job.storage_hours = [0, 0]
     job.data_prices_set_block_numbers = [0, 0]
     job_price, cost = job.cost(provider, requester)
+    workflow_id = 0
     args = [
         provider,
         ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -844,6 +855,7 @@ def test_simple_submit():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -945,6 +957,7 @@ def test_submit_jobs():
             job.cache_types = [CacheID.PUBLIC.value]
             # log(code_hashes[0])
             job_price, *_ = job.cost(provider, requester)
+            workflow_id = 0
             args = [
                 provider,
                 ebb.getProviderSetBlockNumbers(provider)[-1],
@@ -955,6 +968,7 @@ def test_submit_jobs():
                 job.run_time,
                 job.data_transfer_out,
                 job_price,
+                workflow_id,
             ]
             job_price_sum += job_price
             data_transfer_ins = [100]
@@ -1080,6 +1094,7 @@ def test_submit_n_data():
     job.data_prices_set_block_numbers = [0]
     job_price, *_ = job.cost(provider, requester)
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -1090,6 +1105,7 @@ def test_submit_n_data():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     _transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -1114,6 +1130,7 @@ def test_submit_n_data():
     job.data_prices_set_block_numbers = [0, 0]
     job_price, *_ = job.cost(provider, requester)
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -1124,6 +1141,7 @@ def test_submit_n_data():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -1152,6 +1170,7 @@ def test_submit_n_data():
     job.data_prices_set_block_numbers = [0, 0, 0]
     job_price, *_ = job.cost(provider, requester)
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -1162,6 +1181,7 @@ def test_submit_n_data():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -1198,6 +1218,7 @@ def test_submit_n_data():
     job.data_prices_set_block_numbers = [0, 0, 0, 0]
     job_price, *_ = job.cost(provider, requester)
     provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
+    workflow_id = 0
     args = [
         provider,
         provider_price_bn,
@@ -1208,6 +1229,7 @@ def test_submit_n_data():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     set_transfer(requester, Cent(job_price))
     tx = ebb.submitJob(
@@ -1259,6 +1281,7 @@ def test_receive_registered_data_deposit():
     job.data_prices_set_block_numbers = [0, 0, 0]
     job.provider_price_bn = ebb.getProviderSetBlockNumbers(provider)[-1]
     job_price, *_ = job.cost(provider, requester)
+    workflow_id = 0
     args = [
         provider,
         job.provider_price_bn,
@@ -1269,6 +1292,7 @@ def test_receive_registered_data_deposit():
         job.run_time,
         job.data_transfer_out,
         job_price,
+        workflow_id,
     ]
     # print(job_price)
     _transfer(requester, Cent(job_price))

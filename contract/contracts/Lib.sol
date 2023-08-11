@@ -71,6 +71,7 @@ library Lib {
         uint16[] runTime;
         uint32 dataTransferOut;
         uint256 jobPrice;
+        uint256 workflowId;
     }
 
     struct JobIndexes {
@@ -82,7 +83,7 @@ library Lib {
         uint32 elapsedTime;
         uint256[] core;
         uint256[] runTime;
-        uint8 finalize; // {0: first-job, 1: in-between-job, 2 final-job}
+        uint8 finalize; // {0: entry-job, 1: in-between-job, 2 exit-job}
     }
 
     struct DataInfo {

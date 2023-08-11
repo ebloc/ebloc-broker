@@ -404,7 +404,7 @@ class B2dropClass(Storage):
             self.get_share_token(provider_info["f_id"])
         except Exception as e:
             print_tb(f"E: could not get the share id. {e}")
-            # return False ###
+            # return False
 
         if int(self.data_transfer_in_to_download_mb) > int(self.data_transfer_in_requested):
             log(f" * data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}")

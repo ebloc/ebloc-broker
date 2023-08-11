@@ -16,7 +16,7 @@ from broker.utils import CacheID, StorageID, byte_to_mb, bytes32_to_ipfs, get_da
 class IpfsClass(Storage):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        #: if storage class is IPFS, then `cache_type` is always public
+        #: if storage class is IPFS, then 'cache_type' is always public
         self.cache_type = CacheID.PUBLIC
         self.ipfs_hashes = []
         self.cumulative_sizes = {}
@@ -42,7 +42,7 @@ class IpfsClass(Storage):
         is_storage_payment_received_when_job_submitted = self.job_info["is_storage_bn_equal_when_job_submitted_bn"][
             ipfs_hash
         ]
-        log(f"> Is already stored hash={ipfs_hash} -> {is_storage_payment} ", end="")
+        log(f"==> Is already stored hash={ipfs_hash} -> {is_storage_payment} ", end="")
         if not cfg.ipfs.is_hash_locally_cached(ipfs_hash):
             if is_storage_payment:
                 if is_storage_payment_received_when_job_submitted:
@@ -53,11 +53,12 @@ class IpfsClass(Storage):
                 self.data_transfer_in_to_download_mb += size_mb
 
         log(
-            f" * data_transfer_in={size_mb} MB | rounded={int(size_mb)} MB | data_transfer_in_to_download_mb={self.data_transfer_in_to_download_mb}"
+            f" * data_transfer_in={size_mb} MB | rounded={int(size_mb)} MB | "
+            f"data_transfer_in_to_download_mb={self.data_transfer_in_to_download_mb}"
         )
 
     def ipfs_get(self, ipfs_hash, target, is_storage_paid) -> None:
-        """Wrap ipfs-get call."""
+        """Wrap the ipfs-get function."""
         cfg.ipfs.get(ipfs_hash, target, is_storage_paid)
         self.verified_data[ipfs_hash] = True
 
@@ -71,7 +72,7 @@ class IpfsClass(Storage):
             self.thread_log_setup()
 
         start_ipfs_daemon()
-        log(f"{br(get_date())} job's source code has been sent through ", "bold cyan", end="")
+        log(f"{br(get_date())} Source code of the job has been sent through ", "bold cyan", end="")
         if self.cloudStorageID[0] == StorageID.IPFS:
             log("IPFS", "bg")
         else:
@@ -80,7 +81,7 @@ class IpfsClass(Storage):
         if not is_ipfs_on():
             return False
 
-        log(f"==> Is ipfs_hash={self.job_key} locally_cached... ", end="")
+        log(f"==> Is IPFS_hash={self.job_key} locally_cached... ", end="")
         output = cfg.ipfs.is_hash_locally_cached(self.job_key)  # may take long time
         print(output)
         if not os.path.isdir(self.results_folder):

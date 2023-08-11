@@ -884,7 +884,8 @@ contract eBlocBroker is
             args.core,
             args.runTime,
             cost,
-            args.jobPrice - cost // refunded
+            args.jobPrice - cost, // refunded
+            args.workflowId
         );
     }
 

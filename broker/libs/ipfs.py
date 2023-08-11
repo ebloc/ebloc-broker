@@ -40,9 +40,9 @@ class Ipfs:
         if is_ipfs_on(is_print=False):
             self.client = ipfshttpclient.connect("/ip4/127.0.0.1/tcp/5001/http")
 
-    #################
+    # ~~~~~~~~~~~~~ #
     # OFFLINE CALLS #
-    #################
+    # ~~~~~~~~~~~~~ #
     def get_only_ipfs_hash(self, path, is_hidden=True) -> str:
         """Get only chunk and hash of a given path, do not write to disk.
 
@@ -166,7 +166,7 @@ class Ipfs:
                 log(f"E: {target} does not exist")
 
         if os.path.isfile(encrypted_file_target):
-            log(f"## gpg_file: {encrypted_file_target} is already created")
+            log(f"==> gpg_file: {encrypted_file_target} is already created")
             return encrypted_file_target
 
         for attempt in range(5):
@@ -205,9 +205,9 @@ class Ipfs:
             if is_delete:
                 _remove(encrypt_target)
 
-    ################
+    # ~~~~~~~~~~~~ #
     # ONLINE CALLS #
-    ################
+    # ~~~~~~~~~~~~ #
     def swarm_connect(self, ipfs_address: str, is_verbose=False):
         """Swarm connect into the ipfs node."""
         if not is_ipfs_on():
@@ -270,7 +270,7 @@ class Ipfs:
         log()
 
     def is_hash_exists_online(self, ipfs_hash: str, ipfs_address=None, is_verbose=False):
-        log(f"## attempting to check IPFS file [g]{ipfs_hash}[/g] ... ")
+        log(f"==> Attempting to check IPFS file [g]{ipfs_hash}[/g] ... ")
         if not is_ipfs_on():
             start_ipfs_daemon()
             if is_ipfs_on():
@@ -448,7 +448,7 @@ class Ipfs:
         #     raise e
 
     def publish_gpg(self, gpg_fingerprint, is_verbose=True):
-        # log("## running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
+        # log("> running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
         if is_verbose:
             run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
         else:

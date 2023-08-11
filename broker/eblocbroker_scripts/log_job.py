@@ -43,7 +43,7 @@ def handle_event(logged_jobs):
 def watch_bn():
     with suppress(Exception):
         bn = cfg.Ebb.get_block_number()
-        sys.stdout.write(f"\r## [  bn={bn}  ]")
+        sys.stdout.write(f"\r==> [  bn={bn}  ]")
 
 
 def log_loop(event_filter, poll_interval: int = 6):

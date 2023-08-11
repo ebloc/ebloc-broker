@@ -381,7 +381,7 @@ class Job:
         if is_all_equal:  # force to submit given provider address
             provider_to_share = self.Ebb.w3.toChecksumAddress(self.provider_addr)
 
-        log(f"[g]##[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd")
+        log(f"[g]==>[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd")
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
 
     def get_generated_output_files(self):

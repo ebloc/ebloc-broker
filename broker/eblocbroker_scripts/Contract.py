@@ -336,9 +336,9 @@ class Contract(Base):
         print(f"==> address={self.eBlocBroker.contract_address}")
         print(f"==> deployed_block_number={self.get_deployed_block_number()}")
 
-    ##############
+    # ~~~~~~~~~~ #
     # Timeout Tx #
-    ##############
+    # ~~~~~~~~~~ #
     @exit_after(EXIT_AFTER)
     def timeout(self, func, contract, *args):
         """Timeout deploy contract's functions.
@@ -471,9 +471,9 @@ class Contract(Base):
 
             idx += 1
 
-    ################
+    # ~~~~~~~~~~~~ #
     # Transactions #
-    ################
+    # ~~~~~~~~~~~~ #
     def _submit_job(self, required_confs, requester, job_price, *args) -> "TransactionReceipt":
         try:
             # self.approve(env.CONTRACT_ADDRESS, requester, job_price)
@@ -642,9 +642,9 @@ class Contract(Base):
         self.required_confs = 0
         return self.timeout_wrapper("removeRegisteredData", "eBlocBroker", *args)
 
-    ###########
+    # ~~~~~~~ #
     # GETTERS #
-    ###########
+    # ~~~~~~~ #
     def get_registered_data_bn(self, *args):
         if self.eBlocBroker is not None:
             if env.IS_BLOXBERG:
