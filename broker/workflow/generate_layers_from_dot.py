@@ -26,15 +26,8 @@ def is_there_edges(G):
 
 
 def main():
-    n = 15
-    edges = 20
-    ############
     wf = Workflow()
-    # G = wf.generate_random_dag(n, edges)
-    # wf.G = G
-
     wf.read_dot("workflow_job.dot")
-
     log(wf.topological_sort())
     log(wf.topological_generations())
     for item in enumerate(nx.topological_generations(wf.G)):
@@ -66,18 +59,6 @@ def main():
     #             if item not in map_scanned:
     #                 print("zzzzzzzzzzzzzzzzzzzzz")
     #                 _bfs_layers(w.G, [0, item], map_scanned)
-
-    # https://networkx.org/documentation/stable/auto_examples/drawing/plot_weighted_graph.html
-    ##############################################################
-    breakpoint()  # DEBUG
-    nx.nx_pydot.write_dot(wf.G, "workflow_job.dot")
-    nx.draw_spring(wf.G, with_labels=True)
-    plt.savefig("job.png")
-    # breakpoint()  # DEBUG
-    # nx.nx_pydot.write_dot(G, "job.dot")
-    # for i in list(G.nodes):
-    #     print(i)
-    #     print(set(G.predecessors(i)))
 
 
 if __name__ == "__main__":

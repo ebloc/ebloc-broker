@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import random
 from typing import List
-
 from broker._utils._log import console, log
 from broker._utils.tools import print_tb, run
 from broker.errors import QuietExit
@@ -208,7 +207,8 @@ class Workflow:
             if end_node == 0:
                 start_node, end_node = end_node, start_node
 
-            G.add_edge(start_node, end_node)
+            w = random.randint(1, 100)
+            G.add_edge(start_node, end_node, weight=w)
             if not nx.is_directed_acyclic_graph(G):
                 G.remove_edge(start_node, end_node)
 
