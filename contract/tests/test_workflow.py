@@ -331,7 +331,6 @@ def test_workflow():
 
 
 def test_workflow_2():
-    job = Job()
     provider = accounts[1]
     requester = accounts[2]
     register_provider(available_core=4, prices=prices)
@@ -342,6 +341,7 @@ def test_workflow_2():
     code_hash = ipfs_to_bytes32(job_key)
     data_hash = ipfs_to_bytes32(data_hash)
 
+    job = Job()
     job.code_hashes = [code_hash, data_hash]
     job.storage_hours = [0, 0]
     job.data_transfer_ins = [150, 100]
@@ -366,7 +366,7 @@ def test_workflow_2():
         workflow_id,
     ]
     _transfer(requester, Cent(job_price))
-    # TODO: datatransferout 2x considered
+    # TODO: datatransferout considered 2x
     log(f"job_price={float(Cent(job_price).to('usd'))} usd")
     tx = ebb.submitJob(  # first job submit
         job_key,

@@ -30,11 +30,8 @@ def main():
     edges = 20
     ############
     wf = Workflow()
-    # G = wf.generate_random_dag(n, edges)
-    # wf.G = G
-
-    wf.read_dot("workflow_job.dot")
-
+    G = wf.generate_random_dag(n, edges)
+    wf.G = G
     log(wf.topological_sort())
     log(wf.topological_generations())
     for item in enumerate(nx.topological_generations(wf.G)):

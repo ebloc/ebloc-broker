@@ -599,6 +599,7 @@ psutil==5.9.2
 ptyprocess==0.7.0
     # via
     #   pexpect
+pur==7.3.0
 pure-eval==0.2.2
     # via stack-data
 py==1.11.0
@@ -788,7 +789,7 @@ RestrictedPython==6.0
     # via
     #   accesscontrol
 rfc3986==1.4.0
-rich==13.4.2
+rich==13.5.2
 rlp==2.0.1
     # via
     #   eth-account
@@ -1210,7 +1211,7 @@ sphinx-autobuild==2021.3.14
 watchdog==3.0.0
 pydot==1.4.2
 Pyomo==6.6.1
-heft==0.1.1
+heft @ https://github.com/avatar-lavventura/heft/archive/refs/heads/master.zip
 # gdown==4.7.1
     # via
     #   gshell

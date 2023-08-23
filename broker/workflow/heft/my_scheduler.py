@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
 
-from heft.core import (
-    wbar,
-    cbar,
-    ranku,
-    schedule,
-    Event,
-    start_time,
-    makespan,
-    endtime,
-    insert_recvs,
-    insert_sends,
-    insert_sendrecvs,
-    recvs,
-    sends,
-)
+from broker._utils.tools import print_tb
+from broker.errors import QuietExit
+from heft.core import schedule
+
+#     wbar,
+#     cbar,
+#     ranku,
+#     schedule,
+#     Event,
+#     start_time,
+#     makespan,
+#     endtime,
+#     insert_recvs,
+#     insert_sends,
+#     insert_sendrecvs,
+#     recvs,
+#     sends,
+# )
 
 """
 This is a simple script to use the HEFT function provided based on the example given in the original HEFT paper.
-You have to define the DAG, compcost function and commcost funtion.
+You have to define the DAG, computation_cost function and communication_cost funtion.
 
 Each task/job is numbered 1 to 10
 Each processor/agent is named 'a', 'b' and 'c'
@@ -34,10 +37,14 @@ Schedule:
 """
 
 
-dag = {1: (2, 3, 4, 5, 6), 2: (8, 9), 3: (7,), 4: (8, 9), 5: (9,), 6: (8,), 7: (10,), 8: (10,), 9: (10,), 10: ()}
+def computation_cost(job, agent):
+    # if agent == "a" or agent == "d" or agent == "o":
+    #     return 14
+    # elif agent == "b" or agent == "e" or agent == "r":
+    #     return 16
+    # else:
+    #     return 9
 
-
-def compcost(job, agent):
     if job == 1:
         if agent == "a":
             return 14
@@ -111,7 +118,7 @@ def compcost(job, agent):
             return 16
 
 
-def commcost(ni, nj, A, B):
+def communication_cost(ni, nj, A, B):
     if A == B:
         return 0
     else:
@@ -149,7 +156,23 @@ def commcost(ni, nj, A, B):
             return 0
 
 
-orders, jobson = schedule(dag, "abc", compcost, commcost)
-for eachP in sorted(orders):
-    print(eachP, orders[eachP])
-print(jobson)
+def main():
+    #: TODO: from dot to tuple
+    dag = {1: (2, 3, 4, 5, 6), 2: (8, 9), 3: (7,), 4: (8, 9), 5: (9,), 6: (8,), 7: (10,), 8: (10,), 9: (10,), 10: ()}
+
+    orders, jobson = schedule(dag, "abc", computation_cost, communication_cost)
+    for order in sorted(orders):
+        print(order, orders[order])
+
+    print(jobson)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    except QuietExit as e:
+        print(f"#> {e}")
+    except Exception as e:
+        print_tb(str(e))

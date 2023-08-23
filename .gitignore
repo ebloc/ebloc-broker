@@ -134,7 +134,6 @@ owncloudScripts/\.tar\.gz
 \.#package\.json
 package-lock\.json
 patch_*
-program.log
 *.py#
 ._README.md
 *.rst#
@@ -188,3 +187,4 @@ alper.html
 G*.dot
 workflow_job.dot
 job.png
+program.log

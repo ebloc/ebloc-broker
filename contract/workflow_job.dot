@@ -1,0 +1,35 @@
+strict digraph  {
+5;
+6;
+7;
+11;
+9;
+0;
+1;
+2;
+10;
+13;
+12;
+3;
+4;
+5 -> 6  [weight=57];
+5 -> 9  [weight=23];
+5 -> 13  [weight=74];
+7 -> 6  [weight=19];
+7 -> 1  [weight=82];
+11 -> 9  [weight=90];
+9 -> 1  [weight=63];
+9 -> 4  [weight=69];
+9 -> 12  [weight=89];
+9 -> 2  [weight=29];
+0 -> 1  [weight=17];
+0 -> 5  [weight=76];
+0 -> 10  [weight=84];
+0 -> 4  [weight=57];
+2 -> 10  [weight=14];
+12 -> 10  [weight=75];
+3 -> 9  [weight=97];
+4 -> 7  [weight=34];
+4 -> 12  [weight=6];
+4 -> 6  [weight=28];
+}

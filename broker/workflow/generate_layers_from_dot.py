@@ -28,18 +28,29 @@ def is_there_edges(G):
 def main():
     wf = Workflow()
     wf.read_dot("workflow_job.dot")
-    log(wf.topological_sort())
-    log(wf.topological_generations())
-    for item in enumerate(nx.topological_generations(wf.G)):
-        print(item)  # nodes in the layer can run in parallel
-        _G = nx.DiGraph()
-        for _item in item[1]:
-            _G.add_node(_item)
+    # log(wf.topological_sort())
+    # log(wf.topological_generations())
 
-        nx.nx_pydot.write_dot(_G, f"G{item[0]}.dot")
-        # (print(node) for node, out_degree in _G.out_degree() if out_degree == 0)
-        # print(is_there_edges(_G))
-        # breakpoint()  # DEBUG
+    job_number = 0
+    for item in wf.topological_generations():
+        if "\\n" in item:
+            item.remove("\\n")
+
+        job_number += len(item)
+        print(item)
+
+    print(job_number)
+    breakpoint()  # DEBUG
+    # for item in enumerate(nx.topological_generations(wf.G)):
+    #     print(item)  # nodes in the layer can run in parallel
+    # _G = nx.DiGraph()
+    # for _item in item[1]:
+    #     _G.add_node(_item)
+
+    # nx.nx_pydot.write_dot(_G, f"G{item[0]}.dot")
+    # (print(node) for node, out_degree in _G.out_degree() if out_degree == 0)
+    # print(is_there_edges(_G))
+    # breakpoint()  # DEBUG
 
     # for item in enumerate(nx.topological_generations(wf.G)):
     #     temp_G = G.copy()

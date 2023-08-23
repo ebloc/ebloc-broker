@@ -56,6 +56,22 @@ class Workflow:
         """
         return list(nx.topological_generations(self.G))
 
+    def number_of_nodes(self, verbose=False) -> int:
+        """Return number of nodes except counting '\\n'.
+
+        # G.number_of_nodes()
+        """
+        job_number = 0
+        for item in self.topological_generations():
+            if "\\n" in item:
+                item.remove("\\n")
+
+            job_number += len(item)
+            if verbose:
+                print(item)
+
+        return job_number
+
     def bfs_layers(self, _list) -> dict:
         """BFS Layers.
 

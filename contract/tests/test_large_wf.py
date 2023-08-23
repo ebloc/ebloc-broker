@@ -1,23 +1,22 @@
 #!/usr/bin/python3
 
+from broker._utils.yaml import Yaml
+from pathlib import Path
 import os
 import pytest
 import sys
 from os import path
-
-import brownie
+from broker.workflow.Workflow import Workflow
 import contract.tests.cfg as _cfg
 from broker import cfg, config
-from broker._utils._log import console_ruler
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
-from broker.lib import JOB
 from broker.utils import CacheID, StorageID, ipfs_to_bytes32, log
 from brownie import accounts, web3
 from brownie.network.state import Chain
-from contract.scripts.lib import gas_costs, mine, new_test
+from contract.scripts.lib import gas_costs, new_test
 from contract.tests.test_overall_eblocbroker import register_provider, register_requester
 
 # from brownie.test import given, strategy
@@ -101,7 +100,7 @@ def check_price_keys(price_keys, provider, code_hash):
 
 
 def get_bn():
-    log(f"block_number={web3.eth.blockNumber} | contract_bn={web3.eth.blockNumber + 1}")
+    log(f"bn={web3.eth.blockNumber} | contract_bn={web3.eth.blockNumber + 1}")
     return web3.eth.blockNumber
 
 
@@ -114,9 +113,113 @@ def test_dummy():
     pass
 
 
-def test_workflow():
+def calculate_cost(provider, requester, item, workflow_id, estimated_elapse_time, wf):
     job = Job()
+    job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
+    code_hash = ipfs_to_bytes32(job_key)
+    job.code_hashes = [code_hash]
+    job.cores = []
+    job.run_time = []
+    job.data_transfer_ins = []
+    job.storage_hours = [0]
+    job.data_transfer_ins = [1000]
+    job.data_transfer_out = 0
+    job.data_prices_set_block_numbers = [0]
+    job.storage_ids = [StorageID.IPFS.value]
+    job.cache_types = [CacheID.PUBLIC.value]
+    _item = [int(x) for x in item]
+    _item.sort()
+    for _id in _item:
+        job.cores.append(1)
+        # job.data_transfer_ins.append(code_size[_id])
+        job.run_time.append(estimated_elapse_time[_id])
+
+        #: https://stackoverflow.com/a/62100191/2402577
+        for _, v, w in wf.G.edges(str(_id), data=True):
+            # print(u, v, w["weight"])
+            if int(v) not in _item:
+                job.data_transfer_out += int(w["weight"])
+
+    job_price, cost = job.cost(provider, requester, is_verbose=True)
+    args = [
+        provider,
+        ebb.getProviderSetBlockNumbers(provider)[-1],
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+        job_price,
+        workflow_id,
+    ]
+    _transfer(requester, Cent(job_price))
+    log(f"job_price={float(Cent(job_price).to('usd'))} usd")
+    tx = ebb.submitJob(  # first job submit
+        job_key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester},
+    )
+    # for idx in range(0, len(job.cores)):
+    #     log(ebb.getJobInfo(provider, job_key, 0, idx))
+    # breakpoint()  # DEBUG
+
+
+def test_workflow():
+    yaml_fn = Path.home() / "ebloc-broker" / "contract" / "jobs.yaml"
+    yaml = Yaml(yaml_fn)
+    #
     provider = accounts[1]
     requester = accounts[2]
-    register_provider(available_core=128)
+    register_provider(available_core=128, prices=prices)
     register_requester(requester)
+
+    wf = Workflow()
+    wf.read_dot("workflow_job.dot")
+
+    log(wf.topological_sort())
+    log(wf.topological_generations())
+
+    estimated_elapse_time = {}
+    code_size = {}
+    # number_of_nodes = wf.number_of_nodes()
+    for idx, item in enumerate(yaml["jobs"]):
+        estimated_elapse_time[idx] = yaml["jobs"][item]["run_time"]
+        code_size[idx] = yaml["jobs"][item]["size"]
+
+    layer_list = []
+    inner_layer = []
+    flag_est_time = 0
+    thresehold = 120
+    for idx, item in enumerate(wf.topological_generations()):
+        if "\\n" in item:
+            item.remove("\\n")
+
+        max_est_time = 0
+        for job in item:
+            if estimated_elapse_time[int(job)] > max_est_time:
+                max_est_time = estimated_elapse_time[int(job)]
+
+        flag_est_time += max_est_time
+        if flag_est_time <= thresehold:
+            for job in item:
+                inner_layer.append(job)
+        else:
+            layer_list.append(inner_layer)
+            flag_est_time = max_est_time
+            inner_layer = []
+            for job in item:
+                inner_layer.append(job)
+
+    # for idx, item in enumerate(wf.topological_generations()):
+    for idx, item in enumerate(layer_list):
+        if "\\n" in item:
+            item.remove("\\n")
+
+        print(item)
+        workflow_id = idx
+        #: calculate the cost for each layer
+        calculate_cost(provider, requester, item, workflow_id, estimated_elapse_time, wf)
