@@ -249,6 +249,7 @@ def pre_check():
 
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
         msg = f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}"
+        msg = f"{msg}.\nRun 'eblocbroker init'"
         raise Terminate(msg)
 
 

@@ -154,9 +154,10 @@ def tools(bn):
                 )
 
             if not os.path.isdir(env.IPFS_REPO):
-                log(f"warning: {env.IPFS_REPO} repo does not exist")
+                log(f"warning: {env.IPFS_REPO} repo does not exist.")
                 try:
-                    output = run(["ipfs", "init"])
+                    log("Running: 'ipfs init --profile=lowpower'")
+                    output = run(["ipfs", "init", "--profile=lowpower"])
                     print(output)
                 except Exception:
                     raise QuietExit(f"E: {env.IPFS_REPO} repo does not exist")

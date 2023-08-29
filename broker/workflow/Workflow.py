@@ -88,6 +88,32 @@ class Workflow:
         """Create digraph."""
         self.G = nx.drawing.nx_pydot.read_dot(fn)
 
+    def dot_to_tuple(self):
+        """Convert from dot to tuple."""
+        dag = {}
+        for u, v, w in self.G.edges(data=True):
+            if u not in dag:
+                dag[u] = [v]
+            else:
+                dag[u].append(v)
+
+            # print(u, v, w["weight"])
+
+        return dag
+
+    def in_edges(self, _to):
+        output = []
+        for edge in self.G.in_edges(str(_to)):
+            output.append(int(edge[0]))
+
+        return output
+
+    def get_weight(self, _from, _to) -> int:
+        try:
+            return int(self.G.edges[str(_from), str(_to), 0]["weight"])
+        except:
+            return 0
+
     def is_there_edges(self) -> bool:
         """Check no outgoing edges in Graph or not
 

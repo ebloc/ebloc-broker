@@ -64,6 +64,10 @@ if __name__ == "__main__":
         # public IP should exists in the ipfs id
         ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_address, flags=re.DOTALL)
 
+    if "/85." in ipfs_address:
+        #: local-ip used for test purposes on home VM(s)
+        ipfs_address = get_ipfs_address()
+
     # ipfs_address = cfg.ipfs.local_ip_check(ipfs_address)
     try:
         if env.GMAIL:

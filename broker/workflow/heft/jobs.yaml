@@ -1,0 +1,71 @@
+jobs:
+  job1:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 14
+      p2: 16
+      p3: 9
+  job2:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 13
+      p2: 19
+      p3: 18
+  job3:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 11
+      p2: 13
+      p3: 19
+  job4:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 13
+      p2: 8
+      p3: 17
+  job5:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 12
+      p2: 13
+      p3: 10
+  job6:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 13
+      p2: 16
+      p3: 9
+  job7:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 7
+      p2: 15
+      p3: 11
+  job8:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 5
+      p2: 11
+      p3: 14
+  job9:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 18
+      p2: 12
+      p3: 20
+  job10:
+    run_time: 42
+    size: 100
+    cost:
+      p1: 21
+      p2: 7
+      p3: 16

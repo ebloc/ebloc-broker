@@ -1,23 +1,85 @@
 #!/usr/bin/env python3
 
+from broker._utils.yaml import Yaml
+from pathlib import Path
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
 from heft.core import schedule
+from broker.workflow.Workflow import Workflow
+from broker._utils._log import log
 
-#     wbar,
-#     cbar,
-#     ranku,
-#     schedule,
-#     Event,
-#     start_time,
-#     makespan,
-#     endtime,
-#     insert_recvs,
-#     insert_sends,
-#     insert_sendrecvs,
-#     recvs,
-#     sends,
-# )
+wf = Workflow()
+yaml_fn = Path.home() / "ebloc-broker" / "broker" / "workflow" / "heft" / "jobs.yaml"
+yaml = Yaml(yaml_fn)
+
+
+provider_id = {}
+provider_id["a"] = "p1"
+provider_id["b"] = "p2"
+provider_id["c"] = "p3"
+
+
+def computation_cost(job, agent):
+    return yaml["jobs"][f"job{job}"]["cost"][provider_id[agent]]
+
+
+def communication_cost(ni, nj, A, B):
+    if A == B:
+        return 0
+    else:
+        return wf.get_weight(ni, nj)
+
+
+def main():
+    slots = {}
+    wf.read_dot("job.dot")
+    dag = wf.dot_to_tuple()
+    orders, jobson = schedule(dag, "abc", computation_cost, communication_cost)
+    for key, _ in provider_id.items():
+        for order in orders[key]:
+            if key not in slots:
+                slots[key] = [int(order.job)]
+            else:
+                slots[key].append(int(order.job))
+
+    submitted_jobs = []
+    ##
+    batch_to_submit = []
+    for key, value in slots.items():
+        for v in value:
+            dependent_jobs = wf.in_edges(v)
+            flag = False
+            if dependent_jobs:
+                for dependent_job in dependent_jobs:
+                    if dependent_job not in slots[key]:
+                        flag = True
+                        break
+
+            if not flag:
+                batch_to_submit.append(v)
+
+    for job in batch_to_submit:
+        submitted_jobs.append(job)
+
+    # for order in sorted(orders):
+    #     # breakpoint()  # DEBUG
+    #     print(order, orders[order])
+    dependent_jobs = wf.in_edges(9)
+
+    breakpoint()  # DEBUG
+    log(slots)
+    log(jobson)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass
+    except QuietExit as e:
+        print(f"#> {e}")
+    except Exception as e:
+        print_tb(str(e))
 
 """
 This is a simple script to use the HEFT function provided based on the example given in the original HEFT paper.
@@ -35,144 +97,3 @@ Schedule:
 ('c', [Event(job=1, start=0, end=9), Event(job=3, start=9, end=28), Event(job=5, start=28, end=38), Event(job=7, start=38, end=49)])
 {1: 'c', 2: 'a', 3: 'c', 4: 'b', 5: 'c', 6: 'b', 7: 'c', 8: 'a', 9: 'b', 10: 'b'}
 """
-
-
-def computation_cost(job, agent):
-    # if agent == "a" or agent == "d" or agent == "o":
-    #     return 14
-    # elif agent == "b" or agent == "e" or agent == "r":
-    #     return 16
-    # else:
-    #     return 9
-
-    if job == 1:
-        if agent == "a":
-            return 14
-        elif agent == "b":
-            return 16
-        else:
-            return 9
-
-    if job == 2:
-        if agent == "a":
-            return 13
-        elif agent == "b":
-            return 19
-        else:
-            return 18
-    if job == 3:
-        if agent == "a":
-            return 11
-        elif agent == "b":
-            return 13
-        else:
-            return 19
-    if job == 4:
-        if agent == "a":
-            return 13
-        elif agent == "b":
-            return 8
-        else:
-            return 17
-    if job == 5:
-        if agent == "a":
-            return 12
-        elif agent == "b":
-            return 13
-        else:
-            return 10
-    if job == 6:
-        if agent == "a":
-            return 13
-        elif agent == "b":
-            return 16
-        else:
-            return 9
-    if job == 7:
-        if agent == "a":
-            return 7
-        elif agent == "b":
-            return 15
-        else:
-            return 11
-    if job == 8:
-        if agent == "a":
-            return 5
-        elif agent == "b":
-            return 11
-        else:
-            return 14
-    if job == 9:
-        if agent == "a":
-            return 18
-        elif agent == "b":
-            return 12
-        else:
-            return 20
-    if job == 10:
-        if agent == "a":
-            return 21
-        elif agent == "b":
-            return 7
-        else:
-            return 16
-
-
-def communication_cost(ni, nj, A, B):
-    if A == B:
-        return 0
-    else:
-        if ni == 1 and nj == 2:
-            return 18
-        if ni == 1 and nj == 3:
-            return 12
-        if ni == 1 and nj == 4:
-            return 9
-        if ni == 1 and nj == 5:
-            return 11
-        if ni == 1 and nj == 6:
-            return 14
-        if ni == 2 and nj == 8:
-            return 19
-        if ni == 2 and nj == 9:
-            return 16
-        if ni == 3 and nj == 7:
-            return 23
-        if ni == 4 and nj == 8:
-            return 27
-        if ni == 4 and nj == 9:
-            return 23
-        if ni == 5 and nj == 9:
-            return 13
-        if ni == 6 and nj == 8:
-            return 15
-        if ni == 7 and nj == 10:
-            return 17
-        if ni == 8 and nj == 10:
-            return 11
-        if ni == 9 and nj == 10:
-            return 13
-        else:
-            return 0
-
-
-def main():
-    #: TODO: from dot to tuple
-    dag = {1: (2, 3, 4, 5, 6), 2: (8, 9), 3: (7,), 4: (8, 9), 5: (9,), 6: (8,), 7: (10,), 8: (10,), 9: (10,), 10: ()}
-
-    orders, jobson = schedule(dag, "abc", computation_cost, communication_cost)
-    for order in sorted(orders):
-        print(order, orders[order])
-
-    print(jobson)
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        pass
-    except QuietExit as e:
-        print(f"#> {e}")
-    except Exception as e:
-        print_tb(str(e))

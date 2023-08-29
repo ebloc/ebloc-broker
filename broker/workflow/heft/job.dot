@@ -1,0 +1,59 @@
+strict digraph  {
+    1;
+    2;
+    3;
+    4;
+    5;
+    6;
+    7;
+    8;
+    9;
+    10;
+    1 -> 2 [weight=18];
+    1 -> 3 [weight=12];
+    1 -> 4 [weight=9];
+    1 -> 5 [weight=11];
+    1 -> 6 [weight=14];
+    2 -> 8 [weight=19];
+    2 -> 9 [weight=16];
+    3 -> 7 [weight=23];
+    4 -> 8 [weight=27];
+    4 -> 9 [weight=23];
+    5 -> 9 [weight=13];
+    6 -> 8 [weight=15];
+    7 -> 10 [weight=17];
+    8 -> 10 [weight=11];
+    9 -> 10 [weight=13];
+}
+
+
+// if ni == 1 and nj == 2:
+//     return 18  #
+// if ni == 1 and nj == 3:
+//     return 12  #
+// if ni == 1 and nj == 4:
+//     return 9  #
+// if ni == 1 and nj == 5:
+//     return 11  #
+// if ni == 1 and nj == 6:
+//     return 14  #
+// if ni == 2 and nj == 8:
+//     return 19  #
+// if ni == 2 and nj == 9:
+//     return 16  #
+// if ni == 3 and nj == 7:
+//     return 23
+// if ni == 4 and nj == 8:
+//     return 27
+// if ni == 4 and nj == 9:
+//     return 23
+// if ni == 5 and nj == 9:
+//     return 13
+// if ni == 6 and nj == 8:
+//     return 15
+// if ni == 7 and nj == 10:
+//     return 17
+// if ni == 8 and nj == 10:
+//     return 11
+// if ni == 9 and nj == 10:
+//     return 13
