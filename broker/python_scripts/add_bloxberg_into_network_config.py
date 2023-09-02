@@ -3,7 +3,7 @@
 import json
 import ruamel.yaml
 from pathlib import Path
-
+from broker import cfg
 from broker._utils._log import log
 
 
@@ -31,7 +31,8 @@ def bloxberg_dict(_id, url):
 
 def add_bloxberg_config():
     fn = Path.home() / ".brownie" / "network-config.yaml"
-    bloxberg_config = bloxberg_dict("bloxberg", "http://berg-cmpe-boun.duckdns.org:8545")
+
+    bloxberg_config = bloxberg_dict("bloxberg", cfg.BERG_CMPE_IP)
     bloxberg_config_core = bloxberg_dict("bloxberg_core", "https://core.bloxberg.org")
     bloxberg_config_core["name"] = "bloxberg"
     config_data, ind, bsi = ruamel.yaml.util.load_yaml_guess_indent(open(fn))

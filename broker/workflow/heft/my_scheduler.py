@@ -20,6 +20,12 @@ provider_id["c"] = "p3"
 
 
 def computation_cost(job, agent):
+    # if agent == "a":
+    #     return 20
+    # elif agent == "b":
+    #     return 18
+    # else:
+    #     return 15
     return yaml["jobs"][f"job{job}"]["cost"][provider_id[agent]]
 
 
@@ -32,6 +38,8 @@ def communication_cost(ni, nj, A, B):
 
 def main():
     slots = {}
+    # fn = "/home/alper/test_eblocbroker/test_data/base/source_code_wf_random/workflow_job.dot"
+    # wf.read_dot(fn)
     wf.read_dot("job.dot")
     dag = wf.dot_to_tuple()
     orders, jobson = schedule(dag, "abc", computation_cost, communication_cost)
@@ -61,12 +69,13 @@ def main():
     for job in batch_to_submit:
         submitted_jobs.append(job)
 
+    log(batch_to_submit)
+    # breakpoint()  # DEBUG
     # for order in sorted(orders):
     #     # breakpoint()  # DEBUG
     #     print(order, orders[order])
-    dependent_jobs = wf.in_edges(9)
 
-    breakpoint()  # DEBUG
+    # dependent_jobs = wf.in_edges(9)
     log(slots)
     log(jobson)
 

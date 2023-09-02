@@ -16,6 +16,7 @@ TX_TIMEOUT = 1800
 IS_THREAD_JOIN = False
 IS_FULL_TEST = False  # check whether the full-long test is applied
 IS_FIRST_CYCLE = True
+BERG_CMPE_IP = "79.123.176.66"
 
 TEST_JOB_COUNTER = 0
 

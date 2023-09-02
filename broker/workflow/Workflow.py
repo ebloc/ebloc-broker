@@ -101,18 +101,32 @@ class Workflow:
 
         return dag
 
+    def out_edges(self, _out):
+        output = []
+        for edge in self.G.out_edges(int(_out)):
+            output.append(int(edge[1]))
+
+        return output
+
     def in_edges(self, _to):
         output = []
         for edge in self.G.in_edges(str(_to)):
             output.append(int(edge[0]))
 
+        if not output:
+            for edge in self.G.in_edges(int(_to)):
+                output.append(int(edge[0]))
+
         return output
 
     def get_weight(self, _from, _to) -> int:
         try:
-            return int(self.G.edges[str(_from), str(_to), 0]["weight"])
+            return int(self.G.edges[int(_from), int(_to)]["weight"])
         except:
-            return 0
+            try:
+                return int(self.G.edges[str(_from), str(_to), 0]["weight"])
+            except:
+                return 0
 
     def is_there_edges(self) -> bool:
         """Check no outgoing edges in Graph or not
@@ -245,8 +259,10 @@ class Workflow:
         G = nx.DiGraph()
         while G.number_of_edges() < number_edges:
             start_node, end_node = random.sample(range(number_nodes), 2)
+            start_node += 1
+            end_node += 1
             #: ensure that node 0 is always a source (initial node)
-            if end_node == 0:
+            if end_node == 1:
                 start_node, end_node = end_node, start_node
 
             w = random.randint(1, 100)

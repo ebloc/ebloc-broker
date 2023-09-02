@@ -26,8 +26,10 @@ def is_there_edges(G):
 
 
 def main():
-    n = 15
-    edges = 20
+    n = 5
+    edges = 5
+    # n = 15
+    # edges = 20
     ############
     wf = Workflow()
     G = wf.generate_random_dag(n, edges)
@@ -40,7 +42,8 @@ def main():
         for _item in item[1]:
             _G.add_node(_item)
 
-        nx.nx_pydot.write_dot(_G, f"G{item[0]}.dot")
+        # nx.nx_pydot.write_dot(_G, f"G{item[0]}.dot")
+        #
         # (print(node) for node, out_degree in _G.out_degree() if out_degree == 0)
         # print(is_there_edges(_G))
         # breakpoint()  # DEBUG
@@ -66,7 +69,7 @@ def main():
 
     # https://networkx.org/documentation/stable/auto_examples/drawing/plot_weighted_graph.html
     ##############################################################
-    breakpoint()  # DEBUG
+    # breakpoint()  # DEBUG
     nx.nx_pydot.write_dot(wf.G, "workflow_job.dot")
     nx.draw_spring(wf.G, with_labels=True)
     plt.savefig("job.png")

@@ -26,8 +26,9 @@ def _run():
     __ https://gist.github.com/SomajitDey/25f2f7f2aae8ef722f77a7e9ea40cc7c#gistcomment-4022998
     """
     IPFS_BIN = "/usr/local/bin/ipfs"
-    ipfs_init_folder = _env.IPFS_REPO
-    if not os.path.isdir(ipfs_init_folder):
+    ipfs_repo_dir = _env.IPFS_REPO
+    # log(ipfs_repo_dir)
+    if not os.path.isdir(ipfs_repo_dir):
         print(run(["ipfs", "init"]))
 
     if not os.path.isfile(config.env.IPFS_LOG):
@@ -35,9 +36,9 @@ def _run():
 
     with daemon.DaemonContext():
         if cfg.IS_PRIVATE_IPFS:
-            env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": ipfs_init_folder}
+            env = {"LIBP2P_FORCE_PNET": "1", "IPFS_PATH": ipfs_repo_dir}
         else:
-            env = {"IPFS_PATH": ipfs_init_folder}
+            env = {"IPFS_PATH": ipfs_repo_dir}
 
         cmd = [IPFS_BIN, "daemon", "--migrate", "--enable-gc"]
         if not is_docker():

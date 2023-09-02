@@ -227,6 +227,14 @@ class Job:
             self.cache_types.append(CACHE_TYPES[cache_type])
             self.source_code_path = Path(os.path.expanduser(self.cfg["config"]["source_code"]["path"]))
             size_mb = calculate_size(self.source_code_path)
+
+            try:
+                if self.cfg["config"]["dt_in"] > 0:
+                    #: for the test purpose
+                    size_mb = self.cfg["config"]["dt_in"]
+            except:
+                pass
+
             self.paths.append(self.source_code_path)
             self.data_transfer_ins.append(size_mb)
             self.storage_hours.append(self.cfg["config"]["source_code"]["storage_hours"])
@@ -346,9 +354,11 @@ class Job:
         else:
             providers_list = self.Ebb.get_providers()
 
+        self.cfg["config"]["costs"] = {}
         for provider in providers_list:
             try:
                 _price, *_ = self.cost(provider, requester, is_verbose)
+                self.cfg["config"]["costs"][provider] = _price
                 price_list.append(_price)
                 print()
                 # log(f" * provider={provider} | price={Cent(_price)._to()} usd")

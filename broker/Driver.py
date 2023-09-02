@@ -589,7 +589,7 @@ def reconnect():
         cfg.NETWORK_ID = "bloxberg_core"
     elif cfg.NETWORK_ID == "bloxberg_core":
         with suppress(Exception):
-            nc("berg-cmpe-boun.duckdns.org", 8545)
+            nc(cfg.BERG_CMPE_IP, 8545)
             cfg.NETWORK_ID = "bloxberg"
 
     log(f"Trying at {cfg.NETWORK_ID} ...")

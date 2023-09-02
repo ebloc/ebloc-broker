@@ -81,7 +81,7 @@ def connect_to_eblocbroker() -> None:
                         cfg.NETWORK_ID = "bloxberg_core"
                     elif cfg.NETWORK_ID == "bloxberg_core":
                         with suppress(Exception):
-                            nc("berg-cmpe-boun.duckdns.org", 8545)
+                            nc(cfg.BERG_CMPE_IP, 8545)
                             log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg. ", end="")
                             cfg.NETWORK_ID = "bloxberg"
 
