@@ -281,7 +281,7 @@ def test_cost_1():
     dt_out = 0
     _args = [
         0,  # index
-        0,  # jobId
+        0,  # jobID
         1681003991,  # endTimestamp
         dt_in,
         dt_out,

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import networkx as nx
 import base64
 import getpass
 import os
@@ -233,8 +234,14 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * requester_id_address={self.requester_id_address}")
         log(f" * received={self.job_info['received']}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
-        if os.path.isfile(self.results_folder / "workflow_job.dot"):
-            self.is_workflow = True
+        # if os.path.isfile(self.results_folder / "workflow_job.dot"):
+        #     self.is_workflow = True
+
+        dot_fn = self.results_folder / "sub_workflow_job.dot"
+        if os.path.isfile(dot_fn):
+            G = nx.drawing.nx_pydot.read_dot(dot_fn)
+            if len(G.nodes) == 1:
+                self.is_workflow = False
 
         with suppress(Exception):
             log(psutil.Process(int(self.job_state_running_pid)))
@@ -480,7 +487,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             # sleep here so this loop is not keeping CPU busy due to
             # start_code tx may deploy late into the blockchain.
             log(
-                f"==> {br(attempt)} start_code tx of the job is not obtained yet, "
+                f"==> {br(attempt)} start_code tx of the job (jobid={self.jobid}) is not obtained yet, "
                 f"waiting for {sleep_time} seconds to pass...",
                 end="",
             )
@@ -529,7 +536,11 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         log()
         run_time = self.job_info["run_time"]
-        log(f"==> requested_run_time={run_time[self.jobid]} minutes")
+        if self.is_workflow:
+            log(f"==> requested_run_time={run_time[self.jobid]} minutes")
+        else:
+            log(f"==> requested_run_time={run_time[0]} minutes")
+
         try:
             if self.job_state_running_tx:
                 Ebb._wait_for_transaction_receipt(self.job_state_running_tx)
@@ -563,8 +574,12 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.sacct_result()
         self.end_timestamp = slurm.get_job_end_timestamp(self.slurm_job_id)
         self.elapsed_time = slurm.get_elapsed_time(self.slurm_job_id)
-        if self.elapsed_time > int(run_time[self.jobid]):
-            self.elapsed_time = run_time[self.jobid]
+        if self.is_workflow:
+            if self.elapsed_time > int(run_time[self.jobid]):
+                self.elapsed_time = run_time[self.jobid]
+        else:
+            if self.elapsed_time > int(run_time[0]):
+                self.elapsed_time = run_time[0]
 
         log(f"finalized_elapsed_time={self.elapsed_time}")
         log("==> [yellow]job_info=", end="")

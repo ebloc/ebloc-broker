@@ -2,7 +2,7 @@
 
 import sys
 from contextlib import suppress
-
+import time
 from broker import cfg
 from broker._utils.tools import is_byte_str_zero, log, print_tb
 from broker.config import env
@@ -28,17 +28,31 @@ def get_provider_info(self, provider):
         bn = Ebb.get_block_number()
         prices_set_block_numbers = self.get_provider_prices_blocks(provider)
         block_read_from, provider_prices = self._get_provider_info(provider, prices_set_block_numbers[-1])
-        _event_filter = self._eblocbroker.events.LogProviderInfo.createFilter(
-            fromBlock=int(prices_set_block_numbers[0]),
-            # toBlock=int(block_read_from) + 1,
-            argument_filters={"provider": provider},
-        )
-        event_filter = {}
-        for idx in range(len(_event_filter.get_all_entries()) - 1, -1, -1):
-            # in lists [-1] indicated the most recent emitted event
-            for key in _event_filter.get_all_entries()[idx].args:
+        counter = 0
+        while True:
+            _event_filter = self._eblocbroker.events.LogProviderInfo.createFilter(
+                fromBlock=int(prices_set_block_numbers[0]),
+                # toBlock=int(block_read_from) + 1,
+                argument_filters={"provider": provider},
+            )
+            event_filter = {}
+            try:
+                all_entries = _event_filter.get_all_entries()
+                break
+            except Exception as e:
+                log(f"Trying to fetch provider info... {e}")
+                time.sleep(5 + counter)
+                counter += 1
+                continue
+
+            if counter > 5:
+                raise Exception("")
+
+        #: in lists [-1] indicated the most recent emitted event
+        for idx in range(len(all_entries) - 1, -1, -1):
+            for key in all_entries[idx].args:
                 if key not in event_filter:
-                    event_filter[key] = _event_filter.get_all_entries()[idx].args[key]
+                    event_filter[key] = all_entries[idx].args[key]
 
         for key in ["gmail", "ipfsID", "fID", "gpgFingerprint"]:
             if key not in event_filter:

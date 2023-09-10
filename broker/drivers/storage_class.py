@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import networkx as nx
 import json
 import os
 import subprocess
@@ -113,8 +114,7 @@ class Storage(BaseClass):
                 else:
                     with cd(self.results_folder):
                         try:
-                            job_id = _run_as_sudo(env.SLURMUSER, cmd, shell=True)
-                            return job_id
+                            return _run_as_sudo(env.SLURMUSER, cmd, shell=True)
                         except Exception as e:
                             if "Invalid account" in str(e):
                                 remove_user(env.SLURMUSER)
@@ -347,7 +347,16 @@ class Storage(BaseClass):
         source_code_idx = 0  # 0 indicated maps to source_sode
         main_cloud_storage_id = self.logged_job.args["cloudStorageID"][source_code_idx]
         job_info = self.job_infos[0]
-        job_id = 0  # base job_id for them workflow
+        dot_fn = self.results_folder / "sub_workflow_job.dot"
+        if os.path.isfile(dot_fn):
+            G = nx.drawing.nx_pydot.read_dot(dot_fn)
+            if len(G.nodes) == 1:
+                for node in list(G.nodes):
+                    self.job_id = 0
+                    break
+        else:
+            self.job_id = 0  # base job_id within the workflow
+
         job_bn = self.logged_job.blockNumber
         date = (
             subprocess.check_output(  # cmd: date --date=1 seconds +%b %d %k:%M:%S %Y
@@ -415,17 +424,19 @@ class Storage(BaseClass):
             )
             breakpoint()  # DEBUG
         else:
-            jobid = 0
             file_to_run = f"{self.results_folder}/run.sh"
             #: separator character is "~"
-            sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
+            sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{self.job_id}.sh"
+            if not self.is_workflow:
+                jobid = 0
+
             self.run_wrapper(file_to_run, sbatch_file_path)
             job_core_num = str(job_info["core"][jobid])
             #: client's requested seconds to run his/her job, 1 minute additional given
             execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
             d = datetime(1, 1, 1) + execution_time_second
             time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-            log(f"==> time_limit={time_limit} | requested_core_num={job_core_num}")
+            log(f"==> time_limit=[cy]{time_limit}[/cy] | requested_core_num={job_core_num}")
             #: give permission to user that will send jobs to Slurm
             subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
             #: sbatch and update time limit

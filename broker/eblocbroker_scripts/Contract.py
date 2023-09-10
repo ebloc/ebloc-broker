@@ -365,12 +365,14 @@ class Contract(Base):
                 else:
                     raise Exception()
 
-                return method(*args, self.ops)
+                return method(*args, self.ops)  ###################
             else:
                 method = getattr(self.eBlocBroker.functions, func)
                 return method(*args).transact(self.ops)
         except AttributeError as e:
             raise Exception(f"Method {method} is not implemented") from e
+        # except Exception as e:
+        #     breakpoint()  # DEBUG
 
     def timeout_wrapper(self, method, contract, *args):
         idx = 0

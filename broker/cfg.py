@@ -17,7 +17,7 @@ IS_THREAD_JOIN = False
 IS_FULL_TEST = False  # check whether the full-long test is applied
 IS_FIRST_CYCLE = True
 BERG_CMPE_IP = "79.123.176.66"  # "berg-cmpe-boun.duckdns.org" #= may be down once in a while
-
+NETWORK_ID = "bloxberg"
 TEST_JOB_COUNTER = 0
 
 RECONNECT_ATTEMPTS: int = 5
@@ -29,8 +29,6 @@ IPFS_TIMEOUT: int = 300
 IS_SEARCH_BEST_PROVIDER_VERBOSE = True
 TEST_PROVIDERS = None
 TX_LOG_VERBOSE = False
-NETWORK_ID = "bloxberg"
-
 IS_IN_DOCKER = None
 
 

@@ -28,7 +28,7 @@ def _run():
     IPFS_BIN = "/usr/local/bin/ipfs"
     ipfs_repo_dir = _env.IPFS_REPO
     # log(ipfs_repo_dir)
-    if not os.path.isdir(ipfs_repo_dir):
+    if ipfs_repo_dir and not os.path.isdir(ipfs_repo_dir):
         print(run(["ipfs", "init"]))
 
     if not os.path.isfile(config.env.IPFS_LOG):

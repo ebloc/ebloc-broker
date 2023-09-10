@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from typing import List
 from contextlib import suppress
 import networkx as nx
 from broker._utils.yaml import Yaml
@@ -9,9 +10,14 @@ from broker.errors import QuietExit
 from heft.core import schedule
 from broker.workflow.Workflow import Workflow
 from broker._utils._log import log
+from broker.eblocbroker_scripts.job import Job
+from broker.ipfs.submit import submit_ipfs
 
+
+BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
 wf = Workflow()
-yaml_fn = Path.home() / "test_eblocbroker" / "test_data/base" / "source_code_wf_random" / "jobs.yaml"
+yaml_fn = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random" / "jobs.yaml"
+yaml_fn_wf = Path.home() / "ebloc-broker" / "broker" / "test_setup_w" / "job_workflow.yaml"
 yaml = Yaml(yaml_fn)
 
 provider_id = {}
@@ -35,6 +41,12 @@ class Ewe:
     def __init__(self) -> None:
         self.slots = {}  # type: ignore
         self.batch_to_submit = {}  # type: ignore
+        #
+        self.submitted: List[int] = []
+        self.running: List[int] = []
+        self.completed: List[int] = []
+        self.ready: List[int] = []
+        self.remaining: List[int] = []
 
     def set_batch_to_submit(self) -> None:
         self.batch_to_submit = {}
@@ -54,9 +66,67 @@ class Ewe:
 
                     self.batch_to_submit[key].append(v)
 
+    def batch_submit(self):
+        for batch_key in self.batch_to_submit:
+            G_copy = wf.G.copy()
+            yaml_cfg = Yaml(yaml_fn_wf)
+            yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
+            g_list = []
+            for node in list(wf.G.nodes):
+                if node != "\\n" and int(node) not in self.batch_to_submit[batch_key]:
+                    g_list.append(node)
+
+            with suppress(Exception):
+                G_copy.remove_node("\\n")
+
+            for key in g_list:
+                G_copy.remove_node(key)
+
+            nx.nx_pydot.write_dot(G_copy, BASE / "sub_workflow_job.dot")
+            if len(self.batch_to_submit[batch_key]) == 1:
+                node = self.batch_to_submit[batch_key][0]
+                yaml_cfg["config"]["jobs"] = {}
+                yaml_cfg["config"]["jobs"][f"job{node}"]["cores"] = 1
+                yaml_cfg["config"]["jobs"][f"job{node}"]["run_time"] = yaml["config"]["jobs"][f"job{node}"]["run_time"]
+                yaml_cfg["config"]["dt_in"] = yaml["config"]["jobs"][f"job{node}"]["dt_in"]
+                yaml_cfg["config"]["data_transfer_out"] = yaml["config"]["jobs"][f"job{node}"]["dt_out"]
+            elif self.batch_to_submit[batch_key]:
+                continue  # DELETEME
+                sink_nodes = []
+                for node in list(G_copy.nodes):
+                    in_edges = G_copy.in_edges(node)
+                    # print(f"{node} => {in_edges}")
+                    if not in_edges:
+                        sink_nodes.append(node)
+
+                yaml_cfg["config"]["jobs"] = {}
+                yaml_cfg["config"]["dt_in"] = 200
+                yaml_cfg["config"]["data_transfer_out"] = 0
+                #: should start from the first job
+                for node in list(G_copy.nodes):
+                    yaml_cfg["config"]["jobs"][f"job{node}"]["cores"] = 1
+                    yaml_cfg["config"]["jobs"][f"job{node}"]["run_time"] = yaml["config"]["jobs"][f"job{node}"][
+                        "run_time"
+                    ]
+                    yaml_cfg["config"]["data_transfer_out"] += yaml["config"]["jobs"][f"job{node}"]["dt_out"]
+                    if node in sink_nodes:
+                        yaml_cfg["config"]["dt_in"] += yaml["config"]["jobs"][f"job{node}"]["dt_in"] - 200
+
+                #: subtract inner edge weight from dt_out since its in the same graph
+                for u, v, d in G_copy.edges(data=True):
+                    yaml_cfg["config"]["data_transfer_out"] -= int(d["weight"])
+                    # print(u, v, d)
+
+            job = Job()
+            job.set_config(yaml_fn_wf)
+            submit_ipfs(job)
+            for node in list(G_copy.nodes):
+                self.submitted.append(node)
+            else:
+                breakpoint()  # DEBUG
+
 
 def main():
-    BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
     ewe = Ewe()
 
     slots = {}
@@ -73,36 +143,20 @@ def main():
                 slots[key].append(int(order.job))
 
     log(slots)
-
+    #
     ewe.slots = slots
     ewe.set_batch_to_submit()
     log(ewe.batch_to_submit)
+    ewe.batch_submit()
+    # re-organize slots
+    while True:
+        breakpoint()  # DEBUG
 
-    for batch_key in ewe.batch_to_submit:
-        G_copy = wf.G.copy()
-        if ewe.batch_to_submit[batch_key]:
-            g_list = []
-            for node in list(wf.G.nodes):
-                if node != "\\n" and int(node) not in ewe.batch_to_submit[batch_key]:
-                    g_list.append(node)
-
-            with suppress(Exception):
-                G_copy.remove_node("\\n")
-
-            for key in g_list:
-                G_copy.remove_node(key)
-
-            nx.nx_pydot.write_dot(G_copy, BASE / "sub_workflow_job.dot")
-            breakpoint()  # DEBUG
-            # submit job
+        # submit job
 
     ##########################################################################################
     submitted_jobs = []
     while True:
-        running = []
-        completed = []
-        ready = []
-        remaining = []
         """
         for iterate jobs:
             # fill lists into temp

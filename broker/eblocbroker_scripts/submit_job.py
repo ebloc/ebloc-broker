@@ -131,6 +131,7 @@ def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, 
         raise e
 
     self.check_before_submit(provider, _from, provider_info, key, job)
+    workflow_id = 0
     args = [
         provider,
         self._get_provider_set_block_numbers(provider),
@@ -141,6 +142,7 @@ def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, 
         job.run_time,
         job.data_transfer_out,
         job.price,
+        workflow_id,
     ]
     job.print_before_submit()
     try:

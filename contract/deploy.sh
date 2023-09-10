@@ -6,7 +6,7 @@ main () {
         printf "#> something is wrong:\n${output}"
         return
     else
-        network="bloxberg"  # "eblocpoa"
+        network="bloxberg_core"  # "eblocpoa"
         echo -e "## network="$network
         rm -rf build/
         brownie compile

@@ -371,6 +371,7 @@ def get_job_info(
                 self.job_info.update({"processPayment_dataTransferOut_input": output[1][1][4]})
                 self.job_info.update({"processPayment_elapsedTime_input": output[1][1][5]})
                 break
+
     except Exception as e:
         raise e
 

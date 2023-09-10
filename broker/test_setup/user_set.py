@@ -9,6 +9,7 @@ providers = [
 
 dummy_provider = "0x1926b36af775e1312fdebcc46303ecae50d945af"
 requesters = [  # should not contain providers
+    "0x72c1a89ff3606aa29686ba8d29e28dccff06430a",
     "0x378181ce7b07e8dd749c6f42772574441b20e35f",
     "0x4cd57387cc4414be8cece4e6ab84a7dd641eab25",
     "0x02a07535bc88f180ecf9f7c6fd66c0c8941fd7ab",
@@ -103,7 +104,6 @@ requesters = [  # should not contain providers
     "0x1d16cfb236f5830875716c86f600dd2ee7456515",
     "0xe2969f599cb904e9a808ec7218bc14fcfa346965",
     "0x0636278cbd420368b1238ab204b1073df9cc1c5c",
-    "0x72c1a89ff3606aa29686ba8d29e28dccff06430a",
     "0x168cb3240a429c899a74aacda4289f4658ec924b",
     "0x08b003717bfab7a80b17b51c32223460fe9efe2a",
     "0x4aae9220409e1c4d74ac95ba14edb0684a431379",
