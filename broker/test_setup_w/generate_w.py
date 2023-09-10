@@ -8,7 +8,6 @@ from broker._utils.yaml import Yaml
 from pathlib import Path
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
-from broker._utils._log import log
 import shutil
 import random
 
@@ -27,9 +26,8 @@ def main():
     yaml_fn = BASE / "jobs.yaml"
     yaml = Yaml(yaml_fn)
     yaml["config"] = {}
-    #
-    n = job_num = 10
-    edges = job_num * 1.5
+    n = job_num = 6
+    edges = 8
     for fn in BASE.glob("job*.sh"):
         fn.unlink()  # deletes the file
 
@@ -46,9 +44,11 @@ def main():
     wf = Workflow()
     wf.G = wf.generate_random_dag(n, edges)
     nx.nx_pydot.write_dot(wf.G, BASE / "workflow_job.dot")
+
     nx.draw_spring(wf.G, with_labels=True)
     plt.savefig(BASE / "job.png")
     base_size = 200
+    base_dt_out_size = 250
     for i in range(1, job_num + 1):
         sleep_dur = random.randint(15, 30)
         shutil.copyfile("base.sh", BASE / f"job{i}.sh")
@@ -62,7 +62,10 @@ def main():
         for edge in wf.out_edges(i):
             dt_out += wf.get_weight(i, edge)
 
-        _job["dt_out"] = dt_out
+        if dt_out:
+            _job["dt_out"] = dt_out
+        else:
+            _job["dt_out"] = base_dt_out_size
 
         dt_in = 200  # base
         for edge in wf.in_edges(i):

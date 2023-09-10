@@ -24,21 +24,33 @@ def get_requester_info(self, requester):
         event_filter = self._eblocbroker.events.LogRequester.createFilter(
             fromBlock=int(block_read_from), toBlock=int(block_read_from) + 1
         )
-        gpg_fingerprint = event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+        balance = int(Cent(self.get_balance(requester)).to("usd"))
+        try:
+            gpg_fingerprint = (
+                event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+            )
+            requester_info = {
+                "address": requester.lower(),
+                "block_read_from": block_read_from,
+                "gmail": event_filter.get_all_entries()[0].args["gmail"],
+                "gpg_fingerprint": gpg_fingerprint,
+                "ipfs_address": event_filter.get_all_entries()[0].args["ipfsID"],
+                "f_id": event_filter.get_all_entries()[0].args["fID"],
+                "is_orcid_verified": self.is_orcid_verified(requester),
+                "balance_usd": balance,
+            }
+        except:
+            requester_info = {
+                "address": requester.lower(),
+                "block_read_from": block_read_from,
+                "gmail": "",
+                "gpg_fingerprint": "",
+                "ipfs_address": "",
+                "f_id": "",
+                "is_orcid_verified": self.is_orcid_verified(requester),
+                "balance_usd": balance,
+            }
 
-        balance = self.get_balance(requester)
-        _b = int(Cent(balance).to("usd"))
-
-        requester_info = {
-            "address": requester.lower(),
-            "block_read_from": block_read_from,
-            "gmail": event_filter.get_all_entries()[0].args["gmail"],
-            "gpg_fingerprint": gpg_fingerprint,
-            "ipfs_address": event_filter.get_all_entries()[0].args["ipfsID"],
-            "f_id": event_filter.get_all_entries()[0].args["fID"],
-            "is_orcid_verified": self.is_orcid_verified(requester),
-            "balance_usd": _b,
-        }
         if not is_byte_str_zero(orc_id):
             requester_info["orc_id"] = orc_id.decode("utf-8").replace("\x00", "")
 
@@ -51,7 +63,7 @@ def get_requester_info(self, requester):
 if __name__ == "__main__":
     Ebb = cfg.Ebb
     if len(sys.argv) == 1:
-        requester = "0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49"
+        requester = "0x72c1a89ff3606aa29686ba8d29e28dccff06430a"
     elif len(sys.argv) == 2:
         requester = str(sys.argv[1])
 

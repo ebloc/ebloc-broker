@@ -16,7 +16,7 @@ TX_TIMEOUT = 1800
 IS_THREAD_JOIN = False
 IS_FULL_TEST = False  # check whether the full-long test is applied
 IS_FIRST_CYCLE = True
-BERG_CMPE_IP = "79.123.176.66"
+BERG_CMPE_IP = "79.123.176.66"  # "berg-cmpe-boun.duckdns.org" #= may be down once in a while
 
 TEST_JOB_COUNTER = 0
 

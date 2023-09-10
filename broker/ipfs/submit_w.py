@@ -29,9 +29,9 @@ ipfs = cfg.ipfs
 
 
 cfg.TEST_PROVIDERS = [
-    "0x29e613B04125c16db3f3613563bFdd0BA24Cb629",
-    "0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24",
-    "0xE2e146d6B456760150d78819af7d276a1223A6d4",
+    "0x29e613B04125c16db3f3613563bFdd0BA24Cb629",  # leo
+    "0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24",  # leo1
+    "0xe2e146d6B456760150d78819af7d276a1223A6d4",  # leo2
 ]
 
 
@@ -152,7 +152,6 @@ def main():
     BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
     yaml_fn_jobs = BASE / "jobs.yaml"
     yaml_jobs = Yaml(yaml_fn_jobs)
-
     for _job in yaml_jobs["config"]["jobs"]:
         job = Job()
         my_job = yaml_jobs["config"]["jobs"][_job]

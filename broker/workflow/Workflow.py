@@ -103,8 +103,11 @@ class Workflow:
 
     def out_edges(self, _out):
         output = []
-        for edge in self.G.out_edges(int(_out)):
-            output.append(int(edge[1]))
+        try:
+            for edge in self.G.out_edges(int(_out)):
+                output.append(int(edge[1]))
+        except:
+            return []
 
         return output
 
@@ -113,9 +116,12 @@ class Workflow:
         for edge in self.G.in_edges(str(_to)):
             output.append(int(edge[0]))
 
-        if not output:
-            for edge in self.G.in_edges(int(_to)):
-                output.append(int(edge[0]))
+        try:
+            if not output:
+                for edge in self.G.in_edges(int(_to)):
+                    output.append(int(edge[0]))
+        except:
+            return []
 
         return output
 
@@ -261,11 +267,11 @@ class Workflow:
             start_node, end_node = random.sample(range(number_nodes), 2)
             start_node += 1
             end_node += 1
-            #: ensure that node 0 is always a source (initial node)
+            #: ensure that starting node 1 is always a source (initial node)
             if end_node == 1:
                 start_node, end_node = end_node, start_node
 
-            w = random.randint(1, 100)
+            w = random.randint(1, 100)  # weight
             G.add_edge(start_node, end_node, weight=w)
             if not nx.is_directed_acyclic_graph(G):
                 G.remove_edge(start_node, end_node)

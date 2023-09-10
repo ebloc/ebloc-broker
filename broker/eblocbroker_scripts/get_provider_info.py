@@ -44,8 +44,12 @@ def get_provider_info(self, provider):
             if key not in event_filter:
                 event_filter[key] = ""
 
-        #: removes padding 24 zeros at the beginning
-        gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+        if event_filter["gpgFingerprint"]:
+            #: removes padding 24 zeros at the beginning
+            gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+        else:
+            gpg_fingerprint = ""
+
         provider_info = {
             "address": provider,
             "is_orcid_verified": self.is_orcid_verified(provider),
