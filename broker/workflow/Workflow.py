@@ -14,6 +14,7 @@ class Workflow:
 
     def __init__(self, G=None) -> None:
         self.job_ids = {}  # type: ignore
+        self.job_map = {}
         self.G = G
         self.options = {
             "node_color": "lightblue",
@@ -125,6 +126,14 @@ class Workflow:
 
         return output
 
+    def G_sorted(self):
+        my_list = []
+        for node in list(self.G.nodes):
+            if node != "\\n":
+                my_list.append(int(node))
+
+        return sorted(my_list)
+
     def get_weight(self, _from, _to) -> int:
         try:
             return int(self.G.edges[int(_from), int(_to)]["weight"])
@@ -166,7 +175,7 @@ class Workflow:
         if self.job_name == "job":
             time_limit = "0-0:2"
         else:
-            time_limit = self.time_limits[int(i)]
+            time_limit = self.time_limits[self.job_map[int(i)]]
 
         if not len(set(self.G.predecessors(i))):
             job_id = self.not_dependent_submit_job(i, slurm)
@@ -188,11 +197,11 @@ class Workflow:
         if self.job_name == "job":
             core_num = 1
         else:
-            core_num = self.core_numbers[int(i)]
+            core_num = self.core_numbers[self.job_map[int(i)]]
 
-        log(f"$ sbatch -n {core_num} {self.job_name}{i}.sh", "blue", is_code=True, width=250)
+        log(f"$ sbatch -n {core_num} {self.job_name}{self.job_map[int(i)]}.sh", "blue", is_code=True, width=250)
         if slurm:
-            cmd = ["sbatch", "-n", core_num, f"{self.job_name}{i}.sh"]
+            cmd = ["sbatch", "-n", core_num, f"{self.job_name}{self.job_map[int(i)]}.sh"]
             output = run(cmd)
             print(output)
             job_id = int(output.split(" ")[3])
@@ -204,7 +213,7 @@ class Workflow:
         if self.job_name == "job":
             core_num = 1
         else:
-            core_num = self.core_numbers[int(i)]
+            core_num = self.core_numbers[self.job_map[int(i)]]
 
         if len(predecessors) == 1:
             if not predecessors[0] in self.job_ids:
@@ -212,7 +221,7 @@ class Workflow:
                 self.dependency_job(predecessors[0], slurm)
 
             log(
-                f"$ sbatch -n {core_num} --dependency=afterok:{self.job_ids[predecessors[0]]} {self.job_name}{i}.sh",
+                f"$ sbatch -n {core_num} --dependency=afterok:{self.job_ids[predecessors[0]]} {self.job_name}{self.job_map[int(i)]}.sh",
                 "blue",
                 is_code=True,
                 width=250,
@@ -223,7 +232,7 @@ class Workflow:
                     "-n",
                     core_num,
                     f"--dependency=afterok:{self.job_ids[predecessors[0]]}",
-                    f"{self.job_name}{i}.sh",
+                    f"{self.job_name}{self.job_map[int(i)]}.sh",
                 ]
                 output = run(cmd)
                 print(output)
@@ -241,7 +250,7 @@ class Workflow:
 
             job_id_str = job_id_str[:-1]
             log(
-                f"$ sbatch -n {core_num} --dependency=afterok:{job_id_str} {self.job_name}{i}.sh",
+                f"$ sbatch -n {core_num} --dependency=afterok:{job_id_str} {self.job_name}{self.job_map[int(i)]}.sh",
                 "blue",
                 is_code=True,
                 width=250,
@@ -252,7 +261,7 @@ class Workflow:
                     "-n",
                     core_num,
                     f"--dependency=afterok:{job_id_str}",
-                    f"{self.job_name}{i}.sh",
+                    f"{self.job_name}{self.job_map[int(i)]}.sh",
                 ]
                 output = run(cmd)
                 print(output)
@@ -294,7 +303,11 @@ class Workflow:
             if idx != "\\n" and depended_nodes:
                 print(f"{idx} => {depended_nodes}")
 
-        print()
+        for idx, node in enumerate(list(self.G_sorted())):
+            if node != "\\n":
+                self.job_map[int(node)] = idx
+
+        print(self.job_map)
         for idx in list(self.G.nodes):
             if idx != "\\n" and idx not in self.job_ids:
                 self.dependency_job(idx, slurm=True)

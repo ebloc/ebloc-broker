@@ -400,29 +400,37 @@ class Storage(BaseClass):
             time.sleep(0.25)
 
         if self.is_workflow:
-            time_limit_arr = []
-            for jobid in range(len(job_info["core"])):
-                sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
-                file_to_run = f"{self.results_folder}/job{jobid}.sh"
-                self.run_wrapper(file_to_run, sbatch_file_path)
-                execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
-                d = datetime(1, 1, 1) + execution_time_second
-                time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-                time_limit_arr.append(time_limit)
-                # log(f"==> time_limit={time_limit}")
-
             w = Workflow()
+            if os.path.isfile(self.results_folder / "sub_workflow_job.dot"):
+                dot_fn = self.results_folder / "sub_workflow_job.dot"
+            else:
+                dot_fn = self.results_folder / "workflow_job.dot"
+
+            w.read_dot(dot_fn)
+            time_limit_arr = []
+            # for jobid in range(len(job_info["core"])):
+            for jobid, node in enumerate(list(w.G_sorted())):
+                if node != "\\n":
+                    sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
+                    file_to_run = f"{self.results_folder}/job{node}.sh"
+                    self.run_wrapper(file_to_run, sbatch_file_path)
+                    execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
+                    d = datetime(1, 1, 1) + execution_time_second
+                    time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
+                    time_limit_arr.append(time_limit)
+                    # log(f"==> time_limit={time_limit}")
+
             #: give permission to user that will send jobs to Slurm
             subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
-            w.sbatch_from_dot(
-                self.results_folder / "workflow_job.dot",
-                f"{self.results_folder}/{job_key}",
-                index,
-                job_bn,
-                core_numbers=job_info["core"],
-                time_limits=time_limit_arr,
-            )
-            breakpoint()  # DEBUG
+            with cd(self.results_folder):
+                w.sbatch_from_dot(
+                    dot_fn,
+                    f"{self.results_folder}/{job_key}",
+                    index,
+                    job_bn,
+                    core_numbers=job_info["core"],
+                    time_limits=time_limit_arr,
+                )
         else:
             file_to_run = f"{self.results_folder}/run.sh"
             #: separator character is "~"

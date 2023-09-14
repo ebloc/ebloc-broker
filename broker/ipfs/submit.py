@@ -105,6 +105,7 @@ def _submit(provider_addr, job, requester, targets, required_confs):
                     job.info = vars(processed_logs[0].args)
                     log("[y]job_info=[/y]", end="")
                     log(job.info)
+                    job.info["blockNumber"] = tx_receipt["blockNumber"]
 
                 for target in targets:
                     if ".tar.gz.gpg" in str(target):

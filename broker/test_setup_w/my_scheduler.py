@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import time
+from broker.lib import state
 from typing import List
 from contextlib import suppress
 import networkx as nx
@@ -12,6 +14,8 @@ from broker.workflow.Workflow import Workflow
 from broker._utils._log import log
 from broker.eblocbroker_scripts.job import Job
 from broker.ipfs.submit import submit_ipfs
+from broker import cfg
+from broker.eblocbroker_scripts import Contract
 
 
 BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
@@ -24,6 +28,8 @@ provider_id = {}
 provider_id["a"] = "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
 provider_id["b"] = "0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24"
 provider_id["c"] = "0xe2e146d6B456760150d78819af7d276a1223A6d4"
+
+Ebb: "Contract.Contract" = cfg.Ebb
 
 
 def computation_cost(job, agent):
@@ -42,10 +48,11 @@ class Ewe:
         self.slots = {}  # type: ignore
         self.batch_to_submit = {}  # type: ignore
         #
+        self.ready: List[int] = []
+        self.submitted_dict = {}
         self.submitted: List[int] = []
         self.running: List[int] = []
         self.completed: List[int] = []
-        self.ready: List[int] = []
         self.remaining: List[int] = []
 
     def set_batch_to_submit(self) -> None:
@@ -65,6 +72,29 @@ class Ewe:
                         self.batch_to_submit[key] = []
 
                     self.batch_to_submit[key].append(v)
+
+    def set_batch_to_submit_in_while(self) -> None:
+        self.batch_to_submit = {}
+        for key, value in self.slots.items():
+            for v in value:
+                if v in self.ready:  # 5, 3, 4
+                    dependent_jobs = wf.in_edges(v)  # 4 1 2
+                    with suppress(Exception):
+                        dependent_jobs = list(set(dependent_jobs) - set(self.batch_to_submit[key]))
+
+                    flag = False
+                    for dependent_job in dependent_jobs:
+                        if dependent_job not in self.completed:
+                            flag = True
+                            break
+
+                    if not flag:
+                        log(f"job: {v} is ready to submit")
+                        if key not in self.batch_to_submit:
+                            self.batch_to_submit[key] = []
+
+                        self.batch_to_submit[key].append(v)
+                        breakpoint()  # DEBUG
 
     def batch_submit(self):
         for batch_key in self.batch_to_submit:
@@ -91,7 +121,6 @@ class Ewe:
                 yaml_cfg["config"]["dt_in"] = yaml["config"]["jobs"][f"job{node}"]["dt_in"]
                 yaml_cfg["config"]["data_transfer_out"] = yaml["config"]["jobs"][f"job{node}"]["dt_out"]
             elif self.batch_to_submit[batch_key]:
-                continue  # DELETEME
                 sink_nodes = []
                 for node in list(G_copy.nodes):
                     in_edges = G_copy.in_edges(node)
@@ -119,16 +148,63 @@ class Ewe:
 
             job = Job()
             job.set_config(yaml_fn_wf)
-            submit_ipfs(job)
+            submit_ipfs(job)  # submits the job
+            key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
+
             for node in list(G_copy.nodes):
-                self.submitted.append(node)
-            else:
-                breakpoint()  # DEBUG
+                if node != "\\n":
+                    try:
+                        self.submitted_dict[key].append(int(node))
+                    except:
+                        self.submitted_dict[key] = [int(node)]
+
+            for node in list(G_copy.nodes):
+                self.ready.remove(int(node))
+                self.submitted.append(int(node))
+            # else:
+            #     breakpoint()  # DEBUG
+
+
+def check_jobs(ewe):
+    print(f"READY     => {ewe.ready}")
+    print(f"SUBMITTED => {ewe.submitted}")
+    print(f"RUNNING   => {ewe.running}")
+    print(f"COMPLETED => {ewe.completed}")
+    print("-----------------------------------")
+    for key, value in ewe.submitted_dict.items():
+        for idx, val in enumerate(sorted(value)):
+            keys = key.split("_")
+            _job = Ebb.get_job_info(keys[0], keys[1], keys[2], idx, keys[3], is_print=True)
+            state_val = state.inv_code[_job["stateCode"]]
+            if state_val == "SUBMITTED":
+                pass
+            if state_val == "RUNNING":
+                if val in ewe.submitted:
+                    log(f"==> state changed to RUNNING for job: {val}")
+                    ewe.submitted.remove(val)
+                    ewe.running.append(val)
+            if state_val == "COMPLETED":
+                if val in ewe.submitted or val in ewe.running:
+                    log(f"==> state changed to COMPLETED for job: {val}")
+                    with suppress(Exception):
+                        ewe.submitted.remove(val)
+
+                    with suppress(Exception):
+                        ewe.running.remove(val)
+
+                    ewe.completed.append(val)
+                    ewe.set_batch_to_submit_in_while()
+                    if ewe.batch_to_submit:
+                        log(ewe.batch_to_submit)
+                        breakpoint()  # DEBUG
+                        ewe.batch_submit()
+                        return
+
+                    # TODO: recursive check to submit new jobs
 
 
 def main():
     ewe = Ewe()
-
     slots = {}
     fn = "/home/alper/test_eblocbroker/test_data/base/source_code_wf_random/workflow_job.dot"
     wf.read_dot(fn)
@@ -143,32 +219,19 @@ def main():
                 slots[key].append(int(order.job))
 
     log(slots)
-    #
     ewe.slots = slots
+    for node in list(wf.G_sorted()):
+        ewe.ready.append(int(node))
+
     ewe.set_batch_to_submit()
     log(ewe.batch_to_submit)
     ewe.batch_submit()
-    # re-organize slots
     while True:
-        breakpoint()  # DEBUG
-
+        check_jobs(ewe)
+        time.sleep(2)
         # submit job
 
     ##########################################################################################
-    submitted_jobs = []
-    while True:
-        """
-        for iterate jobs:
-            # fill lists into temp
-
-        if is any list changes
-            ... # recursive check to submit new jobs
-        else:
-            # lists = temp_list
-
-        # sleep(15)
-        """
-
     # for job in batch_to_submit:
     #     submitted_jobs.append(job)
 
