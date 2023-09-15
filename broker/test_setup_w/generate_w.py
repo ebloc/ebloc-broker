@@ -44,7 +44,6 @@ def main():
     wf = Workflow()
     wf.G = wf.generate_random_dag(n, edges)
     nx.nx_pydot.write_dot(wf.G, BASE / "workflow_job.dot")
-
     nx.draw_spring(wf.G, with_labels=True)
     plt.savefig(BASE / "job.png")
     base_size = 200

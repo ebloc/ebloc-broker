@@ -3,11 +3,9 @@
 import os
 from pathlib import Path
 from sys import platform
-from web3.logs import DISCARD
 from broker._utils.yaml import Yaml
 from broker import cfg
-from broker._utils.tools import _remove, log
-from broker._utils.web3_tools import get_tx_status
+from broker._utils.tools import log
 from broker.config import env
 from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit
@@ -95,15 +93,17 @@ def _ipfs_add(job, target, idx, is_verbose=False):
 
     job.code_hashes.append(ipfs_to_bytes32(ipfs_hash))
     job.code_hashes_str.append(ipfs_hash)
-    if not is_verbose:
+    if is_verbose:
         log(f"==> ipfs_hash={ipfs_hash} | md5sum={generate_md5sum(target)}")
 
     return job
 
 
 #: heft
-def submit_ipfs(job: Job, is_pass=False, required_confs=1):
-    log(f"==> attemptting to submit job ({job.source_code_path}) using [g]IPFS[/g]")
+def submit_ipfs_calc(job: Job, is_pass=False, is_verbose=True):
+    if is_verbose:
+        log(f"==> attemptting to submit job ({job.source_code_path}) using [g]IPFS[/g]")
+
     requester = Ebb.w3.toChecksumAddress(job.requester_addr)
     Ebb._pre_check(requester)
     try:
@@ -115,9 +115,11 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
     job.folders_to_share = job.paths
     check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
     if main_storage_id == StorageID.IPFS:
-        log("==> submitting source code through [blue]IPFS[/blue]")
+        if is_verbose:
+            log("==> submitting source code through [blue]IPFS[/blue]")
     elif main_storage_id == StorageID.IPFS_GPG:
-        log("==> submitting source code through [blue]IPFS_GPG[/blue]")
+        if is_verbose:
+            log("==> submitting source code through [blue]IPFS_GPG[/blue]")
     else:
         raise Exception("Please provide IPFS or IPFS_GPG storage type for the source code")
 
@@ -135,20 +137,19 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                 if idx == 0 and job.input_files:
                     breakpoint()  # DEBUG
 
-                job = _ipfs_add(job, target, idx)
+                job = _ipfs_add(job, target, idx, is_verbose)
         else:
             code_hash = folder
             if isinstance(code_hash, bytes):
                 job.code_hashes.append(code_hash)
                 job.code_hashes_str.append(code_hash.decode("utf-8"))
 
-    provider_addr = job.search_best_provider(requester)
+    provider_addr = job.search_best_provider(requester, is_verbose=is_verbose)
 
 
 def main():
     yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_workflow.yaml"
     yaml_original = Yaml(yaml_fn)
-
     BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
     yaml_fn_jobs = BASE / "jobs.yaml"
     yaml_jobs = Yaml(yaml_fn_jobs)
@@ -160,7 +161,7 @@ def main():
         yaml_original["config"]["data_transfer_out"] = my_job["dt_out"]
         yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
         job.set_config(yaml_fn)
-        submit_ipfs(job)
+        submit_ipfs_calc(job)
         my_job["costs"] = {}
         #: fetch calcualted cost
         yaml_original = Yaml(yaml_fn)

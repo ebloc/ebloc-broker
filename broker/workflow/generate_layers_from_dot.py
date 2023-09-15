@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 from broker._utils._log import log
@@ -27,7 +28,9 @@ def is_there_edges(G):
 
 def main():
     wf = Workflow()
-    wf.read_dot("workflow_job.dot")
+    # fn = "workflow_job.dot"
+    fn = "/home/alper/test_eblocbroker/test_data/base/source_code_wf_random/workflow_job.dot"
+    wf.read_dot(fn)
     # log(wf.topological_sort())
     # log(wf.topological_generations())
 

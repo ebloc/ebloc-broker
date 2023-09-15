@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+import networkx as nx
 import time
 from broker.lib import state
-from typing import List
+from typing import List, Dict
 from contextlib import suppress
-import networkx as nx
 from broker._utils.yaml import Yaml
 from pathlib import Path
 from broker._utils.tools import print_tb
@@ -39,17 +39,16 @@ def computation_cost(job, agent):
 def communication_cost(ni, nj, A, B):
     if A == B:
         return 0
-    else:
-        return wf.get_weight(ni, nj)
+
+    return wf.get_weight(ni, nj)
 
 
 class Ewe:
     def __init__(self) -> None:
         self.slots = {}  # type: ignore
         self.batch_to_submit = {}  # type: ignore
-        #
         self.ready: List[int] = []
-        self.submitted_dict = {}
+        self.submitted_dict: Dict[str, int] = {}
         self.submitted: List[int] = []
         self.running: List[int] = []
         self.completed: List[int] = []
@@ -121,13 +120,6 @@ class Ewe:
                 yaml_cfg["config"]["dt_in"] = yaml["config"]["jobs"][f"job{node}"]["dt_in"]
                 yaml_cfg["config"]["data_transfer_out"] = yaml["config"]["jobs"][f"job{node}"]["dt_out"]
             elif self.batch_to_submit[batch_key]:
-                sink_nodes = []
-                for node in list(G_copy.nodes):
-                    in_edges = G_copy.in_edges(node)
-                    # print(f"{node} => {in_edges}")
-                    if not in_edges:
-                        sink_nodes.append(node)
-
                 yaml_cfg["config"]["jobs"] = {}
                 yaml_cfg["config"]["dt_in"] = 200
                 yaml_cfg["config"]["data_transfer_out"] = 0
@@ -137,20 +129,27 @@ class Ewe:
                     yaml_cfg["config"]["jobs"][f"job{node}"]["run_time"] = yaml["config"]["jobs"][f"job{node}"][
                         "run_time"
                     ]
-                    yaml_cfg["config"]["data_transfer_out"] += yaml["config"]["jobs"][f"job{node}"]["dt_out"]
-                    if node in sink_nodes:
-                        yaml_cfg["config"]["dt_in"] += yaml["config"]["jobs"][f"job{node}"]["dt_in"] - 200
+                    # yaml_cfg["config"]["data_transfer_out"] += yaml["config"]["jobs"][f"job{node}"]["dt_out"]
 
-                #: subtract inner edge weight from dt_out since its in the same graph
-                for u, v, d in G_copy.edges(data=True):
-                    yaml_cfg["config"]["data_transfer_out"] -= int(d["weight"])
-                    # print(u, v, d)
+                for u, v, d in wf.G.edges(data=True):
+                    if u not in list(G_copy.nodes) and v in list(G_copy.nodes):
+                        yaml_cfg["config"]["dt_in"] += int(d["weight"])
+
+                    if u in list(G_copy.nodes) and v not in list(G_copy.nodes):
+                        yaml_cfg["config"]["data_transfer_out"] += int(d["weight"])
+
+                if yaml_cfg["config"]["data_transfer_out"] == 0:
+                    yaml_cfg["config"]["data_transfer_out"] = 250
+
+                # print(yaml_cfg["config"]["dt_in"])
+                # print(yaml_cfg["config"]["data_transfer_out"])
+                # print(list(G_copy.nodes))
+                # breakpoint()  # DEBUG
 
             job = Job()
             job.set_config(yaml_fn_wf)
             submit_ipfs(job)  # submits the job
             key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
-
             for node in list(G_copy.nodes):
                 if node != "\\n":
                     try:
@@ -178,12 +177,12 @@ def check_jobs(ewe):
             state_val = state.inv_code[_job["stateCode"]]
             if state_val == "SUBMITTED":
                 pass
-            if state_val == "RUNNING":
+            elif state_val == "RUNNING":
                 if val in ewe.submitted:
                     log(f"==> state changed to RUNNING for job: {val}")
                     ewe.submitted.remove(val)
                     ewe.running.append(val)
-            if state_val == "COMPLETED":
+            elif state_val == "COMPLETED":
                 if val in ewe.submitted or val in ewe.running:
                     log(f"==> state changed to COMPLETED for job: {val}")
                     with suppress(Exception):
@@ -196,7 +195,6 @@ def check_jobs(ewe):
                     ewe.set_batch_to_submit_in_while()
                     if ewe.batch_to_submit:
                         log(ewe.batch_to_submit)
-                        breakpoint()  # DEBUG
                         ewe.batch_submit()
                         return
 
@@ -219,6 +217,7 @@ def main():
                 slots[key].append(int(order.job))
 
     log(slots)
+
     ewe.slots = slots
     for node in list(wf.G_sorted()):
         ewe.ready.append(int(node))
@@ -227,19 +226,12 @@ def main():
     log(ewe.batch_to_submit)
     ewe.batch_submit()
     while True:
+        if not ewe.ready:
+            break
+
         check_jobs(ewe)
         time.sleep(2)
-        # submit job
 
-    ##########################################################################################
-    # for job in batch_to_submit:
-    #     submitted_jobs.append(job)
-
-    # breakpoint()  # DEBUG
-    # for order in sorted(orders):
-    #     print(order, orders[order])
-
-    # dependent_jobs = wf.in_edges(9)
     log(jobson)
 
 

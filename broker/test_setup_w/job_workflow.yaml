@@ -7,8 +7,8 @@ config:
     path: ~/test_eblocbroker/test_data/base/source_code_wf_random
     storage_hours: 0
     storage_id: ipfs
-  dt_in: 350 ##
-  data_transfer_out: 250 # sum of output weights
+  dt_in: 356 ##
+  data_transfer_out: 0   # sum of output weights
   jobs:
     job5:
       cores: 1
