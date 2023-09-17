@@ -89,6 +89,7 @@ fi
 find $HOME/.ebloc-broker/*/* -mindepth 1 ! \
      -regex '^./private\(/.*\)?' -delete >/dev/null 2>&1
 
+truncate -s 0 ~/.ebloc-broker/slurm_script.log
 rm -rf $HOME/.ebloc-broker/transactions/*
 rm -f $HOME/.ebloc-broker/end_code_output/*
 rm -f $HOME/.ebloc-broker/drivers_output/*
@@ -130,7 +131,7 @@ else
     rm -rf ~/.ipfs/badgerds
 fi
 
-systemctl status mongod && \
+systemctl status --no-pager mongod && \
     ~/ebloc-broker/broker/libs/mongodb.py --delete-all
 
 if [ "$(hostname)" = "homevm" ]; then

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-from contextlib import suppress
 import time
+from contextlib import suppress
+
 from broker import cfg
 from broker._utils.tools import is_byte_str_zero, log, print_tb
 from broker.config import env

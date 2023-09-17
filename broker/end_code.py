@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import networkx as nx
 import base64
 import getpass
+import networkx as nx
 import os
 import psutil
 import shutil
@@ -12,16 +12,18 @@ from contextlib import suppress
 from pathlib import Path
 from time import sleep
 from typing import Dict, List
-from broker.env import ENV_BASE
+
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import WHERE, br, log, ok
 from broker._utils.tools import _remove, exit_after, is_dir, mkdirs, pid_exists, read_json
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
+from broker.env import ENV_BASE
 from broker.errors import QuietExit
 from broker.imports import connect
 from broker.lib import (
+    JOB,
     calculate_size,
     eblocbroker_function_call,
     remove_files,
@@ -182,6 +184,10 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.modified_date = None
         self.encoded_share_tokens: Dict[str, str] = {}
         self.is_workflow = False
+        self.sub_workflow = False
+        self.job_type = JOB.TYPE["SINGLE"]
+        self.job_type: int = kwargs.pop("job_type")  # from workflow
+
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(_env.IPFS_REPO)
         _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}_{self.jobid}.log"
@@ -189,7 +195,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             log("E: given key and index are equal to each other")
-            sys.exit(1)
+            sys.exit(0)
 
         try:
             self.job_info = eblocbroker_function_call(
@@ -200,7 +206,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                     self.jobid,
                     self.received_bn,
                 ),
-                max_retries=10,
+                max_retries=5,
             )
             self.storage_ids = self.job_info["cloudStorageID"]
             requester_id = self.job_info["job_owner"]
@@ -208,13 +214,14 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             self.requester_info = Ebb.get_requester_info(requester_id)
         except Exception as e:
             log(f"E: {e}")
-            sys.exit(1)
+            sleep(15)
+            sys.exit(0)
 
         self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address
         self.results_folder_prev: Path = self.requester_home_path / f"{self.job_key}_{self.index}"
         self.results_folder = self.results_folder_prev / "JOB_TO_RUN"
         if not is_dir(self.results_folder) and not is_dir(self.results_folder_prev):
-            sys.exit(1)
+            sys.exit(0)
 
         self.results_data_link = Path(self.results_folder_prev) / "data_link"
         self.results_data_folder = Path(self.results_folder_prev) / "data"
@@ -234,23 +241,30 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * requester_id_address={self.requester_id_address}")
         log(f" * received={self.job_info['received']}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
-        # if os.path.isfile(self.results_folder / "workflow_job.dot"):
-        #     self.is_workflow = True
-
         dot_fn = self.results_folder / "sub_workflow_job.dot"
         if os.path.isfile(dot_fn):
+            self.sub_workflow = True
             G = nx.drawing.nx_pydot.read_dot(dot_fn)
             if len(G.nodes) == 1:
                 self.is_workflow = False
+            else:
+                self.is_workflow = True
 
         with suppress(Exception):
-            log(psutil.Process(int(self.job_state_running_pid)))
-            while True:
-                if not pid_exists(self.job_state_running_pid):
-                    break
-                else:
-                    log("==> job_state_running() is still running; sleeping for 15 seconds")
-                    sleep(15)
+            proc = psutil.Process(int(self.job_state_running_pid))
+            log(proc)
+            if proc.status() != psutil.STATUS_SLEEPING:
+                flag = False
+                while True:
+                    if not pid_exists(self.job_state_running_pid):
+                        if flag:
+                            log(ok())
+
+                        break
+                    else:
+                        flag = True
+                        log("==> job_state_running() is still running; sleeping for 15 seconds")
+                        sleep(15)
 
         self.job_state_running_tx = Ebb.mongo_broker.get_job_state_running_tx(self.job_key, self.index)
         log(f"==> job_state_running_tx={self.job_state_running_tx}")
@@ -322,7 +336,26 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         data_transfer_out = byte_to_mb(data_transfer_out)
         self.data_transfer_out += data_transfer_out
 
+    def workflow_test_required(self):
+        if self.sub_workflow and not self.is_workflow:
+            self.data_transfer_in = self.job_info["data_transfer_in"]
+            self.data_transfer_out = self.job_info["data_transfer_out"]
+            log("data_transfer is updated due to test purpose:")
+            log(f" * dt_in={self.data_transfer_in}")
+            log(f" * dt_out={self.data_transfer_out}")
+        elif self.sub_workflow and self.is_workflow:
+            if self.job_type == JOB.TYPE["BEGIN"]:
+                self.data_transfer_in = self.job_info["data_transfer_in"]
+                self.data_transfer_out = 0
+            elif self.job_type == JOB.TYPE["FINAL"]:
+                self.data_transfer_in = 0
+                self.data_transfer_out = self.job_info["data_transfer_out"]
+            elif self.job_type == JOB.TYPE["BETWEEN"]:
+                self.data_transfer_in = 0
+                self.data_transfer_out = 0
+
     def process_payment_tx(self):
+        self.workflow_test_required()
         tx_hash = Ebb.process_payment(
             self.job_key,
             self.index,
@@ -336,12 +369,10 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             self.job_info["core"],
             self.job_info["run_time"],
             self.received_bn,
+            self.job_type,
         )
         log(f"==> [white]process_payment {self.job_key} {self.index}")
         return tx_hash
-
-    def clean_before_upload(self) -> None:
-        remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
 
     def remove_source_code(self) -> None:
         """Client's initial downloaded files are removed."""
@@ -356,6 +387,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             sys.exit()
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn, "-delete"])
+
+    def clean_before_upload(self) -> None:
+        remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
 
     def git_diff_patch_and_upload(self, source_fn: Path, name, storage_class, is_job_key) -> None:
         if is_job_key:
@@ -482,7 +516,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 is_print = False
             except Exception as e:
                 print_tb(e)
-                # sys.exit(1)
+                # sys.exit(0)
 
             # sleep here so this loop is not keeping CPU busy due to
             # start_code tx may deploy late into the blockchain.
@@ -495,7 +529,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             log(ok())
 
         log("E: failed all the attempts, abort")
-        sys.exit(1)
+        sys.exit(0)
 
     def remove_job_folder(self):
         """Remove downloaded code from local since it is not needed anymore; garbage collector."""
@@ -530,7 +564,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             log(f"==> f_id={self.requester_info['f_id']}")
 
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
-            self.get_job_info()
+            # self.get_job_info()
             log(":beer: job is already completed and its money is received", "green")
             raise QuietExit
 
@@ -549,12 +583,13 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
             self.get_job_info(is_log_print=False)  # re-fetch job info
             self.attemp_get_job_info()
+            log(f"==> Receive state of the running job {ok()}")
         except Exception as e:
             print_tb(e)
             raise e
 
-        log(f"==> receive state of the running job {ok()}")
         try:
+            log("==> Getting job info using 'get_job_code_hashes'... ", end="")
             self.job_info = eblocbroker_function_call(
                 lambda: Ebb.get_job_code_hashes(
                     env.PROVIDER_ID,
@@ -563,11 +598,12 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                     # self.jobid,
                     self.received_bn,
                 ),
-                max_retries=10,
+                max_retries=1000,
             )
+            log(f"{ok()}")
         except Exception as e:
             print_tb(e)
-            sys.exit(1)
+            sys.exit(0)
 
         self.code_hashes = self.job_info["code_hashes"]
         self.set_code_hashes_to_process()
@@ -591,11 +627,11 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.upload_driver()
         data_transfer_sum = self.data_transfer_in + self.data_transfer_out
         log(f"==> data_transfer_sum={data_transfer_sum} MB -> rounded={int(data_transfer_sum)} MB")
-        log(f"    ==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
+        log(f"    * data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
         if self.data_transfer_out > 0:
-            log(f"     ==> data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
+            log(f"    * data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
         else:
-            log(f"     ==> data_transfer_out={self.data_transfer_out} MB")
+            log(f"    * data_transfer_out={self.data_transfer_out} MB")
 
         try:
             tx_hash = self.process_payment_tx()
@@ -618,6 +654,7 @@ if __name__ == "__main__":
         "jobid": sys.argv[4],
         "folder_name": sys.argv[5],
         "slurm_job_id": sys.argv[6],
+        "job_type": sys.argv[7],
     }
     try:
         cloud_storage = ENDCODE(**kwargs)
@@ -626,6 +663,6 @@ if __name__ == "__main__":
         pass
     except Exception as e:
         if "reverted transaction" in str(e):
-            log(f"Exception: [green]{e}", is_wrap=True)
+            log(f"Exception: [red]{e}", is_wrap=True)
         else:
             print_tb(e)

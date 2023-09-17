@@ -2,14 +2,15 @@
 
 import time
 from pathlib import Path
-from broker.utils import bytes32_to_ipfs
+
+from broker import cfg
 from broker._utils._log import log, ok
 from broker._utils.tools import _date, print_tb
 from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit
 from broker.ipfs.submit import submit_ipfs
 from broker.lib import state
-from broker import cfg
+from broker.utils import bytes32_to_ipfs
 
 Ebb = cfg.Ebb
 

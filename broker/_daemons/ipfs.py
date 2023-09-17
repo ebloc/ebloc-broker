@@ -3,12 +3,12 @@
 import daemon
 import os
 import sys
-from broker.env import ENV_BASE
+
 from broker import cfg, config
 from broker._utils._log import ok
 from broker._utils.tools import print_tb, run
-from broker.utils import is_ipfs_on, log, popen_communicate, is_docker
-
+from broker.env import ENV_BASE
+from broker.utils import is_docker, is_ipfs_on, log, popen_communicate
 
 _env = ENV_BASE()
 

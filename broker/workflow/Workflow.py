@@ -2,20 +2,34 @@
 
 import matplotlib.pyplot as plt
 import networkx as nx
+import os
 import random
+import time
 from typing import List
+
 from broker._utils._log import console, log
 from broker._utils.tools import print_tb, run
 from broker.errors import QuietExit
+
+# TYPE = {
+#     "BEGIN": 0,
+#     "BETWEEN": 1,
+#     "FINAL": 2,
+#     "SINGLE": 3,
+# }
 
 
 class Workflow:
     """Object to access ebloc-broker smart-contract functions."""
 
     def __init__(self, G=None) -> None:
+        self.first_job_flag = True
         self.job_ids = {}  # type: ignore
         self.job_map = {}
         self.G = G
+        self.job_count = 0
+        self.submitted_job_count = 0
+        self.final_flag = False
         self.options = {
             "node_color": "lightblue",
             "node_size": 250,
@@ -173,21 +187,21 @@ class Workflow:
 
     def dependency_job(self, i, slurm=False):
         if self.job_name == "job":
-            time_limit = "0-0:2"
+            time_limit = "0-0:3"
         else:
             time_limit = self.time_limits[self.job_map[int(i)]]
 
         if not len(set(self.G.predecessors(i))):
             job_id = self.not_dependent_submit_job(i, slurm)
             self.job_ids[i] = job_id
-            print("job_id=" + str(job_id))
+            log(f"job_id={job_id} | TimeLimit={time_limit}")
             if slurm:
                 cmd = ["scontrol", "update", f"jobid={job_id}", f"TimeLimit={time_limit}"]
                 run(cmd)
         else:
             job_id = self.dependent_submit_job(i, list(self.G.predecessors(i)), slurm)
             self.job_ids[i] = job_id
-            print("job_id=" + str(job_id))
+            log(f"job_id={job_id} | TimeLimit={time_limit}")
             print(list(self.G.predecessors(i)))
             if slurm:
                 cmd = ["scontrol", "update", f"jobid={job_id}", f"TimeLimit={time_limit}"]
@@ -197,16 +211,42 @@ class Workflow:
         if self.job_name == "job":
             core_num = 1
         else:
-            core_num = self.core_numbers[self.job_map[int(i)]]
+            if self.job_map[int(i)] == 0 and isinstance(self.core_numbers, int):
+                core_num = self.core_numbers
+            else:
+                core_num = self.core_numbers[self.job_map[int(i)]]
 
-        log(f"$ sbatch -n {core_num} {self.job_name}{self.job_map[int(i)]}.sh", "blue", is_code=True, width=250)
+        self.submitted_job_count += 1
+        if self.submitted_job_count == self.job_count:
+            self.final_flag = True
+
+        if self.job_name == "job":
+            _job_name = f"{self.job_name}{i}.sh"
+        else:
+            _job_name = f"{self.job_name}{self.job_map[int(i)]}~1.sh"
+            if self.first_job_flag:
+                _job_name = f"{self.job_name}{self.job_map[int(i)]}~0.sh"
+                self.first_job_flag = False
+            elif self.final_flag:
+                _job_name = f"{self.job_name}{self.job_map[int(i)]}~2.sh"
+
+            os.rename(f"{self.job_name}{self.job_map[int(i)]}.sh", _job_name)
+
+        log(f"$ sbatch -n {core_num} {_job_name}", "blue", is_code=True, width=250)
         if slurm:
-            cmd = ["sbatch", "-n", core_num, f"{self.job_name}{self.job_map[int(i)]}.sh"]
+            cmd = ["sbatch", "-n", core_num, _job_name]
             output = run(cmd)
+            if not self.final_flag:
+                try:
+                    time.sleep(20)
+                except Exception as e:
+                    log(f"E: {e}")
+
             print(output)
             job_id = int(output.split(" ")[3])
             return job_id
         else:
+            breakpoint()
             return random.randint(1, 101)
 
     def dependent_submit_job(self, i, predecessors, slurm):
@@ -220,8 +260,24 @@ class Workflow:
                 #: if the required job is not submitted to Slurm, recursive call
                 self.dependency_job(predecessors[0], slurm)
 
+            self.submitted_job_count += 1
+            if self.submitted_job_count == self.job_count:
+                self.final_flag = True
+
+            if self.job_name == "job":
+                _job_name = f"{self.job_name}{i}.sh"
+            else:
+                _job_name = f"{self.job_name}{self.job_map[int(i)]}~1.sh"
+                if self.first_job_flag:
+                    _job_name = f"{self.job_name}{self.job_map[int(i)]}~0.sh"
+                    self.first_job_flag = False
+                elif self.final_flag:
+                    _job_name = f"{self.job_name}{self.job_map[int(i)]}~2.sh"
+
+                os.rename(f"{self.job_name}{self.job_map[int(i)]}.sh", _job_name)
+
             log(
-                f"$ sbatch -n {core_num} --dependency=afterok:{self.job_ids[predecessors[0]]} {self.job_name}{self.job_map[int(i)]}.sh",
+                f"$ sbatch -n {core_num} --dependency=afterok:{self.job_ids[predecessors[0]]} {_job_name}",
                 "blue",
                 is_code=True,
                 width=250,
@@ -232,25 +288,49 @@ class Workflow:
                     "-n",
                     core_num,
                     f"--dependency=afterok:{self.job_ids[predecessors[0]]}",
-                    f"{self.job_name}{self.job_map[int(i)]}.sh",
+                    _job_name,
                 ]
                 output = run(cmd)
                 print(output)
+                if not self.final_flag:
+                    try:
+                        time.sleep(20)
+                    except Exception as e:
+                        log(f"E: {e}")
+
                 job_id = int(output.split(" ")[3])
                 return job_id
             else:
+                breakpoint()  # DEBUG
                 return random.randint(1, 101)
         else:
             job_id_str = ""
             for j in predecessors:
                 if j not in self.job_ids:  # if the required job is not submitted to Slurm, recursive call
-                    self.dependency_job(j)
+                    self.dependency_job(j, slurm)
 
                 job_id_str += f"{self.job_ids[j]}:"
 
             job_id_str = job_id_str[:-1]
+
+            self.submitted_job_count += 1
+            if self.submitted_job_count == self.job_count:
+                self.final_flag = True
+
+            if self.job_name == "job":
+                _job_name = f"{self.job_name}{i}.sh"
+            else:
+                _job_name = f"{self.job_name}{self.job_map[int(i)]}~1.sh"
+                if self.first_job_flag:
+                    _job_name = f"{self.job_name}{self.job_map[int(i)]}~0.sh"
+                    self.first_job_flag = False
+                elif self.final_flag:
+                    _job_name = f"{self.job_name}{self.job_map[int(i)]}~2.sh"
+
+                os.rename(f"{self.job_name}{self.job_map[int(i)]}.sh", _job_name)
+
             log(
-                f"$ sbatch -n {core_num} --dependency=afterok:{job_id_str} {self.job_name}{self.job_map[int(i)]}.sh",
+                f"$ sbatch -n {core_num} --dependency=afterok:{job_id_str} {_job_name}",
                 "blue",
                 is_code=True,
                 width=250,
@@ -261,13 +341,14 @@ class Workflow:
                     "-n",
                     core_num,
                     f"--dependency=afterok:{job_id_str}",
-                    f"{self.job_name}{self.job_map[int(i)]}.sh",
+                    _job_name,
                 ]
                 output = run(cmd)
                 print(output)
                 job_id = int(output.split(" ")[3])
                 return job_id
             else:
+                breakpoint()  # DEBUG
                 return random.randint(1, 101)
 
     def generate_random_dag(self, number_nodes, number_edges):
@@ -288,6 +369,11 @@ class Workflow:
         return G
 
     def sbatch_from_dot(self, dot_fn, job_key="job", index="", job_bn="", core_numbers=1, time_limits="0-0:2"):
+        self.job_count = 0
+        for node in list(self.G.nodes):
+            if node != "\\n":
+                self.job_count += 1
+
         self.read_dot(dot_fn)
         if job_key == "job":
             self.job_name = "job"
@@ -307,7 +393,7 @@ class Workflow:
             if node != "\\n":
                 self.job_map[int(node)] = idx
 
-        print(self.job_map)
+        log(f"job_map: {self.job_map}")
         for idx in list(self.G.nodes):
             if idx != "\\n" and idx not in self.job_ids:
                 self.dependency_job(idx, slurm=True)

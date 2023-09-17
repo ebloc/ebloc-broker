@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
-import os
 import matplotlib.pyplot as plt
 import networkx as nx
-from broker.workflow.Workflow import Workflow
-from broker._utils.yaml import Yaml
-from pathlib import Path
-from broker._utils.tools import print_tb
-from broker.errors import QuietExit
-import shutil
+import os
 import random
+import shutil
+import sys
+from pathlib import Path
+
+from broker._utils.tools import print_tb
+from broker._utils.yaml import Yaml
+from broker.errors import QuietExit
+from broker.workflow.Workflow import Workflow
 
 
 def replace_str(fn, sleep_dur):
@@ -26,8 +28,14 @@ def main():
     yaml_fn = BASE / "jobs.yaml"
     yaml = Yaml(yaml_fn)
     yaml["config"] = {}
-    n = job_num = 6
-    edges = 8
+    base_fn = Path.home() / "ebloc-broker" / "broker" / "test_setup_w" / "base.sh"
+    if len(sys.argv) == 3:
+        n = job_num = int(sys.argv[1])
+        edges = int(sys.argv[2])
+    else:
+        n = job_num = 6
+        edges = 8
+
     for fn in BASE.glob("job*.sh"):
         fn.unlink()  # deletes the file
 
@@ -42,16 +50,22 @@ def main():
         pass
 
     wf = Workflow()
-    wf.G = wf.generate_random_dag(n, edges)
+    while True:
+        #: to be sure nodes are generated with the exact given node number
+        wf.G = wf.generate_random_dag(n, edges)
+        if len(list(wf.G.nodes)) == n:
+            break
+
     nx.nx_pydot.write_dot(wf.G, BASE / "workflow_job.dot")
     nx.draw_spring(wf.G, with_labels=True)
     plt.savefig(BASE / "job.png")
     base_size = 200
     base_dt_out_size = 250
     for i in range(1, job_num + 1):
-        sleep_dur = random.randint(15, 30)
-        shutil.copyfile("base.sh", BASE / f"job{i}.sh")
-        replace_str(BASE / f"job{i}.sh", sleep_dur)
+        # sleep_dur = random.randint(15, 30)
+        sleep_dur = random.randint(2, 5)  # 2 <= x <= 5
+        shutil.copyfile(base_fn, BASE / f"job{i}.sh")
+        replace_str(BASE / f"job{i}.sh", sleep_dur * 60)
         _job = yaml["config"]["jobs"][f"job{i}"]
         _job["run_time"] = sleep_dur
         _job["cores"] = 1

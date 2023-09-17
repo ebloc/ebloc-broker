@@ -3,12 +3,13 @@
 import re
 import time
 from contextlib import suppress
+
 from broker._utils._log import log, ok
 from broker._utils.tools import is_process_on
 from broker.config import env
 from broker.errors import BashCommandsException, QuietExit, Terminate
 from broker.lib import run
-from broker.utils import popen_communicate, is_docker
+from broker.utils import is_docker, popen_communicate
 
 
 def add_account_to_slurm(user):

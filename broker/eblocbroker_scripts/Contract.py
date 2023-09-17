@@ -28,8 +28,8 @@ from brownie.network.transaction import TransactionReceipt
 # from brownie.network.gas.strategies import GasNowStrategy
 # from brownie.network.gas.strategies import LinearScalingStrategy
 
-GAS_PRICE = 1.20  # was 1 => 1.13
-EXIT_AFTER = 500  # seconds
+GAS_PRICE = 1.21  # was 1 => 1.13
+EXIT_AFTER = 1000  # seconds
 
 
 class Base:
@@ -365,7 +365,7 @@ class Contract(Base):
                 else:
                     raise Exception()
 
-                return method(*args, self.ops)  ###################
+                return method(*args, self.ops)
             else:
                 method = getattr(self.eBlocBroker.functions, func)
                 return method(*args).transact(self.ops)
@@ -376,6 +376,10 @@ class Contract(Base):
 
     def timeout_wrapper(self, method, contract, *args):
         idx = 0
+        if method == "processPayment":
+            self.max_retries = 100
+
+        first_try_flag = False
         while idx < self.max_retries:
             self.ops = {
                 "from": self._from,
@@ -385,13 +389,21 @@ class Contract(Base):
                 "required_confs": self.required_confs,
             }
             try:
-                if idx > 0:
+                if first_try_flag:
                     # __ https://eth-brownie.readthedocs.io/en/stable/core-chain.html#core-chain-history
                     log(f"Attempt={idx}...")
+                    log(f"==> Sleeping for 15 seconds | gas_price={self.gas_price} ... ", end="")
+                    try:
+                        time.sleep(15)
+                    except Exception as e:
+                        log(f"E: {e}")
+
+                    log(ok())
                     log(history.filter(sender=self._from))
 
                 return self.timeout(method, contract, *args)
             except ValueError as e:
+                first_try_flag = True
                 if "MAC mismatch" in str(e):
                     log("Please check your Ethereum account password")
                     print_tb(e)
@@ -408,11 +420,6 @@ class Contract(Base):
 
                 if "There is another transaction with same nonce in the queue" in str(e):
                     log(f"warning: Tx: {e}", is_code=True)
-                    log("==> sleeping for 15 seconds, will try again, KeyboardInterrupt here if necessary...")
-                    log(f"sleeping -- gas_price={self.gas_price}...", end="")
-                    time.sleep(15)
-                    log("done")
-
                 else:
                     log(f"E: Tx: {e}")
 
@@ -421,7 +428,7 @@ class Contract(Base):
                 ):
                     if self.gas_price < 2:
                         self.gas_price *= 1.13
-                        log(f"==> new_gas_price={self.gas_price}")
+                        log(f"==> new_gas_price={self.gas_price} | idx={idx}")
                     else:
                         idx += 1
 
@@ -447,7 +454,7 @@ class Contract(Base):
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
-                log(f"warning: Timeout Awaiting Transaction in the mempool -- gas_price={self.gas_price}")
+                log(f"warning: Timeout Awaiting Transaction in the mempool | gas_price={self.gas_price}")
                 if self.gas_price < 2:
                     self.gas_price *= 1.13
                     log(f"==> new_gas_price={self.gas_price}")

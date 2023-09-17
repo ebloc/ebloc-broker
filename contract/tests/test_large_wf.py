@@ -1,19 +1,20 @@
 #!/usr/bin/python3
 
-from broker._utils.yaml import Yaml
-from pathlib import Path
 import os
 import pytest
 import sys
 from os import path
-from broker.workflow.Workflow import Workflow
+from pathlib import Path
+
 import contract.tests.cfg as _cfg
 from broker import cfg, config
+from broker._utils.yaml import Yaml
 from broker.config import setup_logger
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
 from broker.eblocbroker_scripts.utils import Cent
 from broker.utils import CacheID, StorageID, ipfs_to_bytes32, log
+from broker.workflow.Workflow import Workflow
 from brownie import accounts, web3
 from brownie.network.state import Chain
 from contract.scripts.lib import gas_costs, new_test

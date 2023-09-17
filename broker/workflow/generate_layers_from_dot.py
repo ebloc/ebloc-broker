@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
+from pathlib import Path
+
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit

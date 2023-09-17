@@ -1,2 +1,6 @@
 * Random Workflow Generator
 To run:
+#+begin_src bash
+./generate_w.py
+~/ebloc-broker/broker/ipfs/submit_w.py
+#+end_src

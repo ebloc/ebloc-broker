@@ -111,6 +111,16 @@ def PrintException() -> str:
     return '{}:{} "{}"'.format(os.path.basename(fn), lineno, line.strip())
 
 
+def sorted_nicely(_list):
+    """Sort the given iterable in the way that humans expect.
+
+    __ https://stackoverflow.com/a/2669120/2402577
+    """
+    convert = lambda text: int(text) if text.isdigit() else text
+    alphanum_key = lambda key: [convert(c) for c in re.split("([0-9]+)", key)]
+    return sorted(_list, key=alphanum_key)
+
+
 def print_tb(message=None, is_print_exc=False) -> None:
     """Log the traceback.
 

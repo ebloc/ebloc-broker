@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-import networkx as nx
 import json
+import networkx as nx
 import os
 import subprocess
 import time
@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from shutil import copyfile
 from typing import Dict, List
-from broker.workflow.Workflow import Workflow
+
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import ok
@@ -24,16 +24,17 @@ from broker.libs.sudo import _run_as_sudo
 from broker.libs.user_setup import add_user_to_slurm, give_rwe_access
 from broker.link import Link
 from broker.utils import (
-    is_docker,
     CacheID,
     bytes32_to_ipfs,
     cd,
     generate_md5sum,
     ipfs_to_bytes32,
+    is_docker,
     is_ipfs_hash_valid,
     print_tb,
     write_to_file,
 )
+from broker.workflow.Workflow import Workflow
 
 
 class BaseClass:
@@ -399,7 +400,8 @@ class Storage(BaseClass):
 
             time.sleep(0.25)
 
-        if self.is_workflow:
+        # if self.is_workflow:
+        if os.path.isfile(self.results_folder / "sub_workflow_job.dot"):
             w = Workflow()
             if os.path.isfile(self.results_folder / "sub_workflow_job.dot"):
                 dot_fn = self.results_folder / "sub_workflow_job.dot"

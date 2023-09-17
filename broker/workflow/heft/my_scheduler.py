@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-from broker._utils.yaml import Yaml
-from pathlib import Path
-from broker._utils.tools import print_tb
-from broker.errors import QuietExit
 from heft.core import schedule
-from broker.workflow.Workflow import Workflow
+from pathlib import Path
+
 from broker._utils._log import log
+from broker._utils.tools import print_tb
+from broker._utils.yaml import Yaml
+from broker.errors import QuietExit
+from broker.workflow.Workflow import Workflow
 
 wf = Workflow()
 yaml_fn = Path.home() / "ebloc-broker" / "broker" / "workflow" / "heft" / "jobs.yaml"

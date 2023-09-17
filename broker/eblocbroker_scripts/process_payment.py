@@ -24,6 +24,7 @@ def process_payment(
     core,
     run_time,
     received_bn=0,
+    job_type=JOB.TYPE["SINGLE"],
 ):
     """Process payment of the received job."""
     if not result_ipfs_hash:
@@ -34,7 +35,7 @@ def process_payment(
     log(
         f"$ ~/ebloc-broker/broker/eblocbroker_scripts/process_payment.py {job_key} {index} {job_id} {elapsed_time}"
         f" {_result_ipfs_hash} '{cloud_storage_ids}' {ended_timestamp} {int(data_transfer_in)} {data_transfer_out} '{core}'"
-        f" '{run_time}'",
+        f" '{run_time}' {job_type}",
         "pink",
         is_code=True,
         h=False,
@@ -61,7 +62,6 @@ def process_payment(
         else:
             result_ipfs_hash = ipfs_to_bytes32(result_ipfs_hash)
 
-        job_type = JOB.TYPE["SINGLE"]
         args = [
             int(index),
             int(job_id),

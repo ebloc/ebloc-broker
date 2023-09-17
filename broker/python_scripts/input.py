@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-from broker.utils import log
-from broker.env import ENV_BASE
+import re
 
 # from broker.config import env
 from broker._utils.tools import print_tb
+from broker.env import ENV_BASE
 from broker.errors import QuietExit
+from broker.utils import log
 from brownie import web3
-import re
 
 _env = ENV_BASE()
 

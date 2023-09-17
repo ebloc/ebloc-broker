@@ -173,7 +173,7 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 self.job_info.update({"submitJob_gas_used": int(tx_receipt["gasUsed"])})
                 break
         else:
-            log(f"E: failed to find and update job({job_key})")
+            raise Exception(f"E: Failed to find and update job({job_key} {index})")
 
         self.fetch_log_data_storage_request(tx_by_block)
         return received_bn

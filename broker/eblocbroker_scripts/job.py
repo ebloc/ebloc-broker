@@ -10,7 +10,7 @@ from typing import Dict, List  # noqa
 
 from broker import cfg, config
 from broker._utils._log import console_ruler
-from broker._utils.tools import _exit, _remove, log, print_tb
+from broker._utils.tools import _exit, _remove, log, print_tb, sorted_nicely
 from broker._utils.web3_tools import get_tx_status
 from broker._utils.yaml import Yaml
 from broker.config import env
@@ -300,7 +300,7 @@ class Job:
 
         self.cores = []
         self.run_time = []
-        for key in self.cfg["config"]["jobs"]:
+        for key in sorted_nicely(self.cfg["config"]["jobs"]):
             self.cores.append(self.cfg["config"]["jobs"][key]["cores"])
             self.run_time.append(self.cfg["config"]["jobs"][key]["run_time"])
 

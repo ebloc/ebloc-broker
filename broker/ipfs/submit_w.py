@@ -3,9 +3,10 @@
 import os
 from pathlib import Path
 from sys import platform
-from broker._utils.yaml import Yaml
+
 from broker import cfg
 from broker._utils.tools import log
+from broker._utils.yaml import Yaml
 from broker.config import env
 from broker.eblocbroker_scripts.job import Job
 from broker.errors import QuietExit

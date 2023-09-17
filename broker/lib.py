@@ -10,6 +10,7 @@ from multiprocessing import Process
 from os.path import exists
 from threading import Thread
 
+from datetime import datetime
 from broker import cfg, config
 from broker._utils._log import WHERE, br
 from broker._utils.tools import _remove, gdrive_about_user, is_process_on, log, mkdir, print_tb
@@ -182,11 +183,11 @@ def echo_grep_awk(str_data, grep_str, column):
 
 
 def eblocbroker_function_call(func, max_retries):
-    for _ in range(max_retries):
+    for idx in range(max_retries):
         try:
             return func()
         except Exception as e:
-            log(f"E: {e} {func}")
+            log(f"E: {e} {func} | attempt={idx} {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}")
             log("sleep 15 seconds, will try again...")
             time.sleep(15)
 
