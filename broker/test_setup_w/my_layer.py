@@ -35,10 +35,10 @@ else:
     n = 10
     edges = 10
 
-BASE_SAVE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
+BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
 
 Ebb: "Contract.Contract" = cfg.Ebb
-BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
+# BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
 
 
 class Ewe:
@@ -53,6 +53,7 @@ class Ewe:
         self.completed: List[int] = []
         self.remaining: List[int] = []
         self.start = 0
+        self.track_submitted_wf = {}  # type: ignore
 
     def get_run_time(self) -> str:
         seconds = round(default_timer() - self.start)
@@ -81,7 +82,7 @@ class Ewe:
 
                         self.completed.append(key)
 
-        with open(BASE_SAVE / "layer_submitted_dict.pkl", "wb") as f:
+        with open(BASE / "layer_submitted_dict.pkl", "wb") as f:
             pickle.dump(self.submitted_node_dict, f)
 
 
@@ -116,8 +117,7 @@ def submit_layering():
     yaml_original = Yaml(yaml_fn)
     yaml_fn_jobs = BASE / "jobs.yaml"
     yaml_jobs = Yaml(yaml_fn_jobs)
-
-    fn = "/home/alper/test_eblocbroker/test_data/base/source_code_wf_random/workflow_job.dot"
+    fn = BASE / "workflow_job.dot"
     wf.read_dot(fn)
     for node in list(wf.G_sorted()):
         ewe.ready.append(int(node))
@@ -136,6 +136,49 @@ def submit_layering():
         raise Exception(f"E: Something is wrong at HEFT, node count should be {n}")
 
     log()
+
+    # while True:
+    #     for idx, item in enumerate(wf.topological_generations()):
+    #         if "\\n" in item:
+    #             item.remove("\\n")
+
+    #         node_list = list(map(int, item))
+    #         break_flag = True
+    #         for node in sorted(node_list):
+    #             if wf.in_edges(node):
+    #                 break_flag = False
+
+    #         #: obtain list of all dependent jobs from the previous layers
+    #         dependent_jobs = []
+    #         for node in sorted(node_list):
+    #             dependent_jobs = list(set(dependent_jobs + wf.in_edges(node)))
+
+    #         for job_id in dependent_jobs:
+    #             key = ewe.submitted_node_dict[job_id]
+    #             keys = key.split("_")
+    #             job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=True)
+    #             state_val = state.inv_code[job_info["stateCode"]]
+    #             if state_val == "RUNNING":
+    #                 if job_id in ewe.submitted:
+    #                     log(f"==> state changed to RUNNING for job: {job_id}")
+    #                     ewe.submitted.remove(job_id)
+    #                     ewe.running.append(job_id)
+    #             elif state_val == "COMPLETED":
+    #                 if job_id in ewe.submitted or job_id in ewe.running:
+    #                     log(f"==> state changed to COMPLETED for job: {job_id}")
+    #                     with suppress(Exception):
+    #                         ewe.submitted.remove(job_id)
+
+    #                     with suppress(Exception):
+    #                         ewe.running.remove(job_id)
+
+    #                     ewe.completed.append(job_id)
+
+    #             #: all jobs should be completed
+    #             output = check_completed_jobs(ewe, dependent_jobs)
+    #             if output:
+    #                 break_flag = True  # submit job as next step
+
     ewe.start = default_timer()
     for idx, item in enumerate(wf.topological_generations()):
         if "\\n" in item:
@@ -188,7 +231,7 @@ def submit_layering():
             log(f"RUNNING   => {ewe.running}")
             log(f"COMPLETED => {ewe.completed}")
             log()
-            log(f"==> workflow_run_time={ewe.get_run_time()}")
+            log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
             log("-----------------------------------")
             ewe.update_job_stats()
 
@@ -228,6 +271,7 @@ def submit_layering():
 
         provider_char = random.choice("abc")
         yaml_original["config"]["provider_address"] = provider_id[provider_char]
+        yaml_original["config"]["source_code"]["path"] = str(BASE)
         log(
             f"* w{idx} => {sorted(node_list)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "
             "[orange]-----------------------------------------------"
@@ -267,8 +311,9 @@ def submit_layering():
         log(f"RUNNING   => {ewe.running}")
         log(f"COMPLETED => {ewe.completed}")
         log()
-        log(f"==> final_workflow_run_time={ewe.get_run_time()}")
         log("-----------------------------------")
+
+    log(f"==> final_layer_by_layer_workflow_run_time={ewe.get_run_time()} {n} {edges}")
 
 
 def main():

@@ -8,4 +8,4 @@ wf_dir=$HOME"/test_eblocbroker/test_data/base/source_code_wf_random/"
 dir="/home/alper/test_eblocbroker/workflow/${node}_${edge}"
 mkdir -p $dir
 cp $wf_dir/* $dir
-rm $dir/*.pkl
+rm -f $dir/*.pkl

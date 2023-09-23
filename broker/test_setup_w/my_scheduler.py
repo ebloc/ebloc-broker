@@ -219,7 +219,7 @@ def check_jobs(ewe):
     log(f"COMPLETED => {ewe.completed}")
     log()
     log(f"slots: {slots}")
-    log(f"==> workflow_run_time={ewe.get_run_time()}")
+    log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
     log("-----------------------------------")
     for key, value in ewe.submitted_dict.items():
         for idx, val in enumerate(sorted(value)):
@@ -296,7 +296,7 @@ def main():
     log(jobson)
 
     # finalizing
-    log(f"==> final_workflow_run_time={ewe.get_run_time()}")
+    log(f"==> final_heft_workflow_run_time={ewe.get_run_time()} {n} {edges}")
     with open(BASE / "heft_submitted_dict.pkl", "wb") as f:
         pickle.dump(ewe.submitted_dict, f)
 
