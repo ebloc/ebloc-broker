@@ -392,13 +392,13 @@ class Contract(Base):
                 if first_try_flag:
                     # __ https://eth-brownie.readthedocs.io/en/stable/core-chain.html#core-chain-history
                     log(f"Attempt={idx}...")
-                    log(f"==> Sleeping for 15 seconds | gas_price={self.gas_price} ... ", end="")
-                    try:
-                        time.sleep(15)
-                    except Exception as e:
-                        log(f"E: {e}")
+                    # log(f"==> Sleeping for 15 seconds | gas_price={self.gas_price} ... ", end="")
+                    # try:
+                    #     time.sleep(15)
+                    # except Exception as e:
+                    #     log(f"E: {e}")
 
-                    log(ok())
+                    # log(ok())
                     log(history.filter(sender=self._from))
 
                 return self.timeout(method, contract, *args)

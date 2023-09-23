@@ -53,7 +53,7 @@ class Ewe:
         self.completed: List[int] = []
         self.remaining: List[int] = []
         self.start = 0
-        self.track_submitted_wf = {}  # type: ignore
+        self.submitted_wf = {}  # type: ignore
 
     def get_run_time(self) -> str:
         seconds = round(default_timer() - self.start)
@@ -197,29 +197,34 @@ def submit_layering():
                 dependent_jobs = list(set(dependent_jobs + wf.in_edges(node)))
 
             for job_id in dependent_jobs:
-                key = ewe.submitted_node_dict[job_id]
-                keys = key.split("_")
-                job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=True)
-                state_val = state.inv_code[job_info["stateCode"]]
-                if state_val == "RUNNING":
-                    if job_id in ewe.submitted:
-                        log(f"==> state changed to RUNNING for job: {job_id}")
-                        ewe.submitted.remove(job_id)
-                        ewe.running.append(job_id)
-                elif state_val == "COMPLETED":
-                    if job_id in ewe.submitted or job_id in ewe.running:
-                        log(f"==> state changed to COMPLETED for job: {job_id}")
-                        with suppress(Exception):
+                if job_id not in ewe.completed:
+                    key = ewe.submitted_node_dict[job_id]
+                    keys = key.split("_")
+                    log(f"{job_id} ", end="")
+                    job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False)
+                    state_val = state.inv_code[job_info["stateCode"]]
+                    if state_val != "COMPLETED":
+                        #: only for print purposes
+                        Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=True)
+
+                    if state_val == "RUNNING":
+                        if job_id in ewe.submitted:
+                            log(f"==> state changed to RUNNING for job: {job_id}")
                             ewe.submitted.remove(job_id)
+                            ewe.running.append(job_id)
+                    elif state_val == "COMPLETED":
+                        if job_id in ewe.submitted or job_id in ewe.running:
+                            log(f"==> state changed to COMPLETED for job: {job_id}")
+                            with suppress(Exception):
+                                ewe.submitted.remove(job_id)
 
-                        with suppress(Exception):
-                            ewe.running.remove(job_id)
+                            with suppress(Exception):
+                                ewe.running.remove(job_id)
 
-                        ewe.completed.append(job_id)
+                            ewe.completed.append(job_id)
 
                 #: all jobs should be completed
-                output = check_completed_jobs(ewe, dependent_jobs)
-                if output:
+                if check_completed_jobs(ewe, dependent_jobs):
                     break_flag = True
 
             if break_flag:
@@ -279,6 +284,7 @@ def submit_layering():
         job = Job()
         job.set_config(yaml_fn)
         submit_ipfs(job)  # submits the job
+        ewe.submitted_wf[idx] = True
         key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
         for node in G_sorted(G_copy):
             if node != "\\n":
@@ -311,6 +317,7 @@ def submit_layering():
         log(f"RUNNING   => {ewe.running}")
         log(f"COMPLETED => {ewe.completed}")
         log()
+        log(f"==> workflow_run_time=={ewe.get_run_time()} {n} {edges}")
         log("-----------------------------------")
 
     log(f"==> final_layer_by_layer_workflow_run_time={ewe.get_run_time()} {n} {edges}")
