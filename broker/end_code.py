@@ -237,9 +237,10 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * provider_id={env.PROVIDER_ID}")
         log(f" * job_key={self.job_key} | index={self.index} | jobid={self.jobid}")
         log(f" * storage_ids={self.storage_ids}")
-        log(f" * [yellow]folder_name[/yellow]={self.folder_name}", h=False)
+        log(f" * [yellow]folder_name[/yellow]=[pink]{self.folder_name}", h=False)
         log(f" * requester_id_address={self.requester_id_address}")
         log(f" * received={self.job_info['received']}")
+        log(f" * job_type={self.job_type}")
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
         dot_fn = self.results_folder / "sub_workflow_job.dot"
         if os.path.isfile(dot_fn):
@@ -561,14 +562,13 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             log(f"==> ipfs_address={self.requester_info['ipfs_address']}")
 
         if self.requester_info["f_id"]:
-            log(f"==> f_id={self.requester_info['f_id']}")
+            log(f"==> f_id=[pink]{self.requester_info['f_id']}")
 
         if self.job_info["stateCode"] == str(state.code["COMPLETED"]):
             # self.get_job_info()
             log(":beer: job is already completed and its money is received", "green")
             raise QuietExit
 
-        log()
         run_time = self.job_info["run_time"]
         if self.is_workflow:
             log(f"==> requested_run_time={run_time[self.jobid]} minutes")

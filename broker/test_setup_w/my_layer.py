@@ -136,56 +136,17 @@ def submit_layering():
         raise Exception(f"E: Something is wrong at HEFT, node count should be {n}")
 
     log()
-
-    # while True:
-    #     for idx, item in enumerate(wf.topological_generations()):
-    #         if "\\n" in item:
-    #             item.remove("\\n")
-
-    #         node_list = list(map(int, item))
-    #         break_flag = True
-    #         for node in sorted(node_list):
-    #             if wf.in_edges(node):
-    #                 break_flag = False
-
-    #         #: obtain list of all dependent jobs from the previous layers
-    #         dependent_jobs = []
-    #         for node in sorted(node_list):
-    #             dependent_jobs = list(set(dependent_jobs + wf.in_edges(node)))
-
-    #         for job_id in dependent_jobs:
-    #             key = ewe.submitted_node_dict[job_id]
-    #             keys = key.split("_")
-    #             job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=True)
-    #             state_val = state.inv_code[job_info["stateCode"]]
-    #             if state_val == "RUNNING":
-    #                 if job_id in ewe.submitted:
-    #                     log(f"==> state changed to RUNNING for job: {job_id}")
-    #                     ewe.submitted.remove(job_id)
-    #                     ewe.running.append(job_id)
-    #             elif state_val == "COMPLETED":
-    #                 if job_id in ewe.submitted or job_id in ewe.running:
-    #                     log(f"==> state changed to COMPLETED for job: {job_id}")
-    #                     with suppress(Exception):
-    #                         ewe.submitted.remove(job_id)
-
-    #                     with suppress(Exception):
-    #                         ewe.running.remove(job_id)
-
-    #                     ewe.completed.append(job_id)
-
-    #             #: all jobs should be completed
-    #             output = check_completed_jobs(ewe, dependent_jobs)
-    #             if output:
-    #                 break_flag = True  # submit job as next step
-
     ewe.start = default_timer()
-    for idx, item in enumerate(wf.topological_generations()):
-        if "\\n" in item:
-            item.remove("\\n")
+    while True:
+        if not ewe.ready:
+            break
 
-        node_list = list(map(int, item))
-        while True:  #: wait till there is no dependency
+        for idx, item in enumerate(wf.topological_generations()):
+            if "\\n" in item:
+                item.remove("\\n")
+
+            node_list = list(map(int, item))
+
             break_flag = True
             for node in sorted(node_list):
                 if wf.in_edges(node):
@@ -196,8 +157,10 @@ def submit_layering():
             for node in sorted(node_list):
                 dependent_jobs = list(set(dependent_jobs + wf.in_edges(node)))
 
+            flag_me = False
             for job_id in dependent_jobs:
-                if job_id not in ewe.completed:
+                if job_id not in ewe.completed and job_id not in ewe.ready:
+                    flag_me = True
                     key = ewe.submitted_node_dict[job_id]
                     keys = key.split("_")
                     log(f"{job_id} ", end="")
@@ -227,83 +190,83 @@ def submit_layering():
                 if check_completed_jobs(ewe, dependent_jobs):
                     break_flag = True
 
-            if break_flag:
-                break
+                if flag_me:
+                    time.sleep(20)
+                    log(f"READY     => {ewe.ready}")
+                    log(f"SUBMITTED => {ewe.submitted}")
+                    log(f"RUNNING   => {ewe.running}")
+                    log(f"COMPLETED => {ewe.completed}")
+                    log()
+                    log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
+                    log("-----------------------------------")
+                    ewe.update_job_stats()
 
-            time.sleep(20)
-            log(f"READY     => {ewe.ready}")
-            log(f"SUBMITTED => {ewe.submitted}")
-            log(f"RUNNING   => {ewe.running}")
-            log(f"COMPLETED => {ewe.completed}")
-            log()
-            log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
-            log("-----------------------------------")
-            ewe.update_job_stats()
+            try:
+                ewe.submitted_wf[idx]
+            except:
+                ewe.submitted_wf[idx] = False
 
-        G_copy = wf.G.copy()
-        with suppress(Exception):
-            G_copy.remove_node("\\n")
+            if break_flag and not ewe.submitted_wf[idx]:
+                G_copy = wf.G.copy()
+                with suppress(Exception):
+                    G_copy.remove_node("\\n")
 
-        for node in list(wf.G.nodes):
-            if node != "\\n" and int(node) not in node_list:
-                G_copy.remove_node(node)
+                for node in list(wf.G.nodes):
+                    if node != "\\n" and int(node) not in node_list:
+                        G_copy.remove_node(node)
 
-        nx.nx_pydot.write_dot(G_copy, BASE / "sub_workflow_job.dot")
-        if len(node_list) > 1:
-            yaml_original["config"]["jobs"] = {}
-            for i, _job in enumerate(sorted(node_list)):
-                my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
-                yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
-                yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
-                yaml_original["config"]["dt_in"] = 200
-                yaml_original["config"]["data_transfer_out"] = 0
-                for u, v, d in wf.G.edges(data=True):
-                    if int(u) in item and int(v) in item:
-                        pass
-                    else:
-                        if u not in list(G_copy.nodes) and v in list(G_copy.nodes):
-                            yaml_original["config"]["dt_in"] += int(d["weight"])
+                nx.nx_pydot.write_dot(G_copy, BASE / "sub_workflow_job.dot")
+                if len(node_list) > 1:
+                    yaml_original["config"]["jobs"] = {}
+                    for i, _job in enumerate(sorted(node_list)):
+                        my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
+                        yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
+                        yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
+                        yaml_original["config"]["dt_in"] = 200
+                        yaml_original["config"]["data_transfer_out"] = 0
+                        for u, v, d in wf.G.edges(data=True):
+                            if int(u) in item and int(v) in item:
+                                pass
+                            else:
+                                if u not in list(G_copy.nodes) and v in list(G_copy.nodes):
+                                    yaml_original["config"]["dt_in"] += int(d["weight"])
 
-                        if u in list(G_copy.nodes) and v not in list(G_copy.nodes):
-                            yaml_original["config"]["data_transfer_out"] += int(d["weight"])
-        else:
-            my_job = yaml_jobs["config"]["jobs"][f"job{node_list[0]}"]
-            yaml_original["config"]["dt_in"] = my_job["dt_in"]
-            yaml_original["config"]["data_transfer_out"] = my_job["dt_out"]
-            yaml_original["config"]["jobs"] = {}
-            yaml_original["config"]["jobs"]["job1"]["cores"] = 1
-            yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
+                                if u in list(G_copy.nodes) and v not in list(G_copy.nodes):
+                                    yaml_original["config"]["data_transfer_out"] += int(d["weight"])
+                else:
+                    my_job = yaml_jobs["config"]["jobs"][f"job{node_list[0]}"]
+                    yaml_original["config"]["dt_in"] = my_job["dt_in"]
+                    yaml_original["config"]["data_transfer_out"] = my_job["dt_out"]
+                    yaml_original["config"]["jobs"] = {}
+                    yaml_original["config"]["jobs"]["job1"]["cores"] = 1
+                    yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
 
-        provider_char = random.choice("abc")
-        yaml_original["config"]["provider_address"] = provider_id[provider_char]
-        yaml_original["config"]["source_code"]["path"] = str(BASE)
-        log(
-            f"* w{idx} => {sorted(node_list)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "
-            "[orange]-----------------------------------------------"
-        )
-        job = Job()
-        job.set_config(yaml_fn)
-        submit_ipfs(job)  # submits the job
-        ewe.submitted_wf[idx] = True
-        key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
-        for node in G_sorted(G_copy):
-            if node != "\\n":
-                try:
-                    ewe.submitted_dict[key].append(int(node))
-                except:
-                    ewe.submitted_dict[key] = [int(node)]
+                provider_char = random.choice("abc")
+                yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                yaml_original["config"]["source_code"]["path"] = str(BASE)
+                log(
+                    f"* w{idx} => {sorted(node_list)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "
+                    "[orange]-----------------------------------------------"
+                )
+                job = Job()
+                job.set_config(yaml_fn)
+                submit_ipfs(job)  # submits the job
+                ewe.submitted_wf[idx] = True
+                key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
+                for node in G_sorted(G_copy):
+                    if node != "\\n":
+                        try:
+                            ewe.submitted_dict[key].append(int(node))
+                        except:
+                            ewe.submitted_dict[key] = [int(node)]
 
-        #: apply reverse map
-        for idx, node in enumerate(sorted(node_list)):
-            ewe.submitted_node_dict[node] = f"{key}_{idx}"
+                #: apply reverse map
+                for idx, node in enumerate(sorted(node_list)):
+                    ewe.submitted_node_dict[node] = f"{key}_{idx}"
 
-        for node in list(G_copy.nodes):
-            ewe.ready.remove(int(node))
-            ewe.submitted.append(int(node))
-
-        ####
-
-        # fetch_calcualted_cost(yaml_fn)
+                for node in list(G_copy.nodes):
+                    ewe.ready.remove(int(node))
+                    ewe.submitted.append(int(node))
 
     #: Check for the final submitted layer
     while True:
