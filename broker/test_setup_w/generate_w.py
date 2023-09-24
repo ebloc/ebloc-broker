@@ -55,7 +55,10 @@ def main():
         wf.G = wf.generate_random_dag(n, edges)
         if len(list(wf.G.nodes)) == n:
             break
+        # else:
+        #     print(f"==> Trying again n={len(list(wf.G.nodes))}")
 
+    print(f"{n} {edges}")
     nx.nx_pydot.write_dot(wf.G, BASE / "workflow_job.dot")
     nx.draw_spring(wf.G, with_labels=True)
     plt.savefig(BASE / "job.png")

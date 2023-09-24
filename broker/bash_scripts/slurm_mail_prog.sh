@@ -30,7 +30,12 @@ if [[ $c == *" Began, "* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
         . $VENV_PATH/bin/activate
-        nohup $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null 2>&1
+        # nohup $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null 2>&1
+        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
+        sleep 1
+        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
+        sleep 1
+        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
     fi
 fi
 
@@ -57,9 +62,14 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
         . $VENV_PATH/bin/activate
-        nohup $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null && \
-            $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null && \
-            $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null 2>&1
+        timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null
+        sleep 1
+        timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null
+        sleep 1
+        timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null
+        # nohup $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null && \
+        #     $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null && \
+        #     $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null 2>&1
     fi
 fi
 

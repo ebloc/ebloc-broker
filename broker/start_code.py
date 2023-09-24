@@ -29,7 +29,7 @@ def start_call(key, index, jobid, slurm_job_id) -> None:
     Ebb.mongo_broker.set_job_state_pid(str(key), int(index), pid)
     _log.ll.LOG_FILENAME = env.LOG_DIR / "transactions" / env.PROVIDER_ID.lower() / f"{key}_{index}.txt"
     # _log.ll.IS_PRINT = False
-    log(f"~/ebloc-broker/broker/start_code.py {key} {index} {jobid} {slurm_job_id}", "info")
+    log(f"$ ~/ebloc-broker/broker/start_code.py {key} {index} {jobid} {slurm_job_id}", "info")
     _, _, error = popen_communicate(["scontrol", "show", "job", slurm_job_id])
     if "slurm_load_jobs error: Invalid job id specified" in str(error):
         log(f"E: {error}")
@@ -47,8 +47,9 @@ def start_call(key, index, jobid, slurm_job_id) -> None:
     date = p3.communicate()[0].decode("utf-8").strip()
     start_ts = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
     log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {jobid} {start_ts}", is_code=True)
+    log(f"==> date={datetime.today().strftime('%Y-%m-%d %H:%M:%S')}")
     log(f"==> pid={pid}")
-    for attempt in range(10):
+    for attempt in range(5):
         if attempt > 0:
             log(f"warning: Sleeping for {cfg.BLOCK_DURATION * 2} ...")
             time.sleep(cfg.BLOCK_DURATION * 2)
@@ -56,8 +57,8 @@ def start_call(key, index, jobid, slurm_job_id) -> None:
         job, *_ = Ebb._get_job_info(env.PROVIDER_ID, key, int(index), int(jobid))
         state_code = int(job[0])
         if state_code > 1:
-            log(f"warning: State is already changed state_code={state.inv_code[state_code]}({state_code})")
-            sys.exit(1)
+            log(f"warning: State have already changed state_code={state.inv_code[state_code]}({state_code})")
+            sys.exit(0)
 
         try:
             tx = Ebb.set_job_state_running(key, index, jobid, start_ts)
@@ -89,7 +90,7 @@ def start_call(key, index, jobid, slurm_job_id) -> None:
 
 def main():
     if len(sys.argv) != 5:
-        log("E: Wrong number of arguments")
+        log("E: Wrong number of arguments provided")
     else:
         start_call(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 

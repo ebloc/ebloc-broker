@@ -28,8 +28,10 @@ if len(sys.argv) == 3:
     n = int(sys.argv[1])
     edges = int(sys.argv[2])
 else:
-    n = 10
-    edges = 10
+    print("Please provide node and edge number as argument")
+    sys.exit(1)
+    # n = 10
+    # edges = 10
 
 BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
 # BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
@@ -75,6 +77,7 @@ class Ewe:
         self.running: List[int] = []
         self.completed: List[int] = []
         self.remaining: List[int] = []
+        self.refunded: List[int] = []
         self.start = 0
 
     def get_run_time(self) -> str:
@@ -217,6 +220,9 @@ def check_jobs(ewe):
     log(f"SUBMITTED => {ewe.submitted}")
     log(f"RUNNING   => {ewe.running}")
     log(f"COMPLETED => {ewe.completed}")
+    if ewe.refunded:
+        log(f"REFUNDED => {ewe.refunded}")
+
     log()
     log(f"slots: {slots}")
     log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
@@ -250,8 +256,20 @@ def check_jobs(ewe):
                             log(ewe.batch_to_submit)
                             ewe.batch_submit()
                             return
+                elif state_val == "REFUNDED":
+                    if val in ewe.submitted or val in ewe.running:
+                        log(f"==> state changed to COMPLETED for job: {val}")
+                        with suppress(Exception):
+                            ewe.submitted.remove(val)
 
-                        # TODO: recursive check to submit new jobs
+                        with suppress(Exception):
+                            ewe.running.remove(val)
+
+                        ewe.refunded.append(val)
+
+                    breakpoint()  # DEBUG
+
+                    # TODO: recursive check to submit new jobs
 
 
 def main():

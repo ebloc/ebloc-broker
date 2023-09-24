@@ -238,7 +238,7 @@ class Workflow:
             output = run(cmd)
             if not self.final_flag:
                 try:
-                    time.sleep(20)
+                    time.sleep(30)
                 except Exception as e:
                     log(f"E: {e}")
 
@@ -246,7 +246,6 @@ class Workflow:
             job_id = int(output.split(" ")[3])
             return job_id
         else:
-            breakpoint()
             return random.randint(1, 101)
 
     def dependent_submit_job(self, i, predecessors, slurm):
@@ -294,14 +293,13 @@ class Workflow:
                 print(output)
                 if not self.final_flag:
                     try:
-                        time.sleep(20)
+                        time.sleep(30)
                     except Exception as e:
                         log(f"E: {e}")
 
                 job_id = int(output.split(" ")[3])
                 return job_id
             else:
-                breakpoint()  # DEBUG
                 return random.randint(1, 101)
         else:
             job_id_str = ""
@@ -348,7 +346,6 @@ class Workflow:
                 job_id = int(output.split(" ")[3])
                 return job_id
             else:
-                breakpoint()  # DEBUG
                 return random.randint(1, 101)
 
     def generate_random_dag(self, number_nodes, number_edges):
@@ -364,6 +361,25 @@ class Workflow:
             w = random.randint(1, 100)  # weight
             G.add_edge(start_node, end_node, weight=w)
             if not nx.is_directed_acyclic_graph(G):
+                G.remove_edge(start_node, end_node)
+
+        return G
+
+    def _generate_random_dag(self, nodes, edges):
+        G = nx.DiGraph()
+        for i in range(nodes):
+            G.add_node(i + 1)
+
+        while edges > 0:
+            start_node = end_node = random.randint(0, nodes) + 1
+            while end_node == start_node:
+                end_node = random.randint(0, nodes) + 1
+
+            w = random.randint(1, 100)  # weight
+            G.add_edge(start_node, end_node, weight=w)
+            if nx.is_directed_acyclic_graph(G):
+                edges -= 1
+            else:
                 G.remove_edge(start_node, end_node)
 
         return G

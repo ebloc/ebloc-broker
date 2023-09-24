@@ -637,12 +637,12 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             tx_hash = self.process_payment_tx()
         except Exception as e:
             print_tb(e)
-            raise e
+            sys.exit(0)
 
         time.sleep(1)
         self._get_tx_status(tx_hash)
         self.get_job_info()
-        log("SUCCESS")
+        log("SUCCESS :beer:")
         # self.remove_job_folder()  # FIXME: TESTING also may remove dependent data files
 
 
@@ -666,3 +666,4 @@ if __name__ == "__main__":
             log(f"Exception: [red]{e}", is_wrap=True)
         else:
             print_tb(e)
+            sys.exit(0)
