@@ -1,63 +1,22 @@
 config:
   # requester_address: "0x0636278CBD420368b1238ab204b1073df9cC1c5c"
-  provider_address: '0xe2e146d6B456760150d78819af7d276a1223A6d4'
+  provider_address: '0x29e613B04125c16db3f3613563bFdd0BA24Cb629'
   search_cheapest_provider: false
   source_code:
     cache_type: public
-    path: /home/alper/test_eblocbroker/workflow/100_125
+    path: /home/alper/test_eblocbroker/workflow/140_200
     storage_hours: 0
     storage_id: ipfs
-  dt_in: 200 ##
-  data_transfer_out: 675  # sum of output weights
+  dt_in: 428 ##
+  data_transfer_out: 250  # sum of output weights
   jobs:
-    job33:
-      cores: 1
-      run_time: 5
-    job84:
-      cores: 1
-      run_time: 5
-    job81:
-      cores: 1
-      run_time: 5
-    job63:
-      cores: 1
-      run_time: 3
-    job2:
-      cores: 1
-      run_time: 3
-    job21:
-      cores: 1
-      run_time: 5
-    job16:
-      cores: 1
-      run_time: 2
-    job57:
+    job127:
       cores: 1
       run_time: 4
-    job73:
+    job94:
       cores: 1
       run_time: 4
-    job19:
+    job131:
       cores: 1
       run_time: 4
-    job68:
-      cores: 1
-      run_time: 2
-    job50:
-      cores: 1
-      run_time: 2
-    job40:
-      cores: 1
-      run_time: 2
-    job88:
-      cores: 1
-      run_time: 4
-    job37:
-      cores: 1
-      run_time: 5
-    job72:
-      cores: 1
-      run_time: 2
-    job91:
-      cores: 1
-      run_time: 2
+  dt_out: {}

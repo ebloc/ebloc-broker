@@ -36,6 +36,8 @@ if [[ $c == *" Began, "* ]]; then
         timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
         sleep 1
         timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
+        sleep 1
+        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
     fi
 fi
 

@@ -49,10 +49,12 @@ def main():
     except:
         pass
 
+    print("Generate random dag...")
     wf = Workflow()
     while True:
         #: to be sure nodes are generated with the exact given node number
         wf.G = wf.generate_random_dag(n, edges)
+        # print(len(list(wf.G.nodes)))
         if len(list(wf.G.nodes)) == n:
             break
         # else:

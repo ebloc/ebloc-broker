@@ -6,6 +6,7 @@ import networkx as nx
 import pickle
 import random
 import time
+from heft.core import schedule
 from contextlib import suppress
 from pathlib import Path
 from timeit import default_timer
@@ -21,13 +22,16 @@ from broker.errors import QuietExit
 from broker.ipfs.submit import submit_ipfs
 from broker.lib import state
 from broker.workflow.Workflow import Workflow
+from broker.test_setup_w.my_scheduler import computation_cost, communication_cost
+
 
 wf = Workflow()
+wf_sub = Workflow()
+slots = {}  # type: ignore
 provider_id = {}
 provider_id["a"] = "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
 provider_id["b"] = "0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24"
 provider_id["c"] = "0xe2e146d6B456760150d78819af7d276a1223A6d4"
-
 if len(sys.argv) == 3:
     n = int(sys.argv[1])
     edges = int(sys.argv[2])
@@ -51,6 +55,7 @@ class Ewe:
         self.submitted: List[int] = []
         self.running: List[int] = []
         self.completed: List[int] = []
+        self.refunded: List[int] = []
         self.remaining: List[int] = []
         self.start = 0
         self.submitted_wf = {}  # type: ignore
@@ -81,6 +86,16 @@ class Ewe:
                             self.running.remove(key)
 
                         self.completed.append(key)
+                elif state_val == "REFUNDED":
+                    if key in self.submitted or key in self.running:
+                        log(f"==> state changed to REFUNDED for job: {key}")
+                        with suppress(Exception):
+                            self.submitted.remove(key)
+
+                        with suppress(Exception):
+                            self.running.remove(key)
+
+                        self.refunded.append(key)
 
         with open(BASE / "layer_submitted_dict.pkl", "wb") as f:
             pickle.dump(self.submitted_node_dict, f)
@@ -96,7 +111,7 @@ def fetch_calcualted_cost(yaml_fn):
 
 def check_completed_jobs(ewe, dependent_jobs):
     for job_id in dependent_jobs:
-        if job_id not in ewe.completed:
+        if job_id not in ewe.completed and job_id not in ewe.refunded:
             return False
 
     return True
@@ -122,6 +137,7 @@ def submit_layering():
     for node in list(wf.G_sorted()):
         ewe.ready.append(int(node))
 
+    last_submitted_provider = "z"
     slot_count = 0
     for idx, item in enumerate(wf.topological_generations()):
         if "\\n" in item:
@@ -135,6 +151,7 @@ def submit_layering():
     if slot_count != n:
         raise Exception(f"E: Something is wrong at LAYER, node count should be {n}")
 
+    start_flag = False
     log()
     ewe.start = default_timer()
     while True:
@@ -146,7 +163,6 @@ def submit_layering():
                 item.remove("\\n")
 
             node_list = list(map(int, item))
-
             break_flag = True
             for node in sorted(node_list):
                 if wf.in_edges(node):
@@ -159,7 +175,7 @@ def submit_layering():
 
             flag_me = False
             for job_id in dependent_jobs:
-                if job_id not in ewe.completed and job_id not in ewe.ready:
+                if job_id not in ewe.completed and job_id not in ewe.ready and job_id not in ewe.refunded:
                     flag_me = True
                     key = ewe.submitted_node_dict[job_id]
                     keys = key.split("_")
@@ -185,21 +201,41 @@ def submit_layering():
                                 ewe.running.remove(job_id)
 
                             ewe.completed.append(job_id)
+                    elif state_val == "REFUNDED":
+                        if job_id in ewe.submitted or job_id in ewe.running:
+                            log(f"==> state changed to REFUNDED for job: {job_id}")
+                            with suppress(Exception):
+                                ewe.submitted.remove(job_id)
 
-                #: all jobs should be completed
+                            with suppress(Exception):
+                                ewe.running.remove(job_id)
+
+                            ewe.refunded.append(job_id)
+
+                #: all jobs should be completed for the given level
                 if check_completed_jobs(ewe, dependent_jobs):
                     break_flag = True
 
                 if flag_me:
-                    time.sleep(20)
-                    log(f"READY     => {ewe.ready}")
-                    log(f"SUBMITTED => {ewe.submitted}")
-                    log(f"RUNNING   => {ewe.running}")
-                    log(f"COMPLETED => {ewe.completed}")
-                    log()
-                    log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
-                    log("-----------------------------------")
                     ewe.update_job_stats()
+
+            if idx == len(wf.topological_generations()) - 1:
+                log(f"READY     => {ewe.ready}")
+                log(f"SUBMITTED => {ewe.submitted}")
+                log(f"RUNNING   => {ewe.running}")
+                log(f"COMPLETED => {ewe.completed}")
+                if ewe.refunded:
+                    log(f"REFUNDED => {ewe.refunded}")
+
+                log()
+                log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
+                if start_flag:
+                    time.sleep(20)
+            else:
+                log("----------------------------------------------------------------------", "yellow")
+
+            if not start_flag:
+                start_flag = True
 
             try:
                 ewe.submitted_wf[idx]
@@ -216,6 +252,19 @@ def submit_layering():
                         G_copy.remove_node(node)
 
                 nx.nx_pydot.write_dot(G_copy, BASE / "sub_workflow_job.dot")
+                # HEFT ------------------------------
+                wf_sub.read_dot(BASE / "sub_workflow_job.dot")
+                dag = wf_sub.dot_to_tuple()
+                orders, jobson = schedule(dag, "abc", computation_cost, communication_cost)
+                for key, _ in provider_id.items():
+                    for order in orders[key]:
+                        if key not in slots:
+                            slots[key] = [int(order.job)]
+                        else:
+                            slots[key].append(int(order.job))
+
+                log(f"slots: {slots}")
+                # HEFT ------------------------------
                 if len(node_list) > 1:
                     yaml_original["config"]["jobs"] = {}
                     for i, _job in enumerate(sorted(node_list)):
@@ -242,11 +291,18 @@ def submit_layering():
                     yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
 
                 provider_char = random.choice("abc")
+                while True:
+                    if provider_char == last_submitted_provider:
+                        provider_char = random.choice("abc")
+                    else:
+                        break
+
+                last_submitted_provider = provider_char
                 yaml_original["config"]["provider_address"] = provider_id[provider_char]
                 yaml_original["config"]["source_code"]["path"] = str(BASE)
                 log(
                     f"* w{idx} => {sorted(node_list)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "
-                    "[orange]-----------------------------------------------"
+                    "[orange]----------------------------------------------------"
                 )
                 job = Job()
                 job.set_config(yaml_fn)
@@ -279,6 +335,9 @@ def submit_layering():
         log(f"SUBMITTED => {ewe.submitted}")
         log(f"RUNNING   => {ewe.running}")
         log(f"COMPLETED => {ewe.completed}")
+        if ewe.refunded:
+            log(f"REFUNDED => {ewe.refunded}")
+
         log()
         log(f"==> workflow_run_time=={ewe.get_run_time()} {n} {edges}")
         log("-----------------------------------")

@@ -657,7 +657,9 @@ class TimeoutError(Exception):
     pass
 
 
-def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+def timeout(seconds=600, error_message=os.strerror(errno.ETIME)):
+    """__ https://stackoverflow.com/a/494273/2402577"""
+
     def decorator(func):
         def _handle_timeout(signum, frame):
             raise TimeoutError(error_message)

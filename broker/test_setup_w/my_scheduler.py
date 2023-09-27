@@ -198,6 +198,7 @@ class Ewe:
 
             job = Job()
             job.set_config(yaml_fn_wf)
+            print(f"dt_in={yaml_cfg['config']['dt_in']}")
             submit_ipfs(job)
             key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
             for node in self.G_sorted(G_copy):
@@ -224,7 +225,10 @@ def check_jobs(ewe):
         log(f"REFUNDED => {ewe.refunded}")
 
     log()
-    log(f"slots: {slots}")
+    log("slots:")
+    log(f"a => {sorted(slots['a'])}")
+    log(f"b => {sorted(slots['b'])}")
+    log(f"c => {sorted(slots['c'])}")
     log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
     log("-----------------------------------")
     for key, value in ewe.submitted_dict.items():
@@ -258,7 +262,7 @@ def check_jobs(ewe):
                             return
                 elif state_val == "REFUNDED":
                     if val in ewe.submitted or val in ewe.running:
-                        log(f"==> state changed to COMPLETED for job: {val}")
+                        log(f"==> state changed to REFUNDED for job: {val}")
                         with suppress(Exception):
                             ewe.submitted.remove(val)
 
@@ -266,10 +270,10 @@ def check_jobs(ewe):
                             ewe.running.remove(val)
 
                         ewe.refunded.append(val)
-
-                    breakpoint()  # DEBUG
-
-                    # TODO: recursive check to submit new jobs
+                        if ewe.batch_to_submit:
+                            log(ewe.batch_to_submit)
+                            ewe.batch_submit()
+                            return
 
 
 def main():

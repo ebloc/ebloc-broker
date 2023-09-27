@@ -375,14 +375,28 @@ class Driver:
             self.requester_id = None
             try:
                 self.process_logged_job(idx)
+            except JobException as e:
+                log(str(e))
+            except Exception as e:
+                if "Max retries exceeded with url" not in str(e):
+                    print_tb(e)
+                elif "Forever is over" in str(e):
+                    self.process_logged_job(idx)
+
+                log(str(e))
+
+            try:
                 self.sent_job_to_storage_class()
             except JobException as e:
                 log(str(e))
             except Exception as e:
                 if "Max retries exceeded with url" not in str(e):
                     print_tb(e)
+                elif "Forever is over" in str(e):
+                    #: try again
+                    self.sent_job_to_storage_class()
 
-                log(str(e))
+                log(f"E: {e}")
 
 
 def check_block_number_sync(current_bn, bn_read):

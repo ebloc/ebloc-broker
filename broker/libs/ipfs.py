@@ -276,9 +276,11 @@ class Ipfs:
             if is_ipfs_on():
                 raise IpfsNotConnected
 
+        """
         if not cfg.IS_THREADING_ENABLED:
             signal.signal(signal.SIGALRM, handler)
             signal.alarm(cfg.IPFS_TIMEOUT)  # Set the signal handler and a 300-second alarm
+        """
 
         try:
             if ipfs_address:

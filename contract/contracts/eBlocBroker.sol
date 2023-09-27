@@ -77,13 +77,17 @@ contract eBlocBroker is
         Lib.Status storage jobInfo = provider.jobStatus[key][args.index];
         require(jobInfo.jobInfo == keccak256(abi.encodePacked(args.core, args.runTime)));
         Lib.Job storage job = jobInfo.jobs[args.jobID]; /* used as a pointer to a storage */
-        require(
-            job.stateCode == Lib.JobStateCodes.RUNNING && // job should be in running state if positive execution duration is provided
-                args.elapsedTime > 0 &&
-                args.elapsedTime <= args.runTime[args.jobID] && // provider cannot request more execution time of the job that is already requested
-                args.dataTransferIn <= jobInfo.dataTransferIn && // provider cannot request more than the job's given dataTransferIn
-                args.dataTransferOut <= jobInfo.dataTransferOut // provider cannot request more than the job's given dataTransferOut
-        );
+        if (job.stateCode == Lib.JobStateCodes.COMPLETED){
+            return;
+        }
+        //: job should be in running state if positive execution duration is provided
+        require(job.stateCode == Lib.JobStateCodes.RUNNING, "HERE_1");
+        //: provider cannot request more execution time of the job that is already requested
+        require(args.elapsedTime > 0 && args.elapsedTime <= args.runTime[args.jobID], "HERE_2");
+        //: provider cannot request more than the job's given dataTransferIn
+        require(args.dataTransferIn <= jobInfo.dataTransferIn, "HERE_3");
+        //: provider cannot request more than the job's given dataTransferOut
+        require(args.dataTransferOut <= jobInfo.dataTransferOut, "HERE_4");
         Lib.ProviderInfo memory info = provider.info[jobInfo.pricesSetBlockNum];
         uint256 gain;
         uint256 _refund;
@@ -134,7 +138,7 @@ contract eBlocBroker is
         gain = gain.add(jobInfo.receivedRegisteredDataFee);
         //: computationalCostRefund
         _refund = _refund.add(info.priceCoreMin.mul(core.mul((runTime.sub(args.elapsedTime)))));
-        require(gain.add(_refund) <= jobInfo.received);
+        require(gain.add(_refund) <= jobInfo.received, "gain.add(refund) > received");
         Lib.IntervalArg memory _interval;
         _interval.startTimestamp = job.startTimestamp;
         _interval.endTimestamp = uint32(args.endTimestamp);
@@ -160,9 +164,7 @@ contract eBlocBroker is
             // prevents double spending used as a reentrancy guard
             job.stateCode = Lib.JobStateCodes.COMPLETED;
         }
-
         // jobInfo.received = jobInfo.received.sub(gain.add(_refund));
-
         jobInfo.receivedRegisteredDataFee = 0;
         if (_refund > 0) {
             // unused core and bandwidth is refunded back to the client

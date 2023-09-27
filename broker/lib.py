@@ -252,7 +252,3 @@ def pre_check():
         msg = f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}"
         msg = f"{msg}.\nRun 'eblocbroker init'"
         raise Terminate(msg)
-
-
-# def preexec_function():
-#     signal.signal(signal.SIGINT, signal.SIG_IGN)

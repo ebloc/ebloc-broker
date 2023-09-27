@@ -2,19 +2,19 @@ networks:
   bloxberg:
     project_dir: ~/ebloc-broker/contract
     eBlocBroker:
-      address: '0x35F8ecb17a9EB63cB12cc0D15404A41946371F00'
-      tx_hash: '0xa3b58df370bce393762ed92ec2d7dcd6d54e53381d42f76c6a18f9d4d1b2662c'
+      address: '0x75a7357764379F26d2CF42E27e274D795B0fC977'
+      tx_hash: '0xcfc50ce3c89b54db1dda88329674c25c6fdcbf9d8e559021c1251bcea8ba6fc1'
     USDTmy:
-      address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
-      tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
+      address: '0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7'
+      tx_hash: '0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6'
   bloxberg-docker:
     project_dir: /workspace/ebloc-broker/contract
-    eBlocBroker:
-      address: '0x35F8ecb17a9EB63cB12cc0D15404A41946371F00'
-      tx_hash: '0xa3b58df370bce393762ed92ec2d7dcd6d54e53381d42f76c6a18f9d4d1b2662c'
-    USDTmy:
-      address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
-      tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
+    # eBlocBroker:
+    #   address: '0x35F8ecb17a9EB63cB12cc0D15404A41946371F00'
+    #   tx_hash: '0xa3b58df370bce393762ed92ec2d7dcd6d54e53381d42f76c6a18f9d4d1b2662c'
+    # USDTmy:
+    #   address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
+    #   tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
 
 networks_old:
   bloxberg:

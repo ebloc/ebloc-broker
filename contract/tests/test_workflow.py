@@ -114,7 +114,133 @@ def test_dummy():
     pass
 
 
-def test_workflow():
+def test_workflow_1():
+    # [42, 62, 77, 3, 76, 14, 1, 48, 17, 15, 51, 86, 94, 26, 91, 57]
+    provider = accounts[1]
+    requester = accounts[2]
+    register_provider(available_core=4, prices=prices)
+    register_requester(requester)
+    job_key = "QmQv4AAL8DZNxZeK3jfJGJi63v1msLMZGan7vSsCDXzZud"
+    code_hash = ipfs_to_bytes32(job_key)
+    job = Job()
+    job.code_hashes = [code_hash]
+    job.storage_hours = [0]
+    job.data_transfer_ins = [200]
+    job.data_transfer_out = 984
+    job.data_prices_set_block_numbers = [0]
+    job.cores = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    job.run_time = [4, 5, 2, 5, 3, 3, 3, 2, 4, 5, 4, 5, 2, 5, 3]
+    job.storage_ids = [StorageID.IPFS.value]
+    job.cache_types = [CacheID.PUBLIC.value]
+    job_price, cost = job.cost(provider, requester, is_verbose=True)
+    workflow_id = 0
+    args = [
+        provider,
+        ebb.getProviderSetBlockNumbers(provider)[-1],
+        job.storage_ids,
+        job.cache_types,
+        job.data_prices_set_block_numbers,
+        job.cores,
+        job.run_time,
+        job.data_transfer_out,
+        job_price,
+        workflow_id,
+    ]
+    _transfer(requester, Cent(job_price))
+    log(f"job_price={float(Cent(job_price).to('usd'))} usd")
+    ebb.submitJob(
+        job_key,
+        job.data_transfer_ins,
+        args,
+        job.storage_hours,
+        job.code_hashes,
+        {"from": requester},
+    )
+    start_timestamp = 10
+    for idx in range(0, 5):
+        ebb.setJobStateRunning(job_key, 0, idx, start_timestamp, {"from": provider})
+
+    # process_payment for the workflow
+    index = 0
+    job_id = 0
+    elapsed_time = 4
+    data_transfer = [0, 22]
+    ended_timestamp = 10 + elapsed_time * 60
+    result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        JOB.TYPE["FINAL"],
+    ]
+    ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+    # ----------------------------------------------------------------------------------g
+    index = 0
+    job_id = 0
+    elapsed_time = 4
+    data_transfer = [0, 22]
+    ended_timestamp = 10 + elapsed_time * 60
+    result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        JOB.TYPE["BEGIN"],
+    ]
+    ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+    # ----------------------------------------------------------------------------------g
+    index = 0
+    job_id = 2
+    elapsed_time = 2
+    data_transfer = [0, 20]
+    ended_timestamp = 10 + elapsed_time * 60
+    result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        JOB.TYPE["BETWEEN"],
+    ]
+    ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+    # ----------------------------------------------------------------------------------g
+    index = 0
+    job_id = 3
+    elapsed_time = 2
+    data_transfer = [0, 20]
+    ended_timestamp = 10 + elapsed_time * 60
+    result_ipfs_hash = ipfs_to_bytes32("QmWmyoMoctfbAaiEs2G46gpeUmhqFRDW6KWo64y5r581Ve")
+    args = [
+        index,
+        job_id,
+        ended_timestamp,
+        data_transfer[0],
+        data_transfer[1],
+        elapsed_time,
+        job.cores,
+        job.run_time,
+        JOB.TYPE["BETWEEN"],
+    ]
+    ebb.processPayment(job_key, args, result_ipfs_hash, {"from": provider})
+
+    # breakpoint()  # DEBUG
+
+
+def test_workflow_2():
     job = Job()
     provider = accounts[1]
     requester = accounts[2]
@@ -330,7 +456,7 @@ def test_workflow():
     assert job_price == received_sum + refunded_sum
 
 
-def test_workflow_2():
+def test_workflow_3():
     provider = accounts[1]
     requester = accounts[2]
     register_provider(available_core=4, prices=prices)

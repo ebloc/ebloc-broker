@@ -240,7 +240,15 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * [yellow]folder_name[/yellow]=[pink]{self.folder_name}", h=False)
         log(f" * requester_id_address={self.requester_id_address}")
         log(f" * received={self.job_info['received']}")
-        log(f" * job_type={self.job_type}")
+        if self.job_type == 0:
+            log(" * job_type=[pink]BEGIN")
+        elif self.job_type == 1:
+            log(" * job_type=[pink]BETWEEN")
+        elif self.job_type == 2:
+            log(" * job_type=[pink]FINAL")
+        elif self.job_type == 3:
+            log(" * job_type=[pink]SINGLE")
+
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
         dot_fn = self.results_folder / "sub_workflow_job.dot"
         if os.path.isfile(dot_fn):
@@ -251,22 +259,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             else:
                 self.is_workflow = True
 
-        with suppress(Exception):
-            proc = psutil.Process(int(self.job_state_running_pid))
-            log(proc)
-            if proc.status() != psutil.STATUS_SLEEPING:
-                flag = False
-                while True:
-                    if not pid_exists(self.job_state_running_pid):
-                        if flag:
-                            log(ok())
-
-                        break
-                    else:
-                        flag = True
-                        log("==> job_state_running() is still running; sleeping for 15 seconds")
-                        sleep(15)
-
+        # self.wait_job_start_process()
         self.job_state_running_tx = Ebb.mongo_broker.get_job_state_running_tx(self.job_key, self.index)
         log(f"==> job_state_running_tx={self.job_state_running_tx}")
 
@@ -302,6 +295,27 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 encoded_value = base64.b64encode((f"{_share_token}:").encode("utf-8")).decode("utf-8")
 
             log(f"==> shared_tokens: {key} => {value['share_token']} | encoded=[m]{encoded_value}", h=False)
+
+    def wait_job_start_process(self):
+        """Wait start.py process.
+
+        It may hang...
+        """
+        with suppress(Exception):
+            proc = psutil.Process(int(self.job_state_running_pid))
+            log(proc)
+            if proc.status() != psutil.STATUS_SLEEPING:
+                flag = False
+                while True:
+                    if not pid_exists(self.job_state_running_pid):
+                        if flag:
+                            log(ok())
+
+                        break
+                    else:
+                        flag = True
+                        log("==> job_state_running() is still running; sleeping for 15 seconds")
+                        sleep(15)
 
     def get_cloud_storage_class(self, _id):
         """Return cloud storage used for the id of the data."""
