@@ -28,7 +28,8 @@ def update_provider_prices(self, available_core, commitment_blk, prices):
     try:
         provider_info = self.get_provider_info(env.PROVIDER_ID)
         if (
-            provider_info["price_core_min"] == prices[0]
+            provider_info["available_core_num"] == available_core
+            and provider_info["price_core_min"] == prices[0]
             and provider_info["price_data_transfer"] == prices[1]
             and provider_info["price_storage"] == prices[2]
             and provider_info["price_cache"] == prices[3]
@@ -47,7 +48,7 @@ if __name__ == "__main__":
     yaml_fn = expanduser("~/.ebloc-broker/cfg.yaml")
     yaml_fn = expanduser(yaml_fn)
     if not os.path.exists(yaml_fn):
-        log(f"E: yaml_fn({yaml_fn}) does not exist")
+        log(f"E: yaml_fn({yaml_fn}) file does not exist")
         raise QuietExit
 
     args = Yaml(yaml_fn, auto_dump=False)

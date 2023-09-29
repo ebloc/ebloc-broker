@@ -14,6 +14,7 @@ from broker.utils import print_tb
 
 # https://blockexplorer.bloxberg.org/address/0xFD0EbCD42D4c4C2a2281adfDB48177454838C433/transactions
 base_account = "0xfd0ebcd42d4c4c2a2281adfdb48177454838c433".lower()
+# base_account = "0xd118b6ef83ccf11b34331f1e7285542ddf70bc49".lower()
 Ebb = cfg.Ebb
 _base_account = base_account.replace("0x", "")
 fn = str(Path(expanduser("~/.brownie/accounts")) / _base_account)
@@ -80,17 +81,21 @@ def transfer_eth(accounts, value, is_force=False):
 
 
 def main():
+    user = "0x72c1a89ff3606aa29686ba8d29e28dccff06430a"
     log(f"==> base_account_balance={Ebb._get_balance(base_account)}\n")
+    log(f"==> user_account_balance={Ebb._get_balance(user)}\n")
     owner = Ebb.get_owner()
     log(f"ower_balance ({owner.lower()})=", "bold", end="")
     balances([owner], is_verbose=True)
     balances(providers)
     print("----")
     # balances(requesters)
-    #
+
     # collect_all_into_base()
-    # transfer_eth(["0x29e613b04125c16db3f3613563bfdd0ba24cb629"], "0.5 ether", is_force=True)
-    # transfer_eth(["0x4934a70ba8c1c3acfa72e809118bdd9048563a24"], "0.5 ether", is_force=True)
+    # transfer_eth(["0x72c1a89ff3606aa29686ba8d29e28dccff06430a"], "0.5 ether", is_force=True)
+    # transfer_eth(["0x29e613b04125c16db3f3613563bfdd0ba24cb629"], "0.3 ether", is_force=True)
+    # transfer_eth(["0x4934a70ba8c1c3acfa72e809118bdd9048563a24"], "0.3 ether", is_force=True)
+    # transfer_eth(["0xe2e146d6b456760150d78819af7d276a1223a6d4"], "0.3 ether", is_force=True)
 
     # transfer_eth(providers, "0.01 ether", is_force=True)
     # transfer_eth(requesters, "0.11 ether")

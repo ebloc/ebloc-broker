@@ -227,7 +227,6 @@ class Job:
             self.cache_types.append(CACHE_TYPES[cache_type])
             self.source_code_path = Path(os.path.expanduser(self.cfg["config"]["source_code"]["path"]))
             size_mb = calculate_size(self.source_code_path)
-
             try:
                 if self.cfg["config"]["dt_in"] > 0:
                     #: for the test purpose

@@ -7,6 +7,8 @@ _HOME="/home/alper"
 VENV_PATH=${_HOME}"/venv"
 BROKER_PATH=${_HOME}"/ebloc-broker/broker"
 LOG_FILE=${_HOME}"/.ebloc-broker/slurm_script.log"
+START_SH=${_HOME}"/.ebloc-broker/start.sh"
+END_SH=${_HOME}"/.ebloc-broker/end.sh"
 SEP="~"
 a=$0
 b=$1
@@ -30,14 +32,15 @@ if [[ $c == *" Began, "* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
         . $VENV_PATH/bin/activate
-        # nohup $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null 2>&1
-        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
-        sleep 1
-        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
-        sleep 1
-        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
-        sleep 1
-        timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
+        echo -e "${BROKER_PATH}/start_code.py $arg0 $arg1 $arg3 $slurm_job_id" >> $START_SH
+        nohup timeout 58 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null 2>&1
+        sleep 58
+        nohup $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null 2>&1
+        # nohup $BROKER_PATH/start_code.sh $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
+        # timeout eklemek?
+        # /usr/bin/timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null || \
+        #     /usr/bin/timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null || \
+        #     /usr/bin/timeout 180 $BROKER_PATH/start_code.py $arg0 $arg1 $arg3 $slurm_job_id >/dev/null
     fi
 fi
 
@@ -64,12 +67,13 @@ if [[ $event == *"COMPLETED"* ]] || [[ $event == *"FAILED"* ]]; then
     echo -e $msg >> $LOG_FILE
     if [ "$arg0" != "$arg1" ]; then  # job_key and index should not be same
         . $VENV_PATH/bin/activate
-        timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null
-        sleep 1
-        timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null
-        sleep 1
-        timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null
-        # nohup $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null && \
+        echo -e "${BROKER_PATH}/end_code.py $arg0 $arg1 $arg2 $arg3 \"$name\" $slurm_job_id $arg4" >> $END_SH
+        # /usr/bin/timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null || \
+        #     /usr/bin/timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null || \
+        #     /usr/bin/timeout 300 $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null
+        nohup $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null 2>&1
+        sleep 59
+        nohup $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null 2>&1
         #     $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null && \
         #     $BROKER_PATH/end_code.py $arg0 $arg1 $arg2 $arg3 $name $slurm_job_id $arg4 >/dev/null 2>&1
     fi

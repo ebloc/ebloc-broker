@@ -32,7 +32,7 @@ def main():
     nx.draw(G, with_labels=True)
     plt.savefig("job.png")
 
-    sys.exit(0)
+    sys.exit(1)
 
     print(set(G.predecessors(5)))
     print([a[0] for a in G.edges() if a[1] == 5])

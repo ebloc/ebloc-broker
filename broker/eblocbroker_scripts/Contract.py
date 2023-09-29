@@ -377,7 +377,7 @@ class Contract(Base):
     def timeout_wrapper(self, method, contract, *args):
         idx = 0
         if method == "processPayment":
-            self.max_retries = 100
+            self.max_retries = 20
 
         first_try_flag = False
         while idx < self.max_retries:

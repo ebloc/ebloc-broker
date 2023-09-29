@@ -14,7 +14,7 @@ from broker.lib import state
 from broker.utils import popen_communicate
 
 
-def start_call(key, index, jobid, slurm_job_id) -> None:
+def start_call(key, index, jobid, slurm_job_id, sleep_dur=0) -> None:
     """Run when slurm job launches.
 
     * cmd1:
@@ -23,11 +23,14 @@ def start_call(key, index, jobid, slurm_job_id) -> None:
 
     * cmd2: date -d 2018-09-09T18:38:29 +"%s"
     """
+    if sleep_dur:
+        time.sleep(sleep_dur)
+
     Ebb = cfg.Ebb
     pid = os.getpid()
     #: save pid of the process as soon as possible
     Ebb.mongo_broker.set_job_state_pid(str(key), int(index), pid)
-    _log.ll.LOG_FILENAME = env.LOG_DIR / "transactions" / env.PROVIDER_ID.lower() / f"{key}_{index}.txt"
+    _log.ll.LOG_FILENAME = env.LOG_DIR / "transactions" / env.PROVIDER_ID.lower() / f"{key}_{index}_{jobid}.txt"
     # _log.ll.IS_PRINT = False
     log(f"~/ebloc-broker/broker/start_code.py {key} {index} {jobid} {slurm_job_id}", "info")
     _, _, error = popen_communicate(["scontrol", "show", "job", slurm_job_id])
@@ -89,10 +92,12 @@ def start_call(key, index, jobid, slurm_job_id) -> None:
 
 
 def main():
-    if len(sys.argv) != 5:
-        log("E: Wrong number of arguments provided")
-    else:
+    if len(sys.argv) == 5:
         start_call(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    elif len(sys.argv) == 6:
+        start_call(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+    else:
+        log("E: Wrong number of arguments provided")
 
 
 if __name__ == "__main__":

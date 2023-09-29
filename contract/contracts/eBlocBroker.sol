@@ -94,7 +94,7 @@ contract eBlocBroker is
         uint256 core = args.core[args.jobID];
         uint256 runTime = args.runTime[args.jobID];
         if (args.finalize == 0 || args.finalize == 3) {
-            // SINGLE-JOB or BEGIN-JOB of a workflow
+            // SINGLE-JOB or BEGIN-JOB of the workflow
             if (jobInfo.cacheCost > 0) {
                 //: checking data transferring cost
                 gain = info.priceCache.mul(args.dataTransferIn); // cache payment to receive
@@ -168,11 +168,8 @@ contract eBlocBroker is
         jobInfo.receivedRegisteredDataFee = 0;
         if (_refund > 0) {
             // unused core and bandwidth is refunded back to the client
-            // _distributeTransfer(jobInfo.jobOwner, _refund);
             ERC20(tokenAddress).increaseAllowance(jobInfo.jobOwner, _refund);
         }
-
-        // _distributeTransfer(msg.sender, gain); // transfer gained amount to the provider
         ERC20(tokenAddress).increaseAllowance(msg.sender, gain);
         _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
         return;

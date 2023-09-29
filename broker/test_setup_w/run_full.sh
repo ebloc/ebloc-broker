@@ -1,34 +1,19 @@
 #!/bin/bash
 
-## ./run.sh 10 10
-# echo "NEW_TEST 10 10"
-./my_scheduler.py 10 10
-./my_layer.py 10 10
+# ./run.sh 32 56
+# ./run.sh 64 112
+# ./run.sh 128 224
+# ./run.sh 256 448
+# ./run.sh 512 1100  # this one is 2.15x
 
-## ./run.sh 20 20
-# echo "NEW_TEST 20 20"
-./my_scheduler.py 20 20
-./my_layer.py 20 20
+# ./my_scheduler.py 32 56
+# ./my_scheduler.py 64 112
+# ./my_scheduler.py 128 224
+./my_scheduler.py 256 448 && \
+    ./my_scheduler.py 512 1100
 
-#./run.sh 40 40
-echo "NEW_TEST 40 40"
-./my_scheduler.py 40 40
-./my_layer.py 40 40
-
-echo "NEW_TEST 60 60"
-./my_scheduler.py 60 60
-
-# ----------------------------------------------
-
-./my_layer.py 60 60
-
-# ./run.sh 80 80
-# ./run.sh 100 100
-
-# echo "NEW_TEST 80 80"
-# ./my_scheduler.py 80 80
-# ./my_layer.py 80 80
-
-# echo "NEW_TEST 100 100"
-# ./my_scheduler.py 100 100
-# ./my_layer.py 100 100
+./my_layer_heft.py 32 56 && \
+    ./my_layer_heft.py 64 112 && \
+    ./my_layer_heft.py 128 224 && \
+    ./my_layer_heft.py 256 448 && \
+    ./my_layer_heft.py 512 1100

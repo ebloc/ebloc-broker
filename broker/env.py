@@ -25,7 +25,11 @@ class ENV_BASE:
 
             raise QuietExit(f"E: {fn} is not created")
 
-        self.cfg_yaml = Yaml(fn)
+        try:
+            self.cfg_yaml = Yaml(fn)
+        except Exception as e:
+            raise QuietExit(f"E: {e}: ~/.ebloc-broker/cfg.yaml is broken") from e
+
         self.cfg = self.cfg_yaml["cfg"]
         self.WHOAMI = self.cfg["whoami"]
         if platform in ("linux", "linux2"):

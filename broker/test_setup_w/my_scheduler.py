@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
+# >10 running jobs should be carried to FAILED
 import datetime
 import networkx as nx
 import pickle
+import sys
 import time
 from contextlib import suppress
 from heft.core import schedule
@@ -12,6 +13,7 @@ from timeit import default_timer
 from typing import Dict, List
 
 from broker import cfg
+from broker._utils import _log
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker._utils.yaml import Yaml
@@ -23,6 +25,8 @@ from broker.lib import state
 from broker.workflow.Workflow import Workflow
 
 wf = Workflow()
+
+_log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
 if len(sys.argv) == 3:
     n = int(sys.argv[1])
@@ -69,6 +73,7 @@ def communication_cost(ni, nj, A, B):
 
 class Ewe:
     def __init__(self) -> None:
+        self.jobs_started_run_time = {}  # type: ignore
         self.slots = {}  # type: ignore
         self.batch_to_submit = {}  # type: ignore
         self.ready: List[int] = []
@@ -78,6 +83,7 @@ class Ewe:
         self.completed: List[int] = []
         self.remaining: List[int] = []
         self.refunded: List[int] = []
+        self.failed: List[int] = []
         self.start = 0
 
     def get_run_time(self) -> str:
@@ -113,7 +119,11 @@ class Ewe:
 
                     flag = False
                     for dependent_job in dependent_jobs:
-                        if dependent_job not in self.completed:
+                        if (
+                            dependent_job in self.ready
+                            or dependent_job in self.submitted
+                            or dependent_job in self.running
+                        ):
                             flag = True
                             break
 
@@ -199,6 +209,7 @@ class Ewe:
             job = Job()
             job.set_config(yaml_fn_wf)
             print(f"dt_in={yaml_cfg['config']['dt_in']}")
+            # with suppress(Exception):
             submit_ipfs(job)
             key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
             for node in self.G_sorted(G_copy):
@@ -212,24 +223,53 @@ class Ewe:
                 pickle.dump(self.submitted_dict, f)
 
             for node in list(G_copy.nodes):
-                self.ready.remove(int(node))
-                self.submitted.append(int(node))
+                if node != "\\n":
+                    try:
+                        self.ready.remove(int(node))
+                    except:
+                        print(node)
+                        log("================================================== something is wrong")
+
+                    if int(node) not in self.submitted:
+                        self.submitted.append(int(node))
 
 
 def check_jobs(ewe):
     log(f"READY     => {ewe.ready}")
     log(f"SUBMITTED => {ewe.submitted}")
     log(f"RUNNING   => {ewe.running}")
-    log(f"COMPLETED => {ewe.completed}")
+    if ewe.completed:
+        log(f"COMPLETED => {ewe.completed}")
+
     if ewe.refunded:
         log(f"REFUNDED => {ewe.refunded}")
 
+    if ewe.failed:
+        log(f"FAILED => {ewe.failed}")
+
+    for job in ewe.jobs_started_run_time:
+        if job in ewe.running:
+            run_time = round(default_timer() - ewe.jobs_started_run_time[job])
+            if run_time > (int(yaml["config"]["jobs"][f"job{job}"]["run_time"]) + 1) * 60:
+                log(f"* CHECKME {job} <======================", "alert")
+
+    """
+    for job in ewe.jobs_started_run_time:
+        if job in ewe.running:
+            run_time = round(default_timer() - ewe.jobs_started_run_time[job])
+            if run_time > (int(yaml["config"]["jobs"][f"job{job}"]["run_time"]) + 10) * 60:
+                with suppress(Exception):
+                    ewe.running.remove(job)
+
+                ewe.failed.append(job)
+    """
+
     log()
-    log("slots:")
-    log(f"a => {sorted(slots['a'])}")
-    log(f"b => {sorted(slots['b'])}")
-    log(f"c => {sorted(slots['c'])}")
-    log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges}")
+    # log("slots:")
+    # log(f"a => {sorted(slots['a'])}")
+    # log(f"b => {sorted(slots['b'])}")
+    # log(f"c => {sorted(slots['c'])}")
+    log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges} (heft)")
     log("-----------------------------------")
     for key, value in ewe.submitted_dict.items():
         for idx, val in enumerate(sorted(value)):
@@ -245,6 +285,7 @@ def check_jobs(ewe):
                         log(f"==> state changed to RUNNING for job: {val}")
                         ewe.submitted.remove(val)
                         ewe.running.append(val)
+                        ewe.jobs_started_run_time[val] = default_timer()
                 elif state_val == "COMPLETED":
                     if val in ewe.submitted or val in ewe.running:
                         log(f"==> state changed to COMPLETED for job: {val}")
@@ -274,6 +315,14 @@ def check_jobs(ewe):
                             log(ewe.batch_to_submit)
                             ewe.batch_submit()
                             return
+
+                if val in ewe.running:
+                    run_time = round(default_timer() - ewe.jobs_started_run_time[val])
+                    if run_time > (int(yaml["config"]["jobs"][f"job{val}"]["run_time"]) + 5) * 60:
+                        with suppress(Exception):
+                            ewe.running.remove(val)
+
+                        ewe.failed.append(val)
 
 
 def main():
@@ -313,12 +362,13 @@ def main():
             break
 
         check_jobs(ewe)
-        time.sleep(15)
+        time.sleep(20)
 
     log(jobson)
 
     # finalizing
-    log(f"==> final_heft_workflow_run_time={ewe.get_run_time()} {n} {edges}")
+    total_run_time = ewe.get_run_time()
+    log(f"==> final_HEFT_workflow_run_time={total_run_time} {edges}")
     with open(BASE / "heft_submitted_dict.pkl", "wb") as f:
         pickle.dump(ewe.submitted_dict, f)
 

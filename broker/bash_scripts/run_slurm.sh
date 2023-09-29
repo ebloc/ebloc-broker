@@ -5,7 +5,7 @@ alias sudo='nocorrect sudo'
 USER=$(whoami)
 # VERBOSE=true
 run_worker_slurmd_nodes () {
-    echo "==> running worker slurmd nodes"
+    echo "==> Running worker slurmd nodes"
     ## https://slurm.schedmd.com/faq.html#multi_slurmd
     #             A I O T
     IFS=/ read -r _ _ _ T <<<$(command sinfo -h -o%C)

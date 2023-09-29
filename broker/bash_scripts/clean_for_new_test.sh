@@ -146,6 +146,12 @@ if [[ -d $BASE ]]; then
     cd $CURRENT_DIR
 fi
 
+# killall timeout
+
+echo -e "#!/bin/bash\n\n#\n" > ~/.ebloc-broker/start.sh
+echo -e "#!/bin/bash\n\n#\n" > ~/.ebloc-broker/end.sh
+chmod +x ~/.ebloc-broker/start.sh ~/.ebloc-broker/end.sh
+
 echo ""
 gdrive about &&  clean_gdrive
 echo ""

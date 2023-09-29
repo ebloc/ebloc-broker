@@ -350,10 +350,10 @@ class Ipfs:
                 result_ipfs_hash = constantly_print_popen(cmd)
                 if not result_ipfs_hash and not self.is_valid(result_ipfs_hash):
                     log(f"E: Generated new hash string returned empty. Trying again. Try count: {attempt}")
-                    time.sleep(5)
+                    # time.sleep(5)
                 elif not self.is_valid(result_ipfs_hash):
                     log(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
-                    time.sleep(5)
+                    # time.sleep(5)
 
                 break
             except:

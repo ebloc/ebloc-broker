@@ -49,7 +49,7 @@ def process_payment(
     self.get_job_info(env.PROVIDER_ID, job_key, index, job_id, received_bn, is_print=False)
     if self.job_info["stateCode"] == state.code["COMPLETED"]:
         log(f"warning: job ({job_key},{index},{job_id}) is completed and already get paid")
-        sys.exit(1)
+        sys.exit(0)
 
     """
     if self.job_info["stateCode"] == str(state.code["COMPLETED"]):

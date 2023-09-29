@@ -42,7 +42,7 @@ def main(*args):
     except:
         print("(0, 0, False, False)")
 
-    sys.exit(0)
+    sys.exit(1)
 
 
 if __name__ == "__main__":

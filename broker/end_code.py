@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import base64
+import datetime
 import getpass
 import networkx as nx
 import os
@@ -195,7 +196,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
             log("E: given key and index are equal to each other")
-            sys.exit(0)
+            sys.exit(1)
 
         try:
             self.job_info = eblocbroker_function_call(
@@ -215,13 +216,13 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         except Exception as e:
             log(f"E: {e}")
             sleep(15)
-            sys.exit(0)
+            sys.exit(1)
 
         self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address
         self.results_folder_prev: Path = self.requester_home_path / f"{self.job_key}_{self.index}"
         self.results_folder = self.results_folder_prev / "JOB_TO_RUN"
         if not is_dir(self.results_folder) and not is_dir(self.results_folder_prev):
-            sys.exit(0)
+            sys.exit(1)
 
         self.results_data_link = Path(self.results_folder_prev) / "data_link"
         self.results_data_folder = Path(self.results_folder_prev) / "data"
@@ -230,6 +231,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.patch_dir_ipfs = Path(self.results_folder_prev) / "patch_ipfs"
         mkdirs([self.patch_dir, self.patch_dir_ipfs])
         remove_empty_files_and_folders(self.results_folder)
+        log(f" * current_date={datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
         log(f" * whoami={getpass.getuser()} | id={os.getegid()}")
         log(f" * home={env.HOME}")
         log(f" * pwd={os.getcwd()}")
@@ -240,14 +242,15 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         log(f" * [yellow]folder_name[/yellow]=[pink]{self.folder_name}", h=False)
         log(f" * requester_id_address={self.requester_id_address}")
         log(f" * received={self.job_info['received']}")
-        if self.job_type == 0:
-            log(" * job_type=[pink]BEGIN")
-        elif self.job_type == 1:
-            log(" * job_type=[pink]BETWEEN")
-        elif self.job_type == 2:
-            log(" * job_type=[pink]FINAL")
-        elif self.job_type == 3:
-            log(" * job_type=[pink]SINGLE")
+        with suppress(Exception):
+            if int(self.job_type) == 0:
+                log(" * job_type=[pink]BEGIN")
+            elif int(self.job_type) == 1:
+                log(" * job_type=[pink]BETWEEN")
+            elif int(self.job_type) == 2:
+                log(" * job_type=[pink]FINAL")
+            elif int(self.job_type) == 3:
+                log(" * job_type=[pink]SINGLE")
 
         self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
         dot_fn = self.results_folder / "sub_workflow_job.dot"
@@ -342,8 +345,12 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         try:
             self.result_ipfs_hash = ipfs.add(folder_path)
             log(f"==> result_ipfs_hash={self.result_ipfs_hash}")
-            ipfs.pin(self.result_ipfs_hash)
-            data_transfer_out = ipfs.get_cumulative_size(self.result_ipfs_hash)
+            if self.result_ipfs_hash:
+                ipfs.pin(self.result_ipfs_hash)
+                data_transfer_out = ipfs.get_cumulative_size(self.result_ipfs_hash)
+            else:
+                data_transfer_out = 0
+                # TRY AGAIN: IPFS may return empty ipfs-hash FIXME
         except Exception as e:
             print_tb(e)
             raise e
@@ -352,12 +359,10 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.data_transfer_out += data_transfer_out
 
     def workflow_test_required(self):
+        log("==> data_transfer is updated due to test purpose:")
         if self.sub_workflow and not self.is_workflow:
             self.data_transfer_in = self.job_info["data_transfer_in"]
             self.data_transfer_out = self.job_info["data_transfer_out"]
-            log("data_transfer is updated due to test purpose:")
-            log(f" * dt_in={self.data_transfer_in}")
-            log(f" * dt_out={self.data_transfer_out}")
         elif self.sub_workflow and self.is_workflow:
             if self.job_type == JOB.TYPE["BEGIN"]:
                 self.data_transfer_in = self.job_info["data_transfer_in"]
@@ -368,6 +373,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             elif self.job_type == JOB.TYPE["BETWEEN"]:
                 self.data_transfer_in = 0
                 self.data_transfer_out = 0
+
+        log(f" * dt_in={self.data_transfer_in}")
+        log(f" * dt_out={self.data_transfer_out}")
 
     def process_payment_tx(self):
         self.workflow_test_required()
@@ -399,7 +407,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 log(f"==> Files to be removed: \n{files_to_remove}\n")
         except Exception as e:
             print_tb(e)
-            sys.exit()
+            sys.exit(1)
 
         run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn, "-delete"])
 
@@ -531,7 +539,6 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 is_print = False
             except Exception as e:
                 print_tb(e)
-                # sys.exit(0)
 
             # sleep here so this loop is not keeping CPU busy due to
             # start_code tx may deploy late into the blockchain.
@@ -544,7 +551,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             log(ok())
 
         log("E: failed all the attempts, abort")
-        sys.exit(0)
+        sys.exit(1)
 
     def remove_job_folder(self):
         """Remove downloaded code from local since it is not needed anymore; garbage collector."""
@@ -617,7 +624,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             log(f"{ok()}")
         except Exception as e:
             print_tb(e)
-            sys.exit(0)
+            sys.exit(1)
 
         self.code_hashes = self.job_info["code_hashes"]
         self.set_code_hashes_to_process()
@@ -631,7 +638,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             if self.elapsed_time > int(run_time[0]):
                 self.elapsed_time = run_time[0]
 
-        log(f"finalized_elapsed_time={self.elapsed_time}")
+        log(f"finalized_elapsed_time={self.elapsed_time} minutes")
         log("==> [yellow]job_info=", end="")
         for item in ["processPayment_bn", "processPayment_gas_used", "result_ipfs_hash"]:
             del self.job_info[item]
@@ -651,7 +658,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             tx_hash = self.process_payment_tx()
         except Exception as e:
             print_tb(e)
-            sys.exit(0)
+            sys.exit(1)
 
         time.sleep(1)
         self._get_tx_status(tx_hash)
@@ -680,4 +687,4 @@ if __name__ == "__main__":
             log(f"Exception: [red]{e}", is_wrap=True)
         else:
             print_tb(e)
-            sys.exit(0)
+            sys.exit(1)

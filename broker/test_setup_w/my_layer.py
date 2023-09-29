@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import sys
 import datetime
 import networkx as nx
 import pickle
 import random
+import sys
 import time
 from contextlib import suppress
 from pathlib import Path

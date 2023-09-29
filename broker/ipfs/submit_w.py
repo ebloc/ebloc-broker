@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 from pathlib import Path
 from sys import platform
 
@@ -149,8 +150,16 @@ def submit_ipfs_calc(job: Job, is_pass=False, is_verbose=True):
 
 
 def main():
+    if len(sys.argv) == 3:
+        n = int(sys.argv[1])
+        edges = int(sys.argv[2])
+    else:
+        n = 6
+        edges = 8
+
     yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_workflow.yaml"
     yaml_original = Yaml(yaml_fn)
+    yaml_original["config"]["source_code"]["path"] = f"/home/alper/test_eblocbroker/workflow/{n}_{edges}"
     BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
     yaml_fn_jobs = BASE / "jobs.yaml"
     yaml_jobs = Yaml(yaml_fn_jobs)

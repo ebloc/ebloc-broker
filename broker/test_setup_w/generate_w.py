@@ -49,7 +49,7 @@ def main():
     except:
         pass
 
-    print("Generate random dag...")
+    print(f"Generate random DAG for {n} {edges}...")
     wf = Workflow()
     while True:
         #: to be sure nodes are generated with the exact given node number
@@ -60,14 +60,15 @@ def main():
         # else:
         #     print(f"==> Trying again n={len(list(wf.G.nodes))}")
 
-    print(f"{n} {edges}")
+    print(f"{n} {edges}  [ok]")
     nx.nx_pydot.write_dot(wf.G, BASE / "workflow_job.dot")
-    nx.draw_spring(wf.G, with_labels=True)
-    plt.savefig(BASE / "job.png")
+    if n < 512:
+        nx.draw_spring(wf.G, with_labels=True)
+        plt.savefig(BASE / "job.png")
+
     base_size = 200
     base_dt_out_size = 250
     for i in range(1, job_num + 1):
-        # sleep_dur = random.randint(15, 30)
         sleep_dur = random.randint(2, 5)  # 2 <= x <= 5
         shutil.copyfile(base_fn, BASE / f"job{i}.sh")
         replace_str(BASE / f"job{i}.sh", sleep_dur * 60)
@@ -90,8 +91,6 @@ def main():
             dt_in += wf.get_weight(edge, i)
 
         _job["dt_in"] = dt_in
-        # breakpoint()  # DEBUG
-        # print(i)
 
 
 if __name__ == "__main__":

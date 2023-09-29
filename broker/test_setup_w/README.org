@@ -4,3 +4,10 @@ To run:
 ./generate_w.py
 ~/ebloc-broker/broker/ipfs/submit_w.py
 #+end_src
+
+On provider
+#+begin_src bash
+while ~/.ebloc-broker/start.sh; do sleep 15; done
+#
+while ~/.ebloc-broker/end.sh; do sleep 15; done
+#+end_src
