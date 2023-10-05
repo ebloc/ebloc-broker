@@ -4,18 +4,24 @@ config:
   search_cheapest_provider: false
   source_code:
     cache_type: public
-    path: /home/alper/test_eblocbroker/workflow/32_56
+    path: /home/alper/test_eblocbroker/workflow/256_448
     storage_hours: 0
     storage_id: ipfs
-  dt_in: 200  ##
-  data_transfer_out: 451  # sum of output weights
+  dt_in: 524  ##
+  data_transfer_out: 374  # sum of output weights
   jobs:
     job1:
       cores: 1
-      run_time: 3
+      run_time: 4
     job2:
       cores: 1
+      run_time: 5
+    job3:
+      cores: 1
       run_time: 4
+    job4:
+      cores: 1
+      run_time: 5
   costs:
     '0x29e613B04125c16db3f3613563bFdd0BA24Cb629': 930380
     '0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24': 862000

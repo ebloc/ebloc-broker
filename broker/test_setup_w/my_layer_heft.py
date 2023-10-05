@@ -44,6 +44,8 @@ else:
     edges = 10
 
 BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
+yaml_fn = BASE / "jobs.yaml"
+yaml = Yaml(yaml_fn)
 
 Ebb: "Contract.Contract" = cfg.Ebb
 # BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
@@ -51,6 +53,7 @@ Ebb: "Contract.Contract" = cfg.Ebb
 
 class Ewe:
     def __init__(self) -> None:
+        self.jobs_started_run_time = {}  # type: ignore
         self.slots = {}  # type: ignore
         self.batch_to_submit = {}  # type: ignore
         self.ready: List[int] = []
@@ -61,6 +64,7 @@ class Ewe:
         self.completed: List[int] = []
         self.refunded: List[int] = []
         self.remaining: List[int] = []
+        self.failed: List[int] = []
         self.start = 0
         self.submitted_wf = {}  # type: ignore
 
@@ -80,6 +84,7 @@ class Ewe:
                         log(f"==> state changed to RUNNING for job: {key}")
                         self.submitted.remove(key)
                         self.running.append(key)
+                        self.jobs_started_run_time[key] = default_timer()
                 elif state_val == "COMPLETED":
                     if key in self.submitted or key in self.running:
                         log(f"==> state changed to COMPLETED for job: {key}")
@@ -115,7 +120,7 @@ def fetch_calcualted_cost(yaml_fn):
 
 def check_completed_jobs(ewe, dependent_jobs):
     for job_id in dependent_jobs:
-        if job_id not in ewe.completed and job_id not in ewe.refunded:
+        if job_id not in ewe.completed and job_id not in ewe.refunded and job_id not in ewe.failed:
             return False
 
     return True
@@ -197,6 +202,7 @@ def submit_layering():
     start_flag = False
     log()
     ewe.start = default_timer()
+    breakpoint()  # DEBUG
     while True:
         if not ewe.ready:
             break
@@ -219,7 +225,7 @@ def submit_layering():
             # ? inner loop to find un-dependent part of the layer
             flag_me = False
             for job_id in dependent_jobs:
-                if job_id not in ewe.completed and job_id not in ewe.ready and job_id not in ewe.refunded:
+                if job_id in ewe.submitted or job_id in ewe.running:
                     flag_me = True
                     key = ewe.submitted_node_dict[job_id]
                     keys = key.split("_")
@@ -235,6 +241,7 @@ def submit_layering():
                             log(f"==> state changed to RUNNING for job: {job_id}")
                             ewe.submitted.remove(job_id)
                             ewe.running.append(job_id)
+                            ewe.jobs_started_run_time[job_id] = default_timer()
                     elif state_val == "COMPLETED":
                         if job_id in ewe.submitted or job_id in ewe.running:
                             log(f"==> state changed to COMPLETED for job: {job_id}")
@@ -256,6 +263,14 @@ def submit_layering():
 
                             ewe.refunded.append(job_id)
 
+                    if job_id in ewe.running:
+                        run_time = round(default_timer() - ewe.jobs_started_run_time[job_id])
+                        if run_time > (int(yaml["config"]["jobs"][f"job{job_id}"]["run_time"]) + 5) * 60:
+                            with suppress(Exception):
+                                ewe.running.remove(job_id)
+
+                            ewe.failed.append(job_id)
+
                 #: all jobs should be completed for the given level
                 if check_completed_jobs(ewe, dependent_jobs):
                     break_flag = True
@@ -270,6 +285,9 @@ def submit_layering():
                 log(f"COMPLETED => {ewe.completed}")
                 if ewe.refunded:
                     log(f"REFUNDED => {ewe.refunded}")
+
+                if ewe.failed:
+                    log(f"FAILED => {ewe.failed}")
 
                 log()
                 log(f"==> workflow_run_time={ewe.get_run_time()} {n} {edges} (layer)")
@@ -449,6 +467,9 @@ def submit_layering():
         log(f"COMPLETED => {ewe.completed}")
         if ewe.refunded:
             log(f"REFUNDED => {ewe.refunded}")
+
+        if ewe.failed:
+            log(f"FAILED => {ewe.failed}")
 
         log()
         log(f"==> workflow_run_time=={ewe.get_run_time()} {n} {edges} (layer)")
