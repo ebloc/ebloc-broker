@@ -2,5 +2,5 @@
 
 while true ; do
   ~/.ebloc-broker/start.sh
-  sleep 15
+  sleep 60
 done

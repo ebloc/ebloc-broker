@@ -67,6 +67,10 @@ class Ewe:
         self.failed: List[int] = []
         self.start = 0
         self.submitted_wf = {}  # type: ignore
+        self.very_first_job = {}
+        self.very_first_job["a"] = True
+        self.very_first_job["b"] = True
+        self.very_first_job["c"] = True
 
     def get_run_time(self) -> str:
         seconds = round(default_timer() - self.start)
@@ -106,6 +110,7 @@ class Ewe:
 
                         self.refunded.append(key)
 
+        breakpoint()  # DEBUG
         with open(BASE / "layer_submitted_dict.pkl", "wb") as f:
             pickle.dump(self.submitted_node_dict, f)
 
@@ -294,7 +299,7 @@ def submit_layering():
                 if start_flag:
                     time.sleep(20)
             else:
-                log("----------------------------------------------------------------------", "yellow")
+                log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "yellow")
 
             if not start_flag:
                 start_flag = True
@@ -319,11 +324,11 @@ def submit_layering():
                     for _idx, partial_layer in enumerate(list(split(node_list, 3))):
                         continue_flag = False
                         if _idx == 0:
-                            provider_char = "a"
+                            provider_char = "c"  # cheapest first
                         if _idx == 1:
                             provider_char = "b"
                         if _idx == 2:
-                            provider_char = "c"
+                            provider_char = "a"
 
                         G_copy = wf.G.copy()
                         with suppress(Exception):
@@ -340,7 +345,12 @@ def submit_layering():
                                 my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
                                 yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
                                 yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
-                                yaml_original["config"]["dt_in"] = 200
+                                if ewe.very_first_job[provider_char]:
+                                    yaml_original["config"]["dt_in"] = 201
+                                    ewe.very_first_job[provider_char] = False
+                                else:
+                                    yaml_original["config"]["dt_in"] = 0
+
                                 yaml_original["config"]["data_transfer_out"] = 0
                                 for u, v, d in wf.G.edges(data=True):
                                     if int(u) in _slots[provider_char] and int(v) in _slots[provider_char]:
@@ -401,7 +411,12 @@ def submit_layering():
                             my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
                             yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
                             yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
-                            yaml_original["config"]["dt_in"] = 200
+                            if ewe.very_first_job[provider_char]:
+                                yaml_original["config"]["dt_in"] = 200
+                                ewe.very_first_job[provider_char] = False
+                            else:
+                                yaml_original["config"]["dt_in"] = 0
+
                             yaml_original["config"]["data_transfer_out"] = 0
                             for u, v, d in wf.G.edges(data=True):
                                 if int(u) in item and int(v) in item:

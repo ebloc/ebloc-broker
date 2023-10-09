@@ -85,6 +85,10 @@ class Ewe:
         self.refunded: List[int] = []
         self.failed: List[int] = []
         self.start = 0
+        self.very_first_job = {}
+        self.very_first_job["a"] = True
+        self.very_first_job["b"] = True
+        self.very_first_job["c"] = True
 
     def get_run_time(self) -> str:
         seconds = round(default_timer() - self.start)
@@ -165,7 +169,12 @@ class Ewe:
                 yaml_cfg["config"]["jobs"] = {}
                 yaml_cfg["config"]["jobs"][f"job{node}"]["cores"] = 1
                 yaml_cfg["config"]["jobs"][f"job{node}"]["run_time"] = yaml["config"]["jobs"][f"job{node}"]["run_time"]
-                yaml_cfg["config"]["dt_in"] = 200
+                if self.very_first_job[batch_key]:
+                    yaml_cfg["config"]["dt_in"] = 201
+                    self.very_first_job[batch_key] = False
+                else:
+                    yaml_cfg["config"]["dt_in"] = 0
+
                 yaml_cfg["config"]["data_transfer_out"] = 0
                 for u, v, d in wf.G.edges(data=True):
                     if int(u) in slots[batch_key] and int(v) in slots[batch_key]:
@@ -180,7 +189,13 @@ class Ewe:
                 # yaml_cfg["config"]["data_transfer_out"] = yaml["config"]["jobs"][f"job{node}"]["dt_out"]
             elif self.batch_to_submit[batch_key]:
                 yaml_cfg["config"]["jobs"] = {}
-                yaml_cfg["config"]["dt_in"] = 200
+
+                if self.very_first_job[batch_key]:
+                    yaml_cfg["config"]["dt_in"] = 201
+                    self.very_first_job[batch_key] = False
+                else:
+                    yaml_cfg["config"]["dt_in"] = 0
+
                 yaml_cfg["config"]["data_transfer_out"] = 0
                 #: should start from the first job
                 for node in list(G_copy.nodes):
@@ -209,7 +224,6 @@ class Ewe:
             job = Job()
             job.set_config(yaml_fn_wf)
             print(f"dt_in={yaml_cfg['config']['dt_in']}")
-            # with suppress(Exception):
             submit_ipfs(job)
             key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
             for node in self.G_sorted(G_copy):
@@ -250,7 +264,7 @@ def check_jobs(ewe):
     for job in ewe.jobs_started_run_time:
         if job in ewe.running:
             run_time = round(default_timer() - ewe.jobs_started_run_time[job])
-            if run_time > (int(yaml["config"]["jobs"][f"job{job}"]["run_time"]) + 1) * 60:
+            if run_time > (int(yaml["config"]["jobs"][f"job{job}"]["run_time"]) + 2) * 60:
                 log(f"* CHECKME {job} <======================", "alert")
 
     """
@@ -362,17 +376,28 @@ def main():
             break
 
         check_jobs(ewe)
-        time.sleep(20)
+        time.sleep(60)
+
+    log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "yellow")
+    while True:
+        #: with for on-going jobs to finish
+        if not ewe.submitted and not ewe.running:
+            break
+
+        check_jobs(ewe)
+        time.sleep(60)
 
     log(jobson)
+    # log("========================================================================")
+    # while True:
+    #     if not ewe.submitted and not ewe.running:
+    #         break
 
     # finalizing
     total_run_time = ewe.get_run_time()
-    log(f"==> final_HEFT_workflow_run_time={total_run_time} {edges}")
+    log(f"==> final_HEFT_workflow_run_time={total_run_time} {n} {edges}")
     with open(BASE / "heft_submitted_dict.pkl", "wb") as f:
         pickle.dump(ewe.submitted_dict, f)
-
-    # heft_log.tex
 
 
 if __name__ == "__main__":
@@ -385,6 +410,7 @@ if __name__ == "__main__":
         print(f"#> {e}")
     except Exception as e:
         print_tb(str(e))
+
 
 """
 This is a simple script to use the HEFT function provided based on the example given in the original HEFT paper.

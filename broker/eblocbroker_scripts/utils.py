@@ -15,13 +15,6 @@ except ImportError:
     DecimalOverrideException = BaseException  # regular catch blocks shouldn't catch
 
 
-# UNITS = {
-#     "mill": 5,
-#     "cent": 6,
-#     "dime": 7,
-#     "usd": 8,
-# }
-
 UNITS = {
     "mill": 6,
     "cent": 6,

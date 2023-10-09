@@ -165,8 +165,8 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
                 if output:
                     output = output[1]
                     self.job_info.update({"data_transfer_in_input": output[1]})
-                    self.job_info.update({"data_transfer_out_input": output[2][-2]})
-                    self.job_info.update({"received": output[2][-1]})
+                    self.job_info.update({"data_transfer_out_input": output[2][-3]})
+                    self.job_info.update({"received": output[2][-2]})
                     self.job_info.update({"storage_duration": output[3]})
                     self.job_info.update({"data_prices_set_block_numbers": output[2][4]})
 
@@ -344,6 +344,8 @@ def get_job_info(
             fromBlock=int(received_bn),
             toBlock="latest",
         )
+
+        #: iterate from the first submitted job since its workflow
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
                 self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
@@ -360,7 +362,6 @@ def get_job_info(
                 self.job_info.update({"processPayment_block_hash": logged_receipt["blockHash"].hex()})
                 tx_receipt = Ebb.get_transaction_receipt(self.job_info["processPayment_tx_hash"])
                 self.job_info.update({"processPayment_gas_used": int(tx_receipt["gasUsed"])})
-                #
                 tx_by_block = Ebb.get_transaction_by_block(
                     tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
                 )

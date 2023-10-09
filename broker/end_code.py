@@ -186,9 +186,8 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.encoded_share_tokens: Dict[str, str] = {}
         self.is_workflow = False
         self.sub_workflow = False
-        self.job_type = JOB.TYPE["SINGLE"]
-        self.job_type: int = kwargs.pop("job_type")  # from workflow
-
+        self.job_type: int = JOB.TYPE["SINGLE"]
+        self.job_type = int(kwargs.pop("job_type"))  # from workflow
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(_env.IPFS_REPO)
         _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}_{self.jobid}.log"
@@ -367,15 +366,16 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             if self.job_type == JOB.TYPE["BEGIN"]:
                 self.data_transfer_in = self.job_info["data_transfer_in"]
                 self.data_transfer_out = 0
-            elif self.job_type == JOB.TYPE["FINAL"]:
-                self.data_transfer_in = 0
-                self.data_transfer_out = self.job_info["data_transfer_out"]
-            elif self.job_type == JOB.TYPE["BETWEEN"]:
-                self.data_transfer_in = 0
-                self.data_transfer_out = 0
 
-        log(f" * dt_in={self.data_transfer_in}")
-        log(f" * dt_out={self.data_transfer_out}")
+        if self.job_type == JOB.TYPE["FINAL"]:
+            self.data_transfer_in = 0
+            self.data_transfer_out = self.job_info["data_transfer_out"]
+        elif self.job_type == JOB.TYPE["BETWEEN"]:
+            self.data_transfer_in = 0
+            self.data_transfer_out = 0
+
+        log(f"  ==> dt_in={self.data_transfer_in}")
+        log(f"  ==> dt_out={self.data_transfer_out}")
 
     def process_payment_tx(self):
         self.workflow_test_required()

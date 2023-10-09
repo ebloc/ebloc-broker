@@ -7,6 +7,8 @@ networks:
     USDTmy:
       address: '0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7'
       tx_hash: '0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6'
+    research_object_certification:
+      address: '0x3fb704dfDB72Fc06860D9F09124C30919488f13C'
   bloxberg-docker:
     project_dir: /workspace/ebloc-broker/contract
     # eBlocBroker:

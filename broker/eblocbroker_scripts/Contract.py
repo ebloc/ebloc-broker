@@ -25,10 +25,7 @@ from brownie import accounts, history
 from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
-# from brownie.network.gas.strategies import GasNowStrategy
-# from brownie.network.gas.strategies import LinearScalingStrategy
-
-GAS_PRICE = 1.21  # was 1 => 1.13
+GAS_PRICE = 0.25  # was 1.21 Gwei
 EXIT_AFTER = 1000  # seconds
 
 
@@ -86,7 +83,6 @@ class Contract(Base):
         #  10000000. Try decreasing supplied gas.
         self.gas = 9980000
         self.gas_price = GAS_PRICE
-        # self.gas_strategy = LinearScalingStrategy(f"{GAS_PRICE} gwei", "10 gwei", 1.1, time_duration=15)
         # self.gas_params = {"gas_price": self.gas_strategy, "gas": self.gas}
         self._setup(is_brownie)
         self.invalid = {"logs", "logsBloom"}
@@ -426,7 +422,7 @@ class Contract(Base):
                 if ("Try increasing the gas price" in str(e)) or (
                     "Transaction with the same hash was already imported." in str(e)
                 ):
-                    if self.gas_price < 2:
+                    if self.gas_price < 1:
                         self.gas_price *= 1.13
                         log(f"==> new_gas_price={self.gas_price} | idx={idx}")
                     else:
@@ -455,7 +451,7 @@ class Contract(Base):
                     self.gas -= 10000
             except KeyboardInterrupt:
                 log(f"warning: Timeout Awaiting Transaction in the mempool | gas_price={self.gas_price}")
-                if self.gas_price < 2:
+                if self.gas_price < 1:
                     self.gas_price *= 1.13
                     log(f"==> new_gas_price={self.gas_price}")
                 else:
