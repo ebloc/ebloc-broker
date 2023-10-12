@@ -224,7 +224,13 @@ class Ewe:
             job = Job()
             job.set_config(yaml_fn_wf)
             print(f"dt_in={yaml_cfg['config']['dt_in']}")
-            submit_ipfs(job)
+            while True:
+                try:
+                    submit_ipfs(job)  # submits the job
+                    break
+                except:
+                    pass
+
             key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
             for node in self.G_sorted(G_copy):
                 if node != "\\n":

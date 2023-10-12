@@ -110,7 +110,6 @@ class Ewe:
 
                         self.refunded.append(key)
 
-        breakpoint()  # DEBUG
         with open(BASE / "layer_submitted_dict.pkl", "wb") as f:
             pickle.dump(self.submitted_node_dict, f)
 
@@ -188,11 +187,11 @@ def submit_layering():
         for idx, partial_layer in enumerate(list(split(sorted(node_list), 3))):
             for node in sorted(partial_layer):
                 if idx == 0:
-                    _slots["a"].append(node)
+                    _slots["c"].append(node)
                 elif idx == 1:
                     _slots["b"].append(node)
                 elif idx == 2:
-                    _slots["c"].append(node)
+                    _slots["a"].append(node)
                 else:
                     breakpoint()  # DEBUG
 
@@ -207,7 +206,7 @@ def submit_layering():
     start_flag = False
     log()
     ewe.start = default_timer()
-    breakpoint()  # DEBUG
+    # breakpoint()  # DEBUG
     while True:
         if not ewe.ready:
             break
@@ -234,12 +233,16 @@ def submit_layering():
                     flag_me = True
                     key = ewe.submitted_node_dict[job_id]
                     keys = key.split("_")
-                    log(f"{job_id} ", end="")
+                    log(f"{job_id} => ", end="")
                     job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False)
                     state_val = state.inv_code[job_info["stateCode"]]
                     if state_val != "COMPLETED":
-                        #: only for print purposes
-                        Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=True)
+                        fn = Ebb.EBB_SCRIPTS / "get_job_info.py"
+                        log(  #: only for print purposes
+                            f"{fn} {keys[0]} {keys[1]} {keys[2]} {keys[4]} {keys[3]}",
+                            h=False,
+                            is_code=True,
+                        )
 
                     if state_val == "RUNNING":
                         if job_id in ewe.submitted:
@@ -310,7 +313,6 @@ def submit_layering():
                 ewe.submitted_wf[idx] = False
 
             # ? check dependency one-one-by submit some jobs in the layer early
-
             if break_flag and not ewe.submitted_wf[idx]:
                 G_copy = wf.G.copy()
                 with suppress(Exception):
@@ -320,106 +322,43 @@ def submit_layering():
                     if node != "\\n" and int(node) not in node_list:
                         G_copy.remove_node(node)
 
-                if len(G_copy.edges) == 0:  # always enters here
-                    for _idx, partial_layer in enumerate(list(split(node_list, 3))):
-                        continue_flag = False
-                        if _idx == 0:
-                            provider_char = "c"  # cheapest first
-                        if _idx == 1:
-                            provider_char = "b"
-                        if _idx == 2:
-                            provider_char = "a"
+                if len(G_copy.edges) != 0:
+                    breakpoint()  # DEBUG
 
-                        G_copy = wf.G.copy()
-                        with suppress(Exception):
-                            G_copy.remove_node("\\n")
+                #: len(G_copy.edges) == 0
+                for _idx, partial_layer in enumerate(list(split(node_list, 3))):
+                    continue_flag = False
+                    if _idx == 0:
+                        provider_char = "c"  # cheapest provider first
+                    if _idx == 1:
+                        provider_char = "b"
+                    if _idx == 2:
+                        provider_char = "a"
 
-                        for node in list(wf.G.nodes):
-                            if node != "\\n" and int(node) not in partial_layer:
-                                G_copy.remove_node(node)
+                    G_copy = wf.G.copy()
+                    with suppress(Exception):
+                        G_copy.remove_node("\\n")
 
-                        nx.nx_pydot.write_dot(G_copy, BASE / "sub_workflow_job.dot")
-                        if len(partial_layer) > 1:
-                            yaml_original["config"]["jobs"] = {}
-                            for i, _job in enumerate(sorted(partial_layer)):
-                                my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
-                                yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
-                                yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
-                                if ewe.very_first_job[provider_char]:
-                                    yaml_original["config"]["dt_in"] = 201
-                                    ewe.very_first_job[provider_char] = False
-                                else:
-                                    yaml_original["config"]["dt_in"] = 0
-
-                                yaml_original["config"]["data_transfer_out"] = 0
-                                for u, v, d in wf.G.edges(data=True):
-                                    if int(u) in _slots[provider_char] and int(v) in _slots[provider_char]:
-                                        pass
-                                    else:
-                                        if u not in list(G_copy.nodes) and v in list(G_copy.nodes):
-                                            yaml_original["config"]["dt_in"] += int(d["weight"])
-
-                                        if u in list(G_copy.nodes) and v not in list(G_copy.nodes):
-                                            yaml_original["config"]["data_transfer_out"] += int(d["weight"])
-                        elif len(partial_layer) == 1:
-                            my_job = yaml_jobs["config"]["jobs"][f"job{partial_layer[0]}"]
-                            yaml_original["config"]["dt_in"] = my_job["dt_in"]
-                            yaml_original["config"]["data_transfer_out"] = my_job["dt_out"]
-                            yaml_original["config"]["jobs"] = {}
-                            yaml_original["config"]["jobs"]["job1"]["cores"] = 1
-                            yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
-                        else:  #: if its empty
-                            continue_flag = True
-
-                        if not continue_flag:
-                            yaml_original["config"]["provider_address"] = provider_id[provider_char]
-                            yaml_original["config"]["source_code"]["path"] = str(BASE)
-                            log(
-                                f"* w{_idx} => {sorted(partial_layer)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "
-                                "[orange]----------------------------------------------------"
-                            )
-                            job = Job()
-                            job.set_config(yaml_fn)
-                            submit_ipfs(job)  # submits the job
-                            #
-                            key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
-                            for node in G_sorted(G_copy):
-                                if node != "\\n":
-                                    try:
-                                        ewe.submitted_dict[key].append(int(node))
-                                    except:
-                                        ewe.submitted_dict[key] = [int(node)]
-
-                            #: apply reverse map
-                            for _idx, node in enumerate(sorted(partial_layer)):
-                                ewe.submitted_node_dict[node] = f"{key}_{_idx}"
-
-                            for node in list(G_copy.nodes):
-                                ewe.ready.remove(int(node))
-                                ewe.submitted.append(int(node))
-
-                    ewe.submitted_wf[idx] = True
-                else:
                     for node in list(wf.G.nodes):
-                        if node != "\\n" and int(node) not in node_list:
+                        if node != "\\n" and int(node) not in partial_layer:
                             G_copy.remove_node(node)
 
                     nx.nx_pydot.write_dot(G_copy, BASE / "sub_workflow_job.dot")
-                    if len(node_list) > 1:
+                    if len(partial_layer) > 1:
                         yaml_original["config"]["jobs"] = {}
-                        for i, _job in enumerate(sorted(node_list)):
+                        for i, _job in enumerate(sorted(partial_layer)):
                             my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
                             yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
                             yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
                             if ewe.very_first_job[provider_char]:
-                                yaml_original["config"]["dt_in"] = 200
+                                yaml_original["config"]["dt_in"] = 201
                                 ewe.very_first_job[provider_char] = False
                             else:
                                 yaml_original["config"]["dt_in"] = 0
 
                             yaml_original["config"]["data_transfer_out"] = 0
                             for u, v, d in wf.G.edges(data=True):
-                                if int(u) in item and int(v) in item:
+                                if int(u) in _slots[provider_char] and int(v) in _slots[provider_char]:
                                     pass
                                 else:
                                     if u not in list(G_copy.nodes) and v in list(G_copy.nodes):
@@ -427,47 +366,51 @@ def submit_layering():
 
                                     if u in list(G_copy.nodes) and v not in list(G_copy.nodes):
                                         yaml_original["config"]["data_transfer_out"] += int(d["weight"])
-                    else:
-                        my_job = yaml_jobs["config"]["jobs"][f"job{node_list[0]}"]
+                    elif len(partial_layer) == 1:
+                        my_job = yaml_jobs["config"]["jobs"][f"job{partial_layer[0]}"]
                         yaml_original["config"]["dt_in"] = my_job["dt_in"]
                         yaml_original["config"]["data_transfer_out"] = my_job["dt_out"]
                         yaml_original["config"]["jobs"] = {}
                         yaml_original["config"]["jobs"]["job1"]["cores"] = 1
                         yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
+                    else:  #: if its empty
+                        continue_flag = True
 
-                    provider_char = random.choice("abc")
-                    while True:
-                        if provider_char == last_submitted_provider:
-                            provider_char = random.choice("abc")
-                        else:
-                            break
-
-                    last_submitted_provider = provider_char
-                    yaml_original["config"]["provider_address"] = provider_id[provider_char]
-                    yaml_original["config"]["source_code"]["path"] = str(BASE)
-                    log(
-                        f"* w{idx} => {sorted(node_list)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "
-                        "[orange]----------------------------------------------------"
-                    )
-                    job = Job()
-                    job.set_config(yaml_fn)
-                    submit_ipfs(job)  # submits the job
-                    ewe.submitted_wf[idx] = True
-                    key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
-                    for node in G_sorted(G_copy):
-                        if node != "\\n":
+                    if not continue_flag:
+                        yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                        yaml_original["config"]["source_code"]["path"] = str(BASE)
+                        log(
+                            f"* w{_idx} => {sorted(partial_layer)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "
+                            "[orange]----------------------------------------------------"
+                        )
+                        job = Job()
+                        job.set_config(yaml_fn)
+                        while True:
                             try:
-                                ewe.submitted_dict[key].append(int(node))
+                                submit_ipfs(job)  # submits the job
+                                break
                             except:
-                                ewe.submitted_dict[key] = [int(node)]
+                                pass
 
-                    #: apply reverse map
-                    for _idx, node in enumerate(sorted(node_list)):
-                        ewe.submitted_node_dict[node] = f"{key}_{_idx}"
+                        key = (
+                            f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
+                        )
+                        for node in G_sorted(G_copy):
+                            if node != "\\n":
+                                try:
+                                    ewe.submitted_dict[key].append(int(node))
+                                except:
+                                    ewe.submitted_dict[key] = [int(node)]
 
-                    for node in list(G_copy.nodes):
-                        ewe.ready.remove(int(node))
-                        ewe.submitted.append(int(node))
+                        #: apply reverse map
+                        for _idx, node in enumerate(sorted(partial_layer)):
+                            ewe.submitted_node_dict[node] = f"{key}_{_idx}"
+
+                        for node in list(G_copy.nodes):
+                            ewe.ready.remove(int(node))
+                            ewe.submitted.append(int(node))
+
+                ewe.submitted_wf[idx] = True
 
     #: Check for the final submitted layer
     while True:
