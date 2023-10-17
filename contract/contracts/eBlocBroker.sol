@@ -36,6 +36,7 @@ contract eBlocBroker is
     using Lib for Lib.Provider;
     using Lib for Lib.ProviderInfo;
     using Lib for Lib.Status;
+    using Lib for Lib.HashToROC;
 
     /**
      * @dev eBlocBroker constructor that sets the original `owner` of the
@@ -409,6 +410,13 @@ contract eBlocBroker is
      */
     function resumeProvider() public whenProviderRegistered whenProviderSuspended returns (bool) {
         providers[msg.sender].isRunning = true; // provider will start accept jobs
+        return true;
+    }
+
+
+    function hashToROC(bytes32 hash, uint32 roc, bool isIPFS) public whenProviderRegistered returns (bool) {
+        providers[msg.sender].hashToROC[hash] = roc;
+        emit LogHashROC(msg.sender, hash, roc, isIPFS);
         return true;
     }
 

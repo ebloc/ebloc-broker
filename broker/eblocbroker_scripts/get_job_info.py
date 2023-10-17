@@ -48,7 +48,6 @@ def analyze_data(self, key, provider=None):
         self.job_info["is_cached"][code_hash_str] = False  # FIXME double check
         # if remaining time to cache is 0, then caching is requested for the
         # related code_hash
-
         if ds.received_block == self.job_info["received_bn"]:
             self.job_info["is_storage_bn_equal_when_job_submitted_bn"][code_hash_str] = True
         else:

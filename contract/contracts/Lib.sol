@@ -144,6 +144,7 @@ library Lib {
         mapping(bytes32 => RegisteredData) registeredData;
         mapping(address => mapping(bytes32 => Storage)) storageInfo;
         mapping(string => Status[]) jobStatus; // All submitted jobs into provider 's Status is accessible
+        mapping(bytes32 => uint) hashToROC;
         LL receiptList; // receiptList will be use to check either job's start and end time overlapped or not
     }
 
@@ -164,6 +165,11 @@ library Lib {
         uint32 length;
         uint32 tail; // tail of the linked list
         mapping(uint256 => Interval) items;
+    }
+
+    struct HashToROC {
+        mapping(bytes32 => uint) hashToROC;
+        mapping(uint => bytes32) rocToHash;
     }
 
     /**

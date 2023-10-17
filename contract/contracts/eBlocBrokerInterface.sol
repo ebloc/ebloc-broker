@@ -69,4 +69,7 @@ interface eBlocBrokerInterface {
          submitJob() or the depositStorage() function.
      */
     event LogDepositStorage(address indexed paidAddress, uint256 payment);
+
+    event LogHashROC(address indexed provider, bytes32 hash, uint32 roc, bool isIPFS);
+
 }

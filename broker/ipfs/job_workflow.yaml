@@ -1,19 +1,16 @@
 config:
   requester_address: '0x72c1a89ff3606aa29686ba8d29e28dccff06430a'
-  provider_address: '0x29e613B04125c16db3f3613563bFdd0BA24Cb629'
+  provider_address: '0xe2e146d6B456760150d78819af7d276a1223A6d4'
   search_cheapest_provider: false
   source_code:
     cache_type: public
-    path: /home/alper/test_eblocbroker/workflow/32_56
+    path: /home/alper/test_eblocbroker/workflow/256_448
     storage_hours: 0
     storage_id: ipfs
-  dt_in: 0    ##
-  data_transfer_out: 451  # sum of output weights
+  dt_in: 372  ##
+  data_transfer_out: 250  # sum of output weights
   jobs:
     job1:
-      cores: 1
-      run_time: 3
-    job2:
       cores: 1
       run_time: 4
   costs:

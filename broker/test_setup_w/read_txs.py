@@ -12,73 +12,86 @@ from broker.eblocbroker_scripts.utils import Cent
 Ebb: "Contract.Contract" = cfg.Ebb
 
 
-def read_txs_layer(n, edges):
+def read_txs_layer(n, edges, fn):
     checked = {}
     BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
     try:
-        with open(BASE / "layer_submitted_dict.pkl", "rb") as f:
+        with open(BASE / fn, "rb") as f:
             loaded_dict = pickle.load(f)
     except Exception as e:
         print_tb(e)
 
+    job_price_sum = 0
+    sum_received = 0
+    sum_refunded = 0
+    total_processpayment_gas = 0
+    idx = 0
     total_submitjob_gas = 0
     total_processpayment_gas = 0
-    total_received = 0
     total_refunded = 0
+    # for k, v in loaded_dict.items():
+    #     log(f"{v} => {k}")
+
     for k, v in loaded_dict.items():
         keys = v.split("_")
-
-        provider = "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
-        job_key = "QmQF75UmtBvnZEZFr1iRLUmb5vt5XXqZqdTkrDKdgXfk8q"
-        index = 0
-        received_bn = 22301335
+        provider = keys[0]
+        job_key = keys[1]
+        index = keys[2]
+        received_bn = keys[3]
+        job_id = keys[4]
         event_filter = Ebb._eblocbroker.events.LogProcessPayment.createFilter(
             argument_filters={"provider": str(provider)},
             fromBlock=int(received_bn),
             toBlock="latest",
         )
         for logged_receipt in event_filter.get_all_entries():
-            if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
-                log(logged_receipt.args)
-                log()
+            if (
+                logged_receipt.args["jobKey"] == job_key
+                and logged_receipt.args["index"] == int(index)
+                and logged_receipt.args["jobID"] == int(job_id)
+            ):
+                idx += 1
+                recv = logged_receipt.args["receivedCent"]
+                ref = logged_receipt.args["refundedCent"]
+                sum_received += float(Cent(recv)._to())
+                sum_refunded += float(Cent(ref)._to())
+                tx_receipt = Ebb.get_transaction_receipt(logged_receipt["transactionHash"].hex())
+                total_processpayment_gas += int(tx_receipt["gasUsed"])
 
-        breakpoint()  # DEBUG
-        output = Ebb.get_job_info(keys[0], keys[1], keys[2], 0, keys[3], is_print=False)
-        checked_key = f"{keys[0]}_{keys[1]}_{keys[2]}_{keys[3]}"
-        if checked_key not in checked:
-            checked[checked_key] = True
+        if int(job_id) == 0:
+            output = Ebb.get_job_info(keys[0], keys[1], keys[2], 0, keys[3], is_print=False)
+            _job_price = output["submitJob_received_job_price"]
+            job_price_sum += float(Cent(_job_price)._to())
             total_submitjob_gas += output["submitJob_gas_used"]
-            total_processpayment_gas += output["processPayment_gas_used"]
-            total_received += output["received_cent"]
-            total_refunded += output["refunded_cent"]
-            log(f"{k} => ", end="")
-            log(v)
+            total_refunded += sum_refunded  # output["refunded_cent"]
 
     log(f"LAYER {n} {edges}")
     log(f"total_submitjob_gas={total_submitjob_gas}")
-    log(f"total_processpayment_gas={total_processpayment_gas}")
-    log(f"total_received={Cent(total_received)._to()} [pink]USDmy")
+    log(f"total_processpayment_gas={total_processpayment_gas} idx={idx}")
+    log(f"total_received={sum_received} [pink]USDmy")
     log(f"total_refunded={Cent(total_refunded)._to()} [pink]USDmy")
+    log(f"job_price_sum={job_price_sum}")
     log("--------------------------------------------------------")
 
 
-def read_txs(n, edges):
+def read_txs(n, edges, fn):
     BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
     try:
-        with open(BASE / "heft_submitted_dict.pkl", "rb") as f:
+        with open(BASE / fn, "rb") as f:
             loaded_dict = pickle.load(f)
     except Exception as e:
         print_tb(e)
 
+    job_price_sum = 0
     total_submitjob_gas = 0
-    total_received = 0
     total_refunded = 0
     sum_received = 0
     sum_refunded = 0
     total_processpayment_gas = 0
+    idx = 0
     for k, v in loaded_dict.items():
+        # log(f"{k} => {v}")
         keys = k.split("_")
-
         provider = keys[0]
         job_key = keys[1]
         index = keys[2]
@@ -90,29 +103,34 @@ def read_txs(n, edges):
         )
         for logged_receipt in event_filter.get_all_entries():
             if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
-                sum_received += logged_receipt.args["receivedCent"]
+                idx += 1
+                recv = logged_receipt.args["receivedCent"]
+                # log(f"{Cent(recv)._to()} [pink]USDmy")
+                sum_received += float(Cent(recv)._to())
                 sum_refunded += logged_receipt.args["refundedCent"]
                 tx_receipt = Ebb.get_transaction_receipt(logged_receipt["transactionHash"].hex())
-                print(int(tx_receipt["gasUsed"]))
                 total_processpayment_gas += int(tx_receipt["gasUsed"])
+                # print(logged_receipt.args["receivedCent"])
+                # print(int(tx_receipt["gasUsed"]))
                 # log(logged_receipt.args)
                 # log()
 
         output = Ebb.get_job_info(keys[0], keys[1], keys[2], 0, keys[3], is_print=False)
         _job_price = output["submitJob_received_job_price"]
+        job_price_sum += float(Cent(_job_price)._to())
         total_submitjob_gas += output["submitJob_gas_used"]
-        total_received += sum_received
-        total_refunded += output["refunded_cent"]
+        total_refunded += sum_refunded  # output["refunded_cent"]
         # log(f"{sum_received} {_job_price}")
-        log(f"{k} => ", end="")
-        log(f"{v}")
+        # log(f"{k} => ", end="")
+        # log(f"{v}")
 
     log()
     log(f"* HEFT {n} {edges}")
     log(f"total_submitjob_gas={total_submitjob_gas}")
-    log(f"total_processpayment_gas={total_processpayment_gas}")
-    log(f"total_received={Cent(total_received)._to()} [pink]USDmy")
+    log(f"total_processpayment_gas={total_processpayment_gas} idx={idx}")
+    log(f"total_received={sum_received} [pink]USDmy")
     log(f"total_refunded={Cent(total_refunded)._to()} [pink]USDmy")
+    log(f"job_price_sum={job_price_sum}")
     log("--------------------------------------------------------")
 
 
@@ -127,13 +145,20 @@ def main():
     """
     ###
 
-    # test = [(16, 28), (32, 56), (64, 112), (128, 224), (256, 448)]
-    test = [(16, 28)]
+    test = [(16, 28), (32, 56), (64, 112), (128, 224), (256, 448)]
+    # test = [(16, 28)]
+    # test = [(32, 56)]
+    # test = [(64, 112)]
     test = dict(test)
     for n, edges in test.items():
-        read_txs(n, edges)
-        # read_txs_layer(n, edges)
-        breakpoint()  # DEBUG
+        # read_txs(n, edges, "heft_submitted_dict_1.pkl")
+        # read_txs(n, edges, "heft_submitted_dict_2.pkl")
+        # read_txs(n, edges, "heft_submitted_dict_3.pkl")
+        # -----------------------------------------------------
+        read_txs_layer(n, edges, "layer_submitted_dict_1.pkl")
+        read_txs_layer(n, edges, "layer_submitted_dict_2.pkl")
+        read_txs_layer(n, edges, "layer_submitted_dict_3.pkl")
+        log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "yellow")
 
 
 if __name__ == "__main__":

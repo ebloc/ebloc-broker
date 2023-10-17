@@ -393,7 +393,7 @@ def main():
         check_jobs(ewe)
         time.sleep(60)
 
-    log(jobson)
+    # log(jobson)
     # log("========================================================================")
     # while True:
     #     if not ewe.submitted and not ewe.running:
