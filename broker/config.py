@@ -164,6 +164,8 @@ driver_cancel_process = None
 _eblocbroker = None
 usdtmy = None
 _usdtmy = None
+roc = None
+_roc = None
 env: ENV
 try:
     env = ENV()

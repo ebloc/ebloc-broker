@@ -121,6 +121,15 @@ def connect_to_eblocbroker() -> None:
             config._usdtmy = cfg.w3.eth.contract(
                 env.TOKEN_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_usdtmy.json")
             )
+
+            from brownie import project as pro
+
+            roc_contract_address = "0x3fb704dfDB72Fc06860D9F09124C30919488f13C"
+            _project = pro.load(env.CONTRACT_PROJECT_PATH / "_other" / "roc")
+            config.roc = _project.ResearchCertificate.at(roc_contract_address)
+            config.roc.contract_address = cfg.w3.toChecksumAddress(roc_contract_address)
+            config._roc = cfg.w3.eth.contract(roc_contract_address, abi=read_abi_file(env.EBB_SCRIPTS / "abi_roc.json"))
+
     except Exception as e:
         print_tb(e)
         raise e

@@ -1,0 +1,20 @@
+* Interaction with ROC
+
+** cURL request:
+
+#+begin_src bash
+curl 'https://certify.bloxberg.org/createBloxbergCertificate' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Content-Type: application/json;charset=UTF-8' \
+  -H 'Origin: https://certify.bloxberg.org' \
+  -H 'Referer: https://certify.bloxberg.org/' \
+  -H 'api_key: 6575b56b-17ab-4cc9-a16b-d499028feee9' \
+  --data-raw '{"publicKey":"0x29e613B04125c16db3f3613563bFdd0BA24Cb629","crid":["0xabcd"],"cridType":"sha2-256","enableIPFS":false,"metadataJson":"{\"authorName\":\"alper\",\"researchTitle\":\"\",\"emailAddress\":\"alper@github.com\"}"}' \
+  --compressed
+#+end_src
+
+Output:
+
+#+begin_src bash
+[{"@context":["https://www.w3.org/2018/credentials/v1","https://w3id.org/bloxberg/schema/research_object_certificate_v1"],"type":["VerifiableCredential","BloxbergCredential"],"issuer":"https://raw.githubusercontent.com/bloxberg-org/issuer_json/master/issuer.json","issuanceDate":"2023-10-23T13:26:58.816316+00:00","credentialSubject":{"id":"https://blockexplorer.bloxberg.org/address/0x29e613B04125c16db3f3613563bFdd0BA24Cb629","issuingOrg":{"id":"https://bloxberg.org"}},"id":"https://bloxberg.org","crid":"0xabcd","cridType":"sha2-256","metadataJson":"{\"authorName\": \"alper\", \"researchTitle\": \"\", \"emailAddress\": \"alper@github.com\"}","proof":{"type":"MerkleProof2019","created":"2023-10-23T13:27:05.406304","proofValue":"z7veGu1qoKR3AS5BQ2v2HQMKMW3tbX1MuyR5YVEwjNhbk6T3b6A7kSE6hWgrg18VwdpQj6tzMCT5CyEdGqZyA9FoENnGkvRi3QSjUTuwu65ZGgmGZWBVtER6mwp8Cq3WnZSYU1rQUR4a7EVY5B9pJbAtjcgx3QQf8mhRNsE5XpdCSfEgmCVfEj6b86y786xki3ooxCB4kmHVMjCNM1ex16knviNsAsqbLpz8G4HCoRntMLGje4nhdV2ymQjwBh66u1BpRCP58ZhyXxB3H8EiJXiVcUTEmijZKAzbEGmjAxWL1YAR7kycaW","proofPurpose":"assertionMethod","verificationMethod":"ecdsa-koblitz-pubkey:0xD748BF41264b906093460923169643f45BDbC32e","ens_name":"mpdl.berg"}}]
+#+end_src

@@ -349,7 +349,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 data_transfer_out = ipfs.get_cumulative_size(self.result_ipfs_hash)
             else:
                 data_transfer_out = 0
-                # TRY AGAIN: IPFS may return empty ipfs-hash FIXME
+                # FIXME: TRY AGAIN: IPFS may return empty ipfs-hash
         except Exception as e:
             print_tb(e)
             raise e
