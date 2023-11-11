@@ -22,3 +22,5 @@ def main():
         info = {"txHash": ebb.tx.txid, "address": ebb.address}
         with open(contract_file, "w") as fp:
             json.dump(info, fp)
+    elif network.show_active() == "development":
+        print("development")

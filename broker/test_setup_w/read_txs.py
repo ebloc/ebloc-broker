@@ -14,7 +14,7 @@ Ebb: "Contract.Contract" = cfg.Ebb
 is_excel = True
 if is_excel:
     log(
-        "name,provider_label,id,sourceCodeHash,index,job_id,received_bn,w_type,elapsed_time,processPayment_tx_hash,"
+        "type,provider_label,id,sourceCodeHash,index,job_id,received_bn,w_type,elapsed_time,processPayment_tx_hash,"
         "processPayment_gasUsed,submitJob_tx_hash,submitJob_gas_used,data_transfer_in_to_download,data_transfer_out,"
         "job_price"
     )
@@ -26,7 +26,6 @@ provider_id["0xe2e146d6B456760150d78819af7d276a1223A6d4".lower()] = "c"
 
 
 def read_txs_layer(n, edges, fn):
-    checked = {}
     BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
     try:
         with open(BASE / fn, "rb") as f:
@@ -81,25 +80,26 @@ def read_txs_layer(n, edges, fn):
                 tx_receipt = Ebb.get_transaction_receipt(logged_receipt["transactionHash"].hex())
                 total_processpayment_gas += int(tx_receipt["gasUsed"])
                 if is_excel:
-                    if job_id == 0:
+                    if int(job_id) == 0:
                         log(
-                            f"{name},{provider_id[provider.lower()]},j{idx},{job_key},{index},{job_id},{received_bn},{n}_{edges},{output['run_time'][job_id]},"
+                            f"{name},{provider_id[provider.lower()]},j{idx},{job_key},{index},{job_id},{received_bn},{n}_{edges},{output['run_time'][int(job_id)]},"
                             f"{tx_receipt['transactionHash'].hex()},{tx_receipt['gasUsed']},{output_g['submitJob_tx_hash']},{output_g['submitJob_gas_used']},"
                             f"{output_g['data_transfer_in_to_download']},{output_g['data_transfer_out']},{jp}"
                         )
                     else:
                         log(
-                            f"{name},{provider_id[provider.lower()]},j{idx},{job_key},{index},{job_id},{received_bn},{n}_{edges},{output['run_time'][job_id]},"
+                            f"{name},{provider_id[provider.lower()]},j{idx},{job_key},{index},{job_id},{received_bn},{n}_{edges},{output['run_time'][int(job_id)]},"
                             f"{tx_receipt['transactionHash'].hex()},{tx_receipt['gasUsed']}"
                         )
 
-    log(f"LAYER {n} {edges}")
-    log(f"total_submitjob_gas={total_submitjob_gas}")
-    log(f"total_processpayment_gas={total_processpayment_gas} idx={idx}")
-    log(f"total_received={sum_received} [pink]USDmy")
-    log(f"total_refunded={Cent(total_refunded)._to()} [pink]USDmy")
-    log(f"job_price_sum={job_price_sum}")
-    log("--------------------------------------------------------")
+    if not is_excel:
+        log(f"LAYER {n} {edges}")
+        log(f"total_submitjob_gas={total_submitjob_gas}")
+        log(f"total_processpayment_gas={total_processpayment_gas} idx={idx}")
+        log(f"total_received={sum_received} [pink]USDmy")
+        log(f"total_refunded={Cent(total_refunded)._to()} [pink]USDmy")
+        log(f"job_price_sum={job_price_sum}")
+        log("--------------------------------------------------------")
 
 
 def read_txs(n, edges, fn):
@@ -168,41 +168,39 @@ def read_txs(n, edges, fn):
                 # log(logged_receipt.args)
                 # log()
 
-    log()
-    log(f"* HEFT {n} {edges}")
-    log(f"total_submitjob_gas={total_submitjob_gas}")
-    log(f"total_processpayment_gas={total_processpayment_gas} idx={idx}")
-    log(f"total_received={sum_received} [pink]USDmy")
-    log(f"total_refunded={Cent(total_refunded)._to()} [pink]USDmy")
-    log(f"job_price_sum={job_price_sum}")
-    log("--------------------------------------------------------")
+    if not is_excel:
+        log()
+        log(f"* HEFT {n} {edges}")
+        log(f"total_submitjob_gas={total_submitjob_gas}")
+        log(f"total_processpayment_gas={total_processpayment_gas} idx={idx}")
+        log(f"total_received={sum_received} [pink]USDmy")
+        log(f"total_refunded={Cent(total_refunded)._to()} [pink]USDmy")
+        log(f"job_price_sum={job_price_sum}")
+        log("--------------------------------------------------------")
 
 
 def main():
-    """
-    test = [(20, 25), (40, 50), (60, 72), (80, 100), (100, 125), (120, 150), (140, 200), (160, 225)]
-    test = dict(test)
-    for n, edges in test.items():
-        read_txs(n, edges)
-
-    breakpoint()  # DEBUG
-    """
-    ###
-
     test = [(16, 28), (32, 56), (64, 112), (128, 224), (256, 448)]
-    test = [(16, 28)]
+    # test = [(16, 28)]
     # test = [(32, 56)]
     # test = [(64, 112)]
+    # test = [(128, 224)]
+    # test = [(256, 448)]
     test = dict(test)
     for n, edges in test.items():
         read_txs(n, edges, "heft_submitted_dict_1.pkl")
-        # read_txs(n, edges, "heft_submitted_dict_2.pkl")
-        # read_txs(n, edges, "heft_submitted_dict_3.pkl")
+        log("\n\n\n")
+        read_txs(n, edges, "heft_submitted_dict_2.pkl")
+        log("\n\n\n")
+        read_txs(n, edges, "heft_submitted_dict_3.pkl")
         # -----------------------------------------------------
-        # read_txs_layer(n, edges, "layer_submitted_dict_1.pkl")
-        # read_txs_layer(n, edges, "layer_submitted_dict_2.pkl")
-        # read_txs_layer(n, edges, "layer_submitted_dict_3.pkl")
-        log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "yellow")
+        read_txs_layer(n, edges, "layer_submitted_dict_1.pkl")
+        log("\n\n\n")
+        read_txs_layer(n, edges, "layer_submitted_dict_2.pkl")
+        log("\n\n\n")
+        read_txs_layer(n, edges, "layer_submitted_dict_3.pkl")
+        if not is_excel:
+            log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "yellow")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,27 @@
+[
+  {
+    "@context": [
+      "https://www.w3.org/2018/credentials/v1",
+      "https://w3id.org/bloxberg/schema/research_object_certificate_v1"
+    ],
+    "type": ["VerifiableCredential", "BloxbergCredential"],
+    "issuer": "https://raw.githubusercontent.com/bloxberg-org/issuer_json/master/issuer.json",
+    "issuanceDate": "2023-10-13T19:33:33.818511+00:00",
+    "credentialSubject": {
+      "id": "https://blockexplorer.bloxberg.org/address/0x29e613B04125c16db3f3613563bFdd0BA24Cb629",
+      "issuingOrg": { "id": "https://bloxberg.org" }
+    },
+    "id": "https://bloxberg.org",
+    "crid": "0xabcd",
+    "cridType": "sha2-256",
+    "metadataJson": "{\"authorName\": \"alper\", \"researchTitle\": \"\", \"emailAddress\": \"alper@github.com\"}",
+    "proof": {
+      "type": "MerkleProof2019",
+      "created": "2023-10-13T19:33:42.989482",
+      "proofValue": "z7veGu1qoKR3AS5LTdxmF14v4PgnHi638vsnMvoFthRMjLxGsnmC6Nu7Jv85Wf7AeViLhmsqNZVgYufRHUjcngRs6HoN5TJU1qUCkQSqa4TC8J7rsa8bcQtToi1H7keJBtA4dTMCYfrgwYaBSBYnoEDGjVyNiRxj9grfR7hn8WAa1CqcLWDuYwdwt2GuCcQHmqhacVWyimkXyav63cqxCeNvnYNX3cwvyb3osXTTUuncx2SfZsCNTSogYZ5pc3kGD6CjnXJSrBBAYjDhZRtLJQ5SPSyuW78SxYJQG24sPZb3XQZrzCe3Ws",
+      "proofPurpose": "assertionMethod",
+      "verificationMethod": "ecdsa-koblitz-pubkey:0xD748BF41264b906093460923169643f45BDbC32e",
+      "ens_name": "mpdl.berg"
+    }
+  }
+]
