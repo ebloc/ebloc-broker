@@ -133,7 +133,7 @@ def fetch_log_data_storage_request(self, tx_by_block):
     self.job_info.update({"submitJob_sum_storage_payment_cent": sum_storage_paid_cent})
 
 
-def update_job_cores(self, provider, job_key, index=0, received_bn=0) -> int:
+def update_job_cores(self, provider, job_key, index=0, received_bn=0, job_id=0) -> int:
     """Update job cores."""
     self.set_job_received_bn(received_bn)
     try:
@@ -327,7 +327,7 @@ def get_job_info(
             "processPayment_dataTransferOut_input": None,
             "processPayment_elapsedTime_input": None,
         }
-        received_bn = self.update_job_cores(provider, job_key, index, received_bn)
+        received_bn = self.update_job_cores(provider, job_key, index, received_bn, job_id)
         if not received_bn or received_bn == self.deployed_block_number:
             # First reading from the mongoDB, this will increase the speed to fetch from the logged data
             received_bn_temp = self.mongo_broker.get_job_bn(self.job_info["job_owner"], job_key, index)

@@ -413,7 +413,6 @@ contract eBlocBroker is
         return true;
     }
 
-
     function hashToROC(bytes32 hash, uint32 roc, bool isIPFS) public whenProviderRegistered returns (bool) {
         providers[msg.sender].hashToROC[hash] = roc;
         emit LogHashROC(msg.sender, hash, roc, isIPFS);

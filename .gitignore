@@ -188,3 +188,4 @@ G*.dot
 workflow_job.dot
 job.png
 program.log
+contract/.build/
