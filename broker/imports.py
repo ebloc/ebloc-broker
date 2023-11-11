@@ -121,7 +121,6 @@ def connect_to_eblocbroker() -> None:
             config._usdtmy = cfg.w3.eth.contract(
                 env.TOKEN_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_usdtmy.json")
             )
-
             """
             from brownie import project as pro
 
