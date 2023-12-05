@@ -24,8 +24,8 @@ source $HOME/venv/bin/activate
 rm -rf build/
 brownie compile --all
 #+end_src
-* Accounts
 
+* Accounts
 - Path: ~~/.brownie/accounts~
 
 #+begin_src bash
@@ -53,4 +53,4 @@ function function(<type>[] memory dataTransferIn) internal { // does not have to
 
 * bloxberg
 ** bootnode
-It takes around 10h to sync complete bloxberg data into bootnode.
+It takes around 10 hours to sync complete bloxberg data into bootnode.
