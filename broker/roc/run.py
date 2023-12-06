@@ -11,6 +11,15 @@ import fileinput
 
 Ebb = cfg.Ebb
 
+"""
+* https://certify.bloxberg.org
+
+{"errors":["Certifying batch to the blockchain failed."]}
+|-> Sorry, something went wrong with confirming your transaction.
+
+curl donmuyor blockladi...
+"""
+
 
 def roc(from_block=23066710, provider="0x29e613B04125c16db3f3613563bFdd0BA24Cb629") -> int:
     roc_id: int = 0
@@ -27,10 +36,17 @@ def roc(from_block=23066710, provider="0x29e613B04125c16db3f3613563bFdd0BA24Cb62
     return roc_id
 
 
-def main():
-    bn = Ebb.get_block_number()
-    print(f"block_number={bn}")
-    _hash = "abcd"
+def commit_hash(_hash, bn):
+    roc()
+    roc(provider=env.PROVIDER_ID)
+    breakpoint()  # DEBUG
+    """
+    output = config.auto.getFromHashToRoc(_hash)
+    if output > 0:
+        log(f"Already committed hash, roc={output}")
+        return
+    """
+
     for line in fileinput.input([env.EBLOCPATH / "broker" / "roc" / "request.sh"], inplace=True):
         if line.strip().startswith("crid="):
             line = f'crid="{_hash}"\n'
@@ -42,9 +58,23 @@ def main():
 
     #: takes long time ~30 seconds
     run(["bash", env.EBLOCPATH / "broker" / "roc" / "request.sh"])
-    roc_id = roc(from_block=bn, provider=env.PROVIDER_ID)
+    roc_id = roc(from_block=bn - 1, provider=env.PROVIDER_ID)
     print(f"roc={roc_id}")
-    # TODO: deploy Auto => Bloxberg
+    if int(roc_id) > 0:
+        # TODO: deploy Auto => Bloxberg
+        fn = env.PROVIDER_ID.lower().replace("0x", "") + ".json"
+        Ebb.brownie_load_account(fn)
+        config.auto.hashToRoc(_hash, roc_id, False, {"from": env.PROVIDER_ID})
+    else:
+        log("E: something went wrong")
+
+
+def main():
+    bn = Ebb.get_block_number()
+    # print(config.auto.getAutonomousSoftwareOrgInfo())
+    print(f"block_number={bn}")
+    _hash = "50c4860efe8f597e39a2305b05b0c299"
+    commit_hash(_hash, bn)
 
 
 if __name__ == "__main__":

@@ -12,8 +12,6 @@ cfg.NETWORK_ID = "bloxberg"
 
 def roc():
     output = Ebb.get_block_number()
-    # print(output)
-
     provider = "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
     event_filter = config._roc.events.Transfer.createFilter(
         argument_filters={"to": str(provider)},

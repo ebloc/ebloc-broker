@@ -166,6 +166,8 @@ usdtmy = None
 _usdtmy = None
 roc = None
 _roc = None
+auto = None
+_auto = None
 env: ENV
 try:
     env = ENV()

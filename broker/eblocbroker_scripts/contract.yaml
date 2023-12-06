@@ -9,6 +9,9 @@ networks:
       tx_hash: '0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6'
     research_object_certification:
       address: '0x3fb704dfDB72Fc06860D9F09124C30919488f13C'
+    AutonomousSoftwareOrg:
+      address: '0xac545bF170DDEc6793DFA5f6CE899aD199893353'
+      tx_hash: '0x1d35d4795df0edb948f9b65cb11aab8b96d8ca30a616e5a4c3d1d217f7e02a39'
   bloxberg-docker:
     project_dir: /workspace/ebloc-broker/contract
     # eBlocBroker:
