@@ -11,15 +11,6 @@ import fileinput
 
 Ebb = cfg.Ebb
 
-"""
-* https://certify.bloxberg.org
-
-{"errors":["Certifying batch to the blockchain failed."]}
-|-> Sorry, something went wrong with confirming your transaction.
-
-curl donmuyor blockladi...
-"""
-
 
 def roc(from_block=23066710, provider="0x29e613B04125c16db3f3613563bFdd0BA24Cb629") -> int:
     roc_id: int = 0
@@ -39,7 +30,6 @@ def roc(from_block=23066710, provider="0x29e613B04125c16db3f3613563bFdd0BA24Cb62
 def commit_hash(_hash, bn):
     roc()
     roc(provider=env.PROVIDER_ID)
-    breakpoint()  # DEBUG
     """
     output = config.auto.getFromHashToRoc(_hash)
     if output > 0:

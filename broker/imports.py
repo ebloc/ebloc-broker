@@ -125,6 +125,29 @@ def connect_to_eblocbroker() -> None:
 
             # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+            from brownie import project as pro_auto
+
+            auto_contract_address = "0x06EE74fa579C771f182624a3f71845697270A9fF"
+            _project = pro_auto.load("/home/alper/git/AutonomousSoftwareOrg")  # TODO: add as sub-module
+            config.auto = _project.AutonomousSoftwareOrg.at(auto_contract_address)
+            config.auto.contract_address = cfg.w3.toChecksumAddress(auto_contract_address)
+            config._auto = cfg.w3.eth.contract(
+                auto_contract_address, abi=read_abi_file(env.EBB_SCRIPTS / "abi_AutonomousSoftwareOrg.json")
+            )
+
+            # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+            from brownie import project as pro_roc
+
+            roc_contract_address = "0xD6397bf1A42f01C753dcD638C6eD3486963A09eD"
+            _project = pro_roc.load(env.EBLOCPATH / "research_certificate")  # TODO: add as sub-module
+            config.roc = _project.ResearchCertificate.at(roc_contract_address)
+            config.roc.contract_address = cfg.w3.toChecksumAddress(roc_contract_address)
+            config._roc = cfg.w3.eth.contract(
+                roc_contract_address, abi=read_abi_file(env.EBB_SCRIPTS / "abi_ResearchCertificate.json")
+            )
+            # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            """
             from brownie import project as pro
 
             roc_contract_address = "0x3fb704dfDB72Fc06860D9F09124C30919488f13C"
@@ -132,18 +155,7 @@ def connect_to_eblocbroker() -> None:
             config.roc = _project.ResearchCertificate.at(roc_contract_address)
             config.roc.contract_address = cfg.w3.toChecksumAddress(roc_contract_address)
             config._roc = cfg.w3.eth.contract(roc_contract_address, abi=read_abi_file(env.EBB_SCRIPTS / "abi_roc.json"))
-
-            # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-            from brownie import project as pro_auto
-
-            auto_contract_address = "0xac545bF170DDEc6793DFA5f6CE899aD199893353"
-            _project = pro.load("/home/alper/git/AutonomousSoftwareOrg")  # add as sub-module
-            config.auto = _project.AutonomousSoftwareOrg.at(auto_contract_address)
-            config.auto.contract_address = cfg.w3.toChecksumAddress(auto_contract_address)
-            config._auto = cfg.w3.eth.contract(
-                auto_contract_address, abi=read_abi_file(env.EBB_SCRIPTS / "abi_AutonomousSoftwareOrg.json")
-            )
+            """
     except Exception as e:
         print_tb(e)
         raise e

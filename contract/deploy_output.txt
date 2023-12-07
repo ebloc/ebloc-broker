@@ -1,44 +1,0 @@
-## network=bloxberg_core
-Brownie v1.19.3 - Python development framework for Ethereum
-
-New compatible solc version available: 0.8.20
-Compiling contracts...
-  Solc version: 0.8.20
-  Optimizer: Enabled  Runs: 200
-  EVM Version: Istanbul
-Generating build data...
- - EBlocBrokerBase
- - Context
- - ERC20
- - IERC20
- - IERC20Metadata
- - Ownable
- - USDTmy
- - Lib
- - SafeMath
- - SafeMath32
- - eBlocBroker
- - eBlocBrokerInterface
-
-Project has been compiled. Build artifacts saved at /home/alper/ebloc-broker/contract/build/contracts
-Brownie v1.19.3 - Python development framework for Ethereum
-
-ContractProject is the active project.
-
-Running '[0;1;34mscripts/eBlocBroker.py[0;m::[0;1;36mmain[0;m'...
-Transaction sent: [0;1;34m0xcb79b65d7c2ffdd4d6bc842586548db6d710afe90304d245f33b20f66afcd4db[0;m
-  Gas price: [0;1;34m0.001[0;m gwei   Gas limit: [0;1;34m966170[0;m   Nonce: [0;1;34m3971[0;m
-  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  USDTmy.constructor confirmed   Block: [0;1;34m22241721[0;m   Gas used: [0;1;34m878337[0;m ([0;1;34m90.91%[0;m)
-  USDTmy deployed at: [0;1;34m0x621827d7f3783E0E155861DA928b369f7a46a2D4[0;m
-
-Transaction sent: [0;1;34m0xa5ee72e214f7957c99b32d2e413b85f93b576935ff2cf7accb35e8b303988aa5[0;m
-  Gas price: [0;1;34m0.001[0;m gwei   Gas limit: [0;1;34m156777[0;m   Nonce: [0;1;34m3972[0;m
-  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Lib.constructor confirmed   Block: [0;1;34m22241722[0;m   Gas used: [0;1;34m142525[0;m ([0;1;34m90.91%[0;m)
-  Lib deployed at: [0;1;34m0x88B0f4018E162be82052F1C75B9A9FE1829A8a84[0;m
-
-Transaction sent: [0;1;34m0x5ce5693b5ec41cb206c0e328e8a3f7570bda8c3d3f2653f5a956e3e6f61ff819[0;m
-  Awaiting transaction in the mempool... -  Gas price: [0;1;34m0.001[0;m gwei   Gas limit: [0;1;34m5818222[0;m   Nonce: [0;1;34m3973[0;m
-  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  eBlocBroker.constructor confirmed   Block: [0;1;34m22241723[0;m   Gas used: [0;1;34m5289293[0;m ([0;1;34m90.91%[0;m)
-  eBlocBroker deployed at: [0;1;34m0xf8238622f900727E2DD478096a414d20Cc1af782[0;m
-
-## setting abi... done

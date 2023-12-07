@@ -7,11 +7,15 @@ networks:
     USDTmy:
       address: '0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7'
       tx_hash: '0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6'
-    research_object_certification:
-      address: '0x3fb704dfDB72Fc06860D9F09124C30919488f13C'
+    ResearchCertificate:
+      address: '0xD6397bf1A42f01C753dcD638C6eD3486963A09eD'
+      tx_hash: '0x8cf7bab8993c192c0de1b56aa8f9f0b706cbd341b35b425d500803509026c653'
     AutonomousSoftwareOrg:
-      address: '0xac545bF170DDEc6793DFA5f6CE899aD199893353'
-      tx_hash: '0x1d35d4795df0edb948f9b65cb11aab8b96d8ca30a616e5a4c3d1d217f7e02a39'
+      address: '0x06EE74fa579C771f182624a3f71845697270A9fF'
+      tx_hash: '0xe76315a96d47584b7da739a3a4d96e1bf64fbe913f35ed85ac4a1e7c4ca7c14e'
+    # research_object_certification:
+    #   address: '0x3fb704dfDB72Fc06860D9F09124C30919488f13C'
+
   bloxberg-docker:
     project_dir: /workspace/ebloc-broker/contract
     # eBlocBroker:

@@ -945,7 +945,6 @@ contract eBlocBroker is
     */
     function getProviderInfo(address provider, uint32 pricesSetBn) public view returns (uint32, Lib.ProviderInfo memory) {
         uint32[] memory providerInfo = pricesSetBlockNum[provider];
-
         if (pricesSetBn == 0) {
             pricesSetBn = providerInfo[providerInfo.length - 1];
             if (pricesSetBn > block.number) {
