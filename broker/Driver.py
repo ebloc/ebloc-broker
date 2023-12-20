@@ -97,7 +97,7 @@ def tools(bn):
             raise Terminate
 
         provider_info_contract = Ebb.get_provider_info(env.PROVIDER_ID)
-        if env.IS_BLOXBERG:
+        if env.IS_TESTNET:
             log(":beer:  Connected into [g]bloxberg[/g]")
         else:
             is_geth_on()

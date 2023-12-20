@@ -174,7 +174,7 @@ class Job:
             if isinstance(_from, int):
                 _from = self.Ebb.account_id_to_address(_from)
 
-            if not env.IS_BLOXBERG and is_geth_account_locked(_from):
+            if not env.IS_TESTNET and is_geth_account_locked(_from):
                 log(f"E: Account({_from}) is locked")
                 raise QuietExit
 

@@ -25,7 +25,11 @@ from brownie import accounts, history
 from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
-GAS_PRICE = 0.25  # was 1.21 Gwei
+if cfg.NETWORK_ID == "sepolia":
+    GAS_PRICE = 1.50
+else:  #: for bloxberg
+    GAS_PRICE = 0.25  # was 1.21 Gwei
+
 EXIT_AFTER = 1000  # seconds
 
 
@@ -80,8 +84,8 @@ class Contract(Base):
         self.required_confs = 1
         self._from = ""
         #: tx cost exceeds current gas limit. Limit: 9990226, got:
-        #  10000000. Try decreasing supplied gas.
-        self.gas = 9980000
+        #: ('insufficient funds for gas * price + value',)
+        self.gas = 9900000
         self.gas_price = GAS_PRICE
         # self.gas_params = {"gas_price": self.gas_strategy, "gas": self.gas}
         self._setup(is_brownie)
@@ -121,7 +125,7 @@ class Contract(Base):
 
     def is_eth_account_locked(self, addr):
         """Check whether the ethereum account is locked."""
-        if env.IS_BLOXBERG:
+        if env.IS_TESTNET:
             try:
                 account = self.brownie_load_account()
             except Exception as e:
@@ -185,7 +189,7 @@ class Contract(Base):
 
     def tx_id(self, tx):
         """Return transaction id."""
-        if env.IS_BLOXBERG:
+        if env.IS_TESTNET:
             return tx.txid
 
         if not tx:
@@ -281,7 +285,7 @@ class Contract(Base):
 
     def transfer(self, amount, from_account, to_account, required_confs=1):
         """Transfer acount's ether balance."""
-        tx = from_account.transfer(to_account, amount, gas_price=GAS_PRICE, required_confs=required_confs)
+        tx = from_account.transfer(to_account, amount, gas_price=f"{GAS_PRICE} gwei", required_confs=required_confs)
         return self.tx_id(tx)
 
     def fetch_logs(self):
@@ -305,8 +309,8 @@ class Contract(Base):
     def _get_contract_yaml(self):
         try:
             _yaml = Yaml(env.CONTRACT_YAML_FILE, auto_dump=False)
-            if env.IS_BLOXBERG:
-                return _yaml["networks"]["bloxberg"]
+            if env.IS_TESTNET:
+                return _yaml["networks"][cfg.NETWORK_ID]
             elif env.IS_EBLOCPOA:
                 return _yaml["networks"]["eblocpoa"]
             else:
@@ -351,7 +355,7 @@ class Contract(Base):
         """
         method = None
         try:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 fn = self.ops["from"].lower().replace("0x", "") + ".json"
                 self.brownie_load_account(fn)
                 if contract == "eBlocBroker":
@@ -377,17 +381,25 @@ class Contract(Base):
 
         first_try_flag = False
         while idx < self.max_retries:
-            self.ops = {
-                "from": self._from,
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "allow_revert": True,
-                "required_confs": self.required_confs,
-            }
+            if cfg.NETWORK_ID == "sepolia":
+                self.ops = {
+                    "from": self._from,
+                    "allow_revert": True,
+                    "required_confs": self.required_confs,
+                }
+            else:
+                self.ops = {
+                    "from": self._from,
+                    "gas": self.gas,
+                    "gas_price": f"{self.gas_price} gwei",
+                    "allow_revert": True,
+                    "required_confs": self.required_confs,
+                }
+
             try:
                 if first_try_flag:
                     # __ https://eth-brownie.readthedocs.io/en/stable/core-chain.html#core-chain-history
-                    log(f"Attempt={idx}...")
+                    log(f"Attempt={idx} | gas_price={self.gas_price} ...")
                     # log(f"==> Sleeping for 15 seconds | gas_price={self.gas_price} ... ", end="")
                     # try:
                     #     time.sleep(15)
@@ -405,10 +417,11 @@ class Contract(Base):
                     print_tb(e)
                     raise QuietExit from e
 
-                try:
-                    nc(env.BLOXBERG_HOST, 8545)
-                except Exception:
-                    log(f"E: Failed to make TCP connecton to {env.BLOXBERG_HOST}")
+                if "sepolia" not in env.BLOXBERG_HOST:
+                    try:
+                        nc(env.BLOXBERG_HOST, 8545)
+                    except Exception:
+                        log(f"E: Failed to make TCP connecton to {env.BLOXBERG_HOST}")
 
                 if "Sequence has incorrect length" in str(e):
                     print_tb(e)
@@ -418,6 +431,7 @@ class Contract(Base):
                     log(f"warning: Tx: {e}", is_code=True)
                 else:
                     log(f"E: Tx: {e}")
+                    breakpoint()  # DEBUG
 
                 if ("Try increasing the gas price" in str(e)) or (
                     "Transaction with the same hash was already imported." in str(e)
@@ -652,7 +666,7 @@ class Contract(Base):
     # ~~~~~~~ #
     def get_registered_data_bn(self, *args):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getRegisteredDataBlockNumbers(*args)
             else:
                 return self.eBlocBroker.functions.getRegisteredDataBlockNumbers(*args).call()
@@ -661,7 +675,7 @@ class Contract(Base):
 
     def get_registered_data_price(self, *args):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getRegisteredDataPrice(*args)
             else:
                 return self.eBlocBroker.functions.getRegisteredDataPrice(*args).call()
@@ -676,7 +690,7 @@ class Contract(Base):
         Ex: (12878247, 12950247, 12952047, 12988647)
         """
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getUpdatedProviderPricesBlocks(account)
             else:
                 return self.eBlocBroker.functions.getUpdatedProviderPricesBlocks(account).call()
@@ -689,7 +703,7 @@ class Contract(Base):
 
     def _get_provider_fees_for_job(self, *args):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getProviderPrices(*args)  # NOQA
             else:
                 return self.eBlocBroker.functions.getProviderPrices(*args).call()  # noqa
@@ -698,7 +712,7 @@ class Contract(Base):
 
     def _get_job_info(self, *args):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getJobInfo(*args)
             else:
                 return self.eBlocBroker.functions.getJobInfo(*args).call()
@@ -707,7 +721,7 @@ class Contract(Base):
 
     def get_user_orcid(self, user):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getOrcID(user)
             else:
                 return self.eBlocBroker.functions.getOrcID(user).call()
@@ -716,7 +730,7 @@ class Contract(Base):
 
     def _get_requester_info(self, requester):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 committed_block_num = self.eBlocBroker.getRequesterCommittmedBlock(requester)
             else:
                 committed_block_num = self.eBlocBroker.functions.getRequesterCommittmedBlock(requester).call()
@@ -728,7 +742,7 @@ class Contract(Base):
     def allowance(self, _from, to):
         """Return the owner of ebloc-broker."""
         if self.usdtmy is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.usdtmy.allowance(_from, to)
             else:
                 return self.eBlocBroker.functions.allowance().call()
@@ -738,7 +752,7 @@ class Contract(Base):
     def get_owner(self):
         """Return the owner of ebloc-broker."""
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getOwner()
             else:
                 return self.eBlocBroker.functions.getOwner().call()
@@ -748,7 +762,7 @@ class Contract(Base):
     def get_job_size(self, provider, key):
         """Return size of the job."""
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getJobSize(provider, key)
             else:
                 return self.eBlocBroker.call().getJobSize(provider, key)
@@ -757,7 +771,7 @@ class Contract(Base):
 
     def is_orcid_verified(self, address):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.isOrcIDVerified(address)
             else:
                 return self.eBlocBroker.functions.isOrcIDVerified(address).call()
@@ -770,7 +784,7 @@ class Contract(Base):
             address = self.w3.toChecksumAddress(address)
 
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.doesRequesterExist(address)
             else:
                 return self.eBlocBroker.functions.doesRequesterExist(address).call()
@@ -783,7 +797,7 @@ class Contract(Base):
             address = self.w3.toChecksumAddress(address)
 
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.doesProviderExist(address)
             else:
                 return self.eBlocBroker.functions.doesProviderExist(address).call()
@@ -793,7 +807,7 @@ class Contract(Base):
     def get_provider_receipt_node(self, provideress, index):
         """Return provider's receipt node based on given index."""
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getProviderReceiptNode(provideress, index)
             else:
                 return self.eBlocBroker.functions.getProviderReceiptNode(provideress, index).call()
@@ -806,7 +820,7 @@ class Contract(Base):
             address = self.w3.toChecksumAddress(address)
 
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getProviderReceiptSize(address)
             else:
                 return self.eBlocBroker.functions.getProviderReceiptSize(address).call()
@@ -815,7 +829,7 @@ class Contract(Base):
 
     def _is_orc_id_verified(self, address):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.isOrcIDVerified(address)
             else:
                 return self.eBlocBroker.functions.isOrcIDVerified(address).call()
@@ -825,7 +839,7 @@ class Contract(Base):
     def _get_provider_info(self, provider, prices_set_block_number=0):
         """Fetch price of the provider within the commitment duration."""
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 block_read_from, provider_price_info = self.eBlocBroker.getProviderInfo(
                     provider, prices_set_block_number
                 )
@@ -855,7 +869,7 @@ class Contract(Base):
             account = self.w3.toChecksumAddress(account)
 
         if self.usdtmy is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.usdtmy.balanceOf(account)
             else:
                 return self.usdtmy.functions.balanceOf(account).call()
@@ -865,7 +879,7 @@ class Contract(Base):
     def get_providers(self):
         """Return the providers list."""
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getProviders()
             else:
                 return self.eBlocBroker.functions.getProviders().call()
@@ -874,7 +888,7 @@ class Contract(Base):
 
     def _get_provider_set_block_numbers(self, provider):
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getProviderSetBlockNumbers(provider)[-1]
             else:
                 return self.eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
@@ -891,7 +905,7 @@ class Contract(Base):
                 code_hash = ipfs_to_bytes32(code_hash)
 
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getStorageInfo(provider, requester, code_hash)
             else:
                 return self.eBlocBroker.functions.getStorageInfo(provider, requester, code_hash).call()
@@ -908,7 +922,7 @@ class Contract(Base):
                     code_hash = ipfs_to_bytes32(code_hash)
 
         if self.eBlocBroker is not None:
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 return self.eBlocBroker.getStorageInfo(provider, data_owner, code_hash)
             else:
                 return self.eBlocBroker.functions.getStorageInfo(provider, data_owner, code_hash).call()

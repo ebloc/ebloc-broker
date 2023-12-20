@@ -6,8 +6,9 @@ main () {
         printf "#> something is wrong:\n${output}"
         return
     else
-        network="bloxberg_core"  # "eblocpoa"
-        echo -e "## network="$network
+        network="sepolia"
+        # network="bloxberg_core"
+        printf "## network=$network\n"
         rm -rf build/
         brownie compile
         brownie run eBlocBroker --network $network

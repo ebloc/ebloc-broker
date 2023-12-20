@@ -1,0 +1,44 @@
+## network=sepolia
+Brownie v1.19.3 - Python development framework for Ethereum
+
+New compatible solc version available: 0.8.22
+Compiling contracts...
+  Solc version: 0.8.22
+  Optimizer: Enabled  Runs: 200
+  EVM Version: Istanbul
+Generating build data...
+ - EBlocBrokerBase
+ - Context
+ - ERC20
+ - IERC20
+ - IERC20Metadata
+ - Ownable
+ - USDTmy
+ - Lib
+ - SafeMath
+ - SafeMath32
+ - eBlocBroker
+ - eBlocBrokerInterface
+
+Project has been compiled. Build artifacts saved at /home/alper/ebloc-broker/contract/build/contracts
+Brownie v1.19.3 - Python development framework for Ethereum
+
+ContractProject is the active project.
+
+Running '[0;1;34mscripts/eBlocBroker.py[0;m::[0;1;36mmain[0;m'...
+Transaction sent: [0;1;34m0x62ef4bb70b6e4a8e9ab3c976974e5978244f0790784d6176ab4b650d73ee337c[0;m
+  Awaiting transaction in the mempool... -  Gas price: [0;1;34m48.356717434[0;m gwei   Gas limit: [0;1;34m974532[0;m   Nonce: [0;1;34m0[0;m
+  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  USDTmy.constructor confirmed   Block: [0;1;34m4923187[0;m   Gas used: [0;1;34m885939[0;m ([0;1;34m90.91%[0;m)
+  USDTmy deployed at: [0;1;34m0x7449585EaB2106B3c2c7f625d3Ad26640Fc14cec[0;m
+
+Transaction sent: [0;1;34m0x2d06b040ed0a7eb951e3f9c002ab122f091eb4e7434eabb0c36c51903085d597[0;m
+  Gas price: [0;1;34m55.222348665[0;m gwei   Gas limit: [0;1;34m144958[0;m   Nonce: [0;1;34m1[0;m
+  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Lib.constructor confirmed   Block: [0;1;34m4923188[0;m   Gas used: [0;1;34m131780[0;m ([0;1;34m90.91%[0;m)
+  Lib deployed at: [0;1;34m0x675e975A7ed48ADCc1FBb40d4349BCa49ab594c7[0;m
+
+Transaction sent: [0;1;34m0x7a32155daaef5d9884cabb91136966c672746847157fa06ed2f0236f101ad7f2[0;m
+  Gas price: [0;1;34m55.222348665[0;m gwei   Gas limit: [0;1;34m5868349[0;m   Nonce: [0;1;34m2[0;m
+  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  eBlocBroker.constructor confirmed   Block: [0;1;34m4923189[0;m   Gas used: [0;1;34m5334863[0;m ([0;1;34m90.91%[0;m)
+  eBlocBroker deployed at: [0;1;34m0x00A7413ACb69D7F9a03ab92B77c49628bD340274[0;m
+
+## setting abi... done

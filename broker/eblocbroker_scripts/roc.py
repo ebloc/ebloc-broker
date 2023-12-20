@@ -7,7 +7,6 @@ from broker.utils import print_tb
 
 Ebb = cfg.Ebb
 logging = setup_logger()
-cfg.NETWORK_ID = "bloxberg"
 
 
 def roc():

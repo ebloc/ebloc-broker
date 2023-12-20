@@ -1,4 +1,5 @@
 networks:
+  active_network: bloxberg # sepolia # change me at cfg.py file as well
   bloxberg:
     project_dir: ~/ebloc-broker/contract
     eBlocBroker:
@@ -13,9 +14,21 @@ networks:
     AutonomousSoftwareOrg:
       address: '0x06EE74fa579C771f182624a3f71845697270A9fF'
       tx_hash: '0xe76315a96d47584b7da739a3a4d96e1bf64fbe913f35ed85ac4a1e7c4ca7c14e'
-    # research_object_certification:
-    #   address: '0x3fb704dfDB72Fc06860D9F09124C30919488f13C'
-
+  sepolia:
+    project_dir: ~/ebloc-broker/contract
+    name: sepolia
+    eBlocBroker:
+      address: '0x00A7413ACb69D7F9a03ab92B77c49628bD340274'
+      tx_hash: '0x7a32155daaef5d9884cabb91136966c672746847157fa06ed2f0236f101ad7f2'
+    USDTmy:
+      address: '0x7449585EaB2106B3c2c7f625d3Ad26640Fc14cec'
+      tx_hash: '0x62ef4bb70b6e4a8e9ab3c976974e5978244f0790784d6176ab4b650d73ee337c'
+    ResearchCertificate:
+      address: '0x17e85EF468e5e085659d0443e29856a9054f0E7A'
+      tx_hash: '0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07'
+    AutonomousSoftwareOrg:
+      address: '0xC26ad052140a483f0342DD6e58c3D3A49DBfc106'
+      tx_hash: '0x596adaa251729551525850d913424946f3096821fc8a12e6bb5de0c6094cd29a'
   bloxberg-docker:
     project_dir: /workspace/ebloc-broker/contract
     # eBlocBroker:
@@ -24,7 +37,6 @@ networks:
     # USDTmy:
     #   address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
     #   tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
-
 networks_old:
   bloxberg:
     project_dir: ~/ebloc-broker/contract

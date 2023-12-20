@@ -16,12 +16,11 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
     cmd: ./authenticate_orc_id.py 0x29e613B04125c16db3f3613563bFdd0BA24Cb629 0000-0001-7642-0552
     """
     address = self.w3.toChecksumAddress(address)
-    log(f"==> authenticating user={address}")
+    log(f"==> authenticating user={address} ...")
     if not self.w3.isAddress(_from):
         raise Exception(f"Account: {_from} is not a valid address")
 
     if not self.is_owner(_from):
-        breakpoint()  # DEBUG
         raise Exception(f"Account: {_from} that will call the transaction is not the owner of the contract")
 
     if not self.does_requester_exist(address) and not self.does_provider_exist(address):

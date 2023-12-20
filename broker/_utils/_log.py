@@ -102,6 +102,7 @@ class Log:
     # def halo_decorator(self):
     #     with Halo(text="Loading", spinner="line", placement="right"):
     #         time.sleep(6)
+    #
     def print_color(self, text: str, color=None, is_bold=True, end="\n", highlight=True) -> None:
         """Print string in color format."""
         if text[0:3] in self.inner_bullets:
@@ -144,6 +145,8 @@ class Log:
             if not color:
                 if text[:3] == "#> ":
                     color = "pink"
+                elif text[:3] == "***":
+                    color = "orange"
                 else:
                     color = "blue"
         elif text[:8].lower() == "warning:":
@@ -165,7 +168,7 @@ class Log:
             _len = 2
             is_bullet = True
             if not color:
-                color = "blue"
+                color = "pink"
         elif "SUCCESS" in text or "Finalazing" in text or text in ["END", "DONE"]:
             if not color:
                 color = "green"

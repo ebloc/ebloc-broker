@@ -25,7 +25,6 @@ from broker.lib import state
 
 VERBOSE = False
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cfg.NETWORK_ID = "bloxberg"
 Ebb = cfg.Ebb
 columns_size = 30
 is_provider = True

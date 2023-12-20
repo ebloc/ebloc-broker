@@ -1,8 +1,9 @@
 #!/bin/bash
 
 main () {
-    network="bloxberg_core"
-    echo -e "## network="$network
+    network="sepolia"
+    # network="bloxberg_core"
+    printf "## network=$network\n"
     rm -rf build/
     brownie compile
     brownie run ResearchCertificate --network $network

@@ -11,7 +11,6 @@ from broker.errors import QuietExit
 from broker.utils import is_docker
 
 ipfs = cfg.ipfs
-cfg.NETWORK_ID = "bloxberg"
 
 
 def is_provider_info_match(self, gmail, ipfs_address, gpg_fingerprint, f_id):

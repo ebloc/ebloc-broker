@@ -14,7 +14,7 @@ def _connect_to_web3() -> None:
     __ https://bloxberg.org
     """
     if env.IS_GETH_TUNNEL or not env.IS_EBLOCPOA:
-        if env.IS_BLOXBERG:
+        if env.IS_TESTNET:
             # TODO you can use brownie's connected web3?
             cfg.w3 = Web3(HTTPProvider("https://core.bloxberg.org"))
         else:
@@ -43,7 +43,7 @@ def connect_to_web3() -> None:
                 if env.IS_GETH_TUNNEL:
                     raise Exception("Web3ConnectError: try tunnelling: ssh -f -N -L 8545:localhost:8545 username@<ip>")
 
-                if env.IS_BLOXBERG:
+                if env.IS_TESTNET:
                     log("E: web3 is not connected into [green]BLOXBERG[/green]")
                 else:
                     is_geth_on()
@@ -53,7 +53,7 @@ def connect_to_web3() -> None:
                 print_tb(e)
                 sys.exit(1)
 
-            if not env.IS_GETH_TUNNEL and not env.IS_BLOXBERG:
+            if not env.IS_GETH_TUNNEL and not env.IS_TESTNET:
                 log(
                     "E: If web3 is not connected please start geth server and give permission \n"
                     "to /private/geth.ipc file doing: ",

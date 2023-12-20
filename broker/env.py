@@ -46,8 +46,8 @@ class ENV_BASE:
         self.IPFS_REPO = self.tilda_check(self.cfg["ipfs_repo_dir"])
         self.EBLOCPATH = self.tilda_check(Path(self.cfg["ebloc_path"]))
         self.CONTRACT_PROJECT_PATH = self.EBLOCPATH / "contract"
-        self.IS_BLOXBERG = True
-        if self.IS_BLOXBERG:
+        self.IS_TESTNET = True
+        if self.IS_TESTNET:
             self.IS_EBLOCPOA = False  # eblocpoa is not in use
             self.IS_GETH_TUNNEL = False
 
@@ -55,13 +55,17 @@ class ENV_BASE:
         self.CONTRACT_YAML_FILE = self.EBB_SCRIPTS / "contract.yaml"
         try:
             _yaml = Yaml(self.CONTRACT_YAML_FILE)
-            if self.IS_BLOXBERG:
-                _yaml = _yaml["networks"]["bloxberg"]
+            if self.IS_TESTNET:
+                self.ACTIVE_NETWORK = _yaml["networks"]["active_network"]
+                _yaml = _yaml["networks"][self.ACTIVE_NETWORK]
             elif self.IS_EBLOCPOA:
                 _yaml = _yaml["networks"]["eblocpoa"]
 
             self.CONTRACT_ADDRESS = _yaml["eBlocBroker"]["address"]
             self.TOKEN_CONTRACT_ADDRESS = _yaml["USDTmy"]["address"]
+            #
+            self.ROC_CONTRACT_ADDRESS = _yaml["ResearchCertificate"]["address"]
+            self.AUTO_CONTRACT_ADDRESS = _yaml["AutonomousSoftwareOrg"]["address"]
         except Exception as e:
             raise e
 

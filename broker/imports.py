@@ -71,11 +71,11 @@ def connect_to_eblocbroker() -> None:
             config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi.json"))
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
-        elif env.IS_BLOXBERG and not cfg.IS_BROWNIE_TEST:
+        elif env.IS_TESTNET and not cfg.IS_BROWNIE_TEST:
             try:
                 network.connect(cfg.NETWORK_ID)
                 if not network.is_connected():
-                    log(f"E: {network.show_active()} is not connected through {env.BLOXBERG_HOST}")
+                    log(f"E: <{network.show_active()}> is not connected through {env.BLOXBERG_HOST}")
                     if cfg.NETWORK_ID == "bloxberg":
                         log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg_core. ", end="")
                         cfg.NETWORK_ID = "bloxberg_core"
@@ -124,30 +124,24 @@ def connect_to_eblocbroker() -> None:
             )
 
             # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-            from brownie import project as pro_auto
-
-            auto_contract_address = "0x06EE74fa579C771f182624a3f71845697270A9fF"
-            _project = pro_auto.load("/home/alper/git/AutonomousSoftwareOrg")  # TODO: add as sub-module
-            config.auto = _project.AutonomousSoftwareOrg.at(auto_contract_address)
-            config.auto.contract_address = cfg.w3.toChecksumAddress(auto_contract_address)
-            config._auto = cfg.w3.eth.contract(
-                auto_contract_address, abi=read_abi_file(env.EBB_SCRIPTS / "abi_AutonomousSoftwareOrg.json")
-            )
-
-            # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
             from brownie import project as pro_roc
 
-            roc_contract_address = "0xD6397bf1A42f01C753dcD638C6eD3486963A09eD"
-            _project = pro_roc.load(env.EBLOCPATH / "research_certificate")  # TODO: add as sub-module
-            config.roc = _project.ResearchCertificate.at(roc_contract_address)
-            config.roc.contract_address = cfg.w3.toChecksumAddress(roc_contract_address)
+            project_roc = pro_roc.load(env.EBLOCPATH / "research_certificate")  # TODO: add as sub-module
+            config.roc = project_roc.ResearchCertificate.at(env.ROC_CONTRACT_ADDRESS)
+            config.roc.contract_address = cfg.w3.toChecksumAddress(env.ROC_CONTRACT_ADDRESS)
             config._roc = cfg.w3.eth.contract(
-                roc_contract_address, abi=read_abi_file(env.EBB_SCRIPTS / "abi_ResearchCertificate.json")
+                env.ROC_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_ResearchCertificate.json")
             )
             # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-            """
+            from brownie import project as pro_auto
+
+            _project = pro_auto.load("/home/alper/git/AutonomousSoftwareOrg")  # TODO: add as sub-module
+            config.auto = _project.AutonomousSoftwareOrg.at(env.AUTO_CONTRACT_ADDRESS)
+            config.auto.contract_address = cfg.w3.toChecksumAddress(env.AUTO_CONTRACT_ADDRESS)
+            config._auto = cfg.w3.eth.contract(
+                env.AUTO_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_AutonomousSoftwareOrg.json")
+            )
+            """ depreciated
             from brownie import project as pro
 
             roc_contract_address = "0x3fb704dfDB72Fc06860D9F09124C30919488f13C"

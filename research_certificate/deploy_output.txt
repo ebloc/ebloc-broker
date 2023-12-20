@@ -1,0 +1,39 @@
+## network=sepolia
+Brownie v1.19.3 - Python development framework for Ethereum
+
+New compatible solc version available: 0.8.22
+Compiling contracts...
+  Solc version: 0.8.22
+  Optimizer: Enabled  Runs: 200
+  EVM Version: Istanbul
+Generating build data...
+ - Context
+ - Counters
+ - SafeMath
+ - ERC165
+ - IERC165
+ - IERC721
+ - IERC721Metadata
+ - IERC721Receiver
+ - Math
+ - ERC721
+ - ResearchCertificate
+ - SignedMath
+ - Strings
+ - IERC1155Errors
+ - IERC20Errors
+ - IERC721Errors
+
+Project has been compiled. Build artifacts saved at /home/alper/ebloc-broker/research_certificate/build/contracts
+Brownie v1.19.3 - Python development framework for Ethereum
+
+ResearchCertificateProject is the active project.
+
+Running '[0;1;34mscripts/ResearchCertificate.py[0;m::[0;1;36mmain[0;m'...
+from=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49
+Transaction sent: [0;1;34m0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07[0;m
+  Gas price: [0;1;34m1.138964003[0;m gwei   Gas limit: [0;1;34m1232479[0;m   Nonce: [0;1;34m8[0;m
+  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  ResearchCertificate.constructor confirmed   Block: [0;1;34m4936991[0;m   Gas used: [0;1;34m1120436[0;m ([0;1;34m90.91%[0;m)
+  ResearchCertificate deployed at: [0;1;34m0x17e85EF468e5e085659d0443e29856a9054f0E7A[0;m
+
+## setting abi... done

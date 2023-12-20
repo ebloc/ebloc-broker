@@ -43,7 +43,7 @@ def main():
                 "bold",
                 end="",
             )
-            if env.IS_BLOXBERG:
+            if env.IS_TESTNET:
                 log(f" | network=[g]BLOXBERG\n{providers}", "bold")
 
             columns = 80

@@ -9,7 +9,6 @@ from broker.utils import print_tb
 
 Ebb = cfg.Ebb
 logging = setup_logger()
-cfg.NETWORK_ID = "bloxberg"
 
 
 def get_block_number(is_write_to_file=False):
@@ -20,7 +19,7 @@ def get_block_number(is_write_to_file=False):
             #: used in cleaning for a new test
             env.config["token_balance"] = int(Ebb.get_balance(env.PROVIDER_ID))
         else:
-            log(f"block_number={output}")
+            log(f"block_number={output} | active_network={env.ACTIVE_NETWORK}")
     except Exception as e:
         print_tb(e)
 
