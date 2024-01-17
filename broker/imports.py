@@ -41,7 +41,7 @@ def read_abi_file(abi_file):
 
 
 def connect():
-    """Connect to web3.
+    """Connect to Web3.
 
     return: ebb and web3 objects.
     """

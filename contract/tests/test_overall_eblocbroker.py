@@ -973,7 +973,6 @@ def test_submit_jobs():
             job_price_sum += job_price
             data_transfer_ins = [100]
             job_key = job.storage_hours[0]
-
             set_transfer(requester, Cent(job_price))
             tx = ebb.submitJob(
                 job_key,
@@ -1117,7 +1116,7 @@ def test_submit_n_data():
         {"from": requester},
     )
     gas_costs.append(tx.__dict__["gas_used"])
-    # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #
     job.code_hashes = [b"9b3e9babb6539c1aceea8d606fc55403", b"9a4c0c1c9aadb203daf9367bd4df930b"]
     job.key = job.code_hashes[0]
     job.cores = [2]

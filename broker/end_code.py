@@ -186,7 +186,7 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.encoded_share_tokens: Dict[str, str] = {}
         self.is_workflow = False
         self.sub_workflow = False
-        self.job_type: int = JOB.TYPE["SINGLE"]
+        # self.job_type: int = JOB.TYPE["SINGLE"]
         self.job_type = int(kwargs.pop("job_type"))  # from workflow
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(_env.IPFS_REPO)

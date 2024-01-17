@@ -19,10 +19,6 @@ class HandlerException(Exception):
     """Generate HandlerException."""
 
 
-class QuietTerminate(Exception):
-    """Terminate the process."""
-
-
 class Terminate(Exception):
     """Terminate the process."""
 
@@ -31,9 +27,13 @@ class Timeout(Exception):
     """Timeout."""
 
 
+class Web3NotConnected(Exception):
+    """Web3 is not connected."""
+
+
 class QuietExit(Exception):
     """Exit quietly without printing the trace."""
 
 
-class Web3NotConnected(Exception):
-    """Web3 is not connected."""
+class QuietTerminate(Exception):
+    """Terminate the process."""

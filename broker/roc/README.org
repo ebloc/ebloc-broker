@@ -1,3 +1,4 @@
 * README
 
-- ~/ebloc-broker/broker/eblocbroker_scripts/roc.py
+Scripts:
+- [[~/ebloc-broker/broker/eblocbroker_scripts/roc.py]]

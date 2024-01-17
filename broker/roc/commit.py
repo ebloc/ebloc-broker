@@ -7,12 +7,18 @@ from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.config import env
 from broker.errors import QuietExit
+import networkx as nx
+from typing import List
 
+fn = "/home/alper/git/AutonomousSoftwareOrg/graph/original.gv"
+G = nx.drawing.nx_pydot.read_dot(fn)
+
+"""
 Ebb = cfg.Ebb
 Ebb.get_block_number()
+"""
 
-
-data = {
+data_map = {
     "17.2": "9ea971a966ec0f612b268d7e089b1f9e",
     "10.0": "110e00c9266bf7cb964cd68f5e0a6b96",
     "7.0": "3930b695da4c9f46aa0ef0153d8ca288",
@@ -84,14 +90,109 @@ data = {
     "49": "47de855b72114be6dcad7564e48cd936",
 }
 
+orphan_data = ["1", "2", "11", "3", "44"]
+generated_data: List[str] = []
+completed_sw = []
+
+
+def add_software_exec_record(sw, index, input_hashes, output_hashes):
+    fn = env.PROVIDER_ID.lower().replace("0x", "") + ".json"
+    Ebb.brownie_load_account(fn)
+
+    if config.roc.getTokenIndex(sw) > 0:
+        log(f"=> sw({sw}) is already created")
+    else:
+        log(f"=> [blue]sw({sw}) to be registered")
+        config.auto.addSoftwareExecRecord(
+            sw, index, input_hashes, output_hashes, {"from": env.PROVIDER_ID, "gas": 9900000, "allow_revert": True}
+        )
+
+
+def commit_software():
+    while True:
+        if len(completed_sw) == len(sw_nodes):
+            break
+
+        for sw_node in sw_nodes:
+            if sw_node not in completed_sw:
+                pre = set(G.predecessors(sw_node))
+                if pre.issubset(orphan_data + generated_data):
+                    input_hashes = []
+                    for data in pre:
+                        input_hashes.append(data_map[data])
+
+                    output_hashes = []
+                    succ = set(G.successors(sw_node))
+                    for data in succ:
+                        output_hashes.append(data_map[data])
+                        generated_data.append(data)
+
+                    completed_sw.append(sw_node)
+
+                    #: save to blockchain
+                    add_software_exec_record(data_map[sw_node], int(sw_node.split(".")[1]), input_hashes, output_hashes)
+
+
+sw_nodes = []
+for node in list(G.nodes):
+    if "." in node:
+        sw_nodes.append(node)
+
+# commit_software()
+"""
+order = {}
+for sw_node in sw_nodes:
+    roc_num = config.roc.getTokenIndex(data_map[sw_node])
+    order[sw_node] = roc_num
+
+sorted_order = {k: v for k, v in sorted(order.items(), key=lambda item: item[1])}
+log(sorted_order)
+"""
+
+sorted_order = {
+    "10.0": 13,
+    "17.2": 14,
+    "7.2": 19,
+    "7.3": 21,
+    "7.4": 23,
+    "14.0": 26,
+    "4.0": 29,
+    "4.1": 33,
+    "7.1": 35,
+    "14.1": 38,
+    "17.0": 42,
+    "17.3": 45,
+    "19.0": 46,
+    "17.4": 48,
+    "22.3": 50,
+    "7.0": 53,
+    "17.1": 57,
+    "22.0": 60,
+    "22.1": 64,
+    "22.2": 66,
+}
+
+hit_data = {}
+
+for node in sorted_order:
+    successors = set(G.successors(node))
+    owned_data = []
+    for succ in successors:
+        if succ not in hit_data:
+            owned_data.append(succ)
+            hit_data[succ] = True
+
+    log(f"{node} => {owned_data}")
+    # breakpoint()  # DEBUG
+
+
+#  set(G.predecessors("17.2"))
+breakpoint()  # DEBUG
+
 
 def md5_hash():
     _hash = random.getrandbits(128)
     return "%032x" % _hash
-
-
-def add_software_exec_record():
-    pass
 
 
 def commit_hash(_hash):
@@ -108,7 +209,7 @@ def main():
     log(config.roc.name())
     log(config.auto.getAutonomousSoftwareOrgInfo())
     #
-    commit_hash("50c4860efe8f597e39a2305b05b0c292")
+    commit_hash("50c4860efe8f597e39a2305b05b0c291")
 
     log(md5_hash())
     # output = md5_hash()
