@@ -973,7 +973,6 @@ def test_submit_jobs():
             job_price_sum += job_price
             data_transfer_ins = [100]
             job_key = job.storage_hours[0]
-
             set_transfer(requester, Cent(job_price))
             tx = ebb.submitJob(
                 job_key,

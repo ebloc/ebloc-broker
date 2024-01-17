@@ -103,10 +103,11 @@ def register_provider_wrapper(yaml_fn, is_bare=False):
         print_tb(e)
 
     exit_flag = False
+    """
     if env.PROVIDER_ID == Ebb.get_owner():
         log("E: Address cannot be same as owner's")
         exit_flag = True
-
+    """
     error_list = []
     if not f_id:
         error_list.append("f_id")
