@@ -26,7 +26,7 @@ from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
 if cfg.NETWORK_ID == "sepolia":
-    GAS_PRICE = 1.50
+    GAS_PRICE = 100  # 1.50
 else:  #: for bloxberg
     GAS_PRICE = 0.25  # was 1.21 Gwei
 
@@ -310,7 +310,11 @@ class Contract(Base):
         try:
             _yaml = Yaml(env.CONTRACT_YAML_FILE, auto_dump=False)
             if env.IS_TESTNET:
-                return _yaml["networks"][cfg.NETWORK_ID]
+                net = cfg.NETWORK_ID
+                if "bloxberg" in cfg.NETWORK_ID:
+                    net = "bloxberg"
+
+                return _yaml["networks"][net]
             elif env.IS_EBLOCPOA:
                 return _yaml["networks"]["eblocpoa"]
             else:
@@ -386,6 +390,7 @@ class Contract(Base):
                     "from": self._from,
                     "allow_revert": True,
                     "required_confs": self.required_confs,
+                    "gas_price": f"{self.gas_price} gwei",
                 }
             else:
                 self.ops = {

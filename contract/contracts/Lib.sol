@@ -120,7 +120,7 @@ library Lib {
         uint32 pricesSetBlockNum; // When provider is submitted provider's most recent block number when its set or updated
         uint256 cacheCost;
         uint256 received; // paid amount (new owned) by the requester
-        address payable jobOwner; // Address of the client (msg.sender) has been stored
+        address jobOwner; // Address of the client (msg.sender) has been stored
         bytes32 sourceCodeHash; // keccak256 of the list of sourceCodeHash list concatinated with the cacheType list
         bytes32 jobInfo;
         uint256 receivedRegisteredDataFee;
