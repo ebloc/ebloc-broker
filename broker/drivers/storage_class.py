@@ -436,9 +436,12 @@ class Storage(BaseClass):
         else:
             file_to_run = f"{self.results_folder}/run.sh"
             #: separator character is "~"
-            sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{self.job_id}.sh"
-            if not self.is_workflow:
+            if self.is_workflow:
+                sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{self.job_id}.sh"
+            else:
                 jobid = 0
+                SINGLE = "3"
+                sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{self.job_id}~{SINGLE}.sh"
 
             self.run_wrapper(file_to_run, sbatch_file_path)
             job_core_num = str(job_info["core"][jobid])

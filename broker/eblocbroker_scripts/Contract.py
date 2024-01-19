@@ -26,7 +26,7 @@ from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
 if cfg.NETWORK_ID == "sepolia":
-    GAS_PRICE = 1.50
+    GAS_PRICE = 5
 else:  #: for bloxberg
     GAS_PRICE = 0.25  # was 1.21 Gwei
 
@@ -78,14 +78,17 @@ class Contract(Base):
         self.EBB_SCRIPTS = env.EBB_SCRIPTS
         mc = MongoClient()
         self.mongo_broker = MongoBroker(mc, mc["ebloc_broker"]["cache"])
-        # self.gas_limit = "max"  # 300000
         self.ops = {}
         self.max_retries = 3
         self.required_confs = 1
         self._from = ""
         #: tx cost exceeds current gas limit. Limit: 9990226, got:
         #: ('insufficient funds for gas * price + value',)
-        self.gas = 9900000
+        if cfg.NETWORK_ID == "sepolia":
+            self.gas = 1000000
+        else:  #: brownie
+            self.gas = 9900000
+
         self.gas_price = GAS_PRICE
         # self.gas_params = {"gas_price": self.gas_strategy, "gas": self.gas}
         self._setup(is_brownie)
@@ -310,7 +313,11 @@ class Contract(Base):
         try:
             _yaml = Yaml(env.CONTRACT_YAML_FILE, auto_dump=False)
             if env.IS_TESTNET:
-                return _yaml["networks"][cfg.NETWORK_ID]
+                net = cfg.NETWORK_ID
+                if "bloxberg" in cfg.NETWORK_ID:
+                    net = "bloxberg"
+
+                return _yaml["networks"][net]
             elif env.IS_EBLOCPOA:
                 return _yaml["networks"]["eblocpoa"]
             else:
@@ -386,6 +393,7 @@ class Contract(Base):
                     "from": self._from,
                     "allow_revert": True,
                     "required_confs": self.required_confs,
+                    # "gas_price": f"{self.gas_price} gwei",
                 }
             else:
                 self.ops = {
@@ -508,13 +516,23 @@ class Contract(Base):
         method_name = "submitJob"
         idx = 0
         while idx < self.max_retries:
-            self.ops = {
-                "gas": self.gas,
-                "gas_price": f"{self.gas_price} gwei",
-                "from": requester,
-                "allow_revert": True,
-                "required_confs": required_confs,
-            }
+            if cfg.NETWORK_ID == "sepolia":
+                self.ops = {
+                    "gas": self.gas,
+                    # "gas_price": f"{self.gas_price} gwei",  # brownie sets it dynamically
+                    "from": requester,
+                    "allow_revert": True,
+                    "required_confs": required_confs,
+                }
+            else:
+                self.ops = {
+                    "gas": self.gas,
+                    "gas_price": f"{self.gas_price} gwei",
+                    "from": requester,
+                    "allow_revert": True,
+                    "required_confs": required_confs,
+                }
+
             try:
                 return self.timeout(method_name, "eBlocBroker", *args)
             except ValueError as e:

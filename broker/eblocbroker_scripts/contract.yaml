@@ -1,5 +1,5 @@
 networks:
-  active_network: bloxberg # sepolia # change me at cfg.py file as well
+  active_network: bloxberg # sepolia   # bloxberg change me at cfg.py file as well
   bloxberg:
     project_dir: ~/ebloc-broker/contract
     eBlocBroker:
@@ -31,12 +31,12 @@ networks:
       tx_hash: '0x596adaa251729551525850d913424946f3096821fc8a12e6bb5de0c6094cd29a'
   bloxberg-docker:
     project_dir: /workspace/ebloc-broker/contract
-    # eBlocBroker:
-    #   address: '0x35F8ecb17a9EB63cB12cc0D15404A41946371F00'
-    #   tx_hash: '0xa3b58df370bce393762ed92ec2d7dcd6d54e53381d42f76c6a18f9d4d1b2662c'
-    # USDTmy:
-    #   address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
-    #   tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
+      # eBlocBroker:
+      #   address: '0x35F8ecb17a9EB63cB12cc0D15404A41946371F00'
+      #   tx_hash: '0xa3b58df370bce393762ed92ec2d7dcd6d54e53381d42f76c6a18f9d4d1b2662c'
+      # USDTmy:
+      #   address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
+      #   tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
 networks_old:
   bloxberg:
     project_dir: ~/ebloc-broker/contract

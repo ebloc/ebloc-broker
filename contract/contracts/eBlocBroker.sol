@@ -64,7 +64,7 @@ contract eBlocBroker is
        * @param key Uniqu ID for the given job.
        * @param args The index of the job and ID of the job to identify for workflow {index, jobID, endTimestamp}.
        * => elapsedTime Execution time in minutes of the completed job.
-       * @param resultIpfsHash Ipfs hash of the generated output files.
+       * @param resultIpfsHash IPFS hash of the generated output files.
        */
     function processPayment(
         string memory key,
@@ -115,7 +115,6 @@ contract eBlocBroker is
                 delete jobInfo.dataTransferIn;
             }
         }
-
         if (args.finalize == 2 || args.finalize == 3) {
             if (jobInfo.dataTransferOut > 0 && args.dataTransferOut != jobInfo.dataTransferOut) {
                 _refund = _refund.add(info.priceDataTransfer.mul(jobInfo.dataTransferOut.sub(args.dataTransferOut)));
@@ -175,6 +174,8 @@ contract eBlocBroker is
         _logProcessPayment(key, args, resultIpfsHash, jobInfo.jobOwner, gain, _refund);
         return;
     }
+
+
 
     /**
      * @dev Refund funds the complete amount to client if requested job is still
@@ -273,7 +274,7 @@ contract eBlocBroker is
     /**
      * @dev Register a provider's (msg.sender's) given information
      *
-     * @param gpgFingerprint is a bytes8 containing a gpg key ID that is used by GNU
+     * @param gpgFingerprint is a bytes32 containing a gpg key ID that is used by GNU
        Privacy Guard to encrypt or decrypt files.
      * @param gmail is a string containing an gmail
      * @param fcID is a string containing a Federated Cloud ID for
@@ -423,7 +424,7 @@ contract eBlocBroker is
      * @dev Register or update a requester's (msg.sender's) information to
      * eBlocBroker.
      *
-     * @param gpgFingerprint | is a bytes8 containing a gpg key ID that is used by the
+     * @param gpgFingerprint | is a bytes32 containing a gpg key ID that is used by the
        GNU Privacy Guard to encrypt or decrypt files.
      * @param gmail is a string containing an gmail
      * @param fcID is a string containing a Federated Cloud ID for
@@ -569,7 +570,7 @@ contract eBlocBroker is
         Lib.JobArgument memory args,
         uint32[] memory storageDuration,
         bytes32[] memory sourceCodeHash
-    ) public payable {
+    ) public {
         Lib.Provider storage provider = providers[args.provider];
         require(
             provider.isRunning &&
@@ -586,6 +587,7 @@ contract eBlocBroker is
                 orcID[msg.sender].length > 0 &&
                 orcID[args.provider].length > 0
         );
+
         if (args.cloudStorageID.length > 0)
             for (uint256 i = 1; i < args.cloudStorageID.length; i++)
                 require(
@@ -600,10 +602,11 @@ contract eBlocBroker is
             priceBlockIndex = providerInfo[providerInfo.length - 2];
         }
         require(args.priceBlockIndex == priceBlockIndex);
+
         Lib.ProviderInfo memory info = provider.info[priceBlockIndex];
         uint256 cost;
         uint256[3] memory tmp;
-        /* uint256 storageCost; */
+        // uint256 storageCost;
         // uint256 refunded;
         // "storageDuration[0]" => As temp variable stores the calcualted cacheCost
         // "dataTransferIn[0]"  => As temp variable stores the overall dataTransferIn value,
@@ -625,7 +628,6 @@ contract eBlocBroker is
 
         // @args.jobPrice: paid, @cost: calculated
         require(args.jobPrice >= cost);
-        /* transfer(getOwner(), cost); // transfer cost to contract */
         ERC20(tokenAddress).transferFrom(msg.sender, address(this), cost);
         // here returned "priceBlockIndex" used as temp variable to hold pushed index value of the jobStatus struct
         Lib.Status storage jobInfo = provider.jobStatus[key].push();
@@ -634,7 +636,7 @@ contract eBlocBroker is
         jobInfo.dataTransferOut = args.dataTransferOut;
         jobInfo.pricesSetBlockNum = uint32(priceBlockIndex);
         jobInfo.received = cost.sub(tmp[0]);
-        jobInfo.jobOwner = payable(msg.sender);
+        jobInfo.jobOwner = msg.sender;
         jobInfo.sourceCodeHash = keccak256(abi.encodePacked(sourceCodeHash, args.cacheType));
         jobInfo.jobInfo = keccak256(abi.encodePacked(args.core, args.runTime));
         jobInfo.receivedRegisteredDataFee = tmp[2];
@@ -648,18 +650,6 @@ contract eBlocBroker is
         job.stateCode = stateCode;
         return true;
     }
-
-    /* function setJobStatePending( */
-    /*     string memory key, */
-    /*     uint32 index, */
-    /*     uint32 jobID */
-    /* ) public returns (bool) {         */
-    /*     Lib.Job storage job = providers[msg.sender].jobStatus[key][index].jobs[jobID]; */
-    /*     // job.stateCode should be {SUBMITTED (0)} */
-    /*     require(job.stateCode == Lib.JobStateCodes.SUBMITTED, "Not permitted"); */
-    /*     job.stateCode = Lib.JobStateCodes.PENDING; */
-    /*     emit LogSetJob(msg.sender, key, index, jobID, uint8(Lib.JobStateCodes.PENDING)); */
-    /* } */
 
     function setJobStateRunning(
         string memory key,
@@ -1060,8 +1050,7 @@ contract eBlocBroker is
         return pricesSetBlockNum[provider];
     }
 
-    /* // used for tests */
-    /* // ============== */
+    // USED FOR TESTS=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     function getProviderReceiptNode(address provider, uint32 index)
         external
         view
@@ -1073,6 +1062,7 @@ contract eBlocBroker is
     {
         return providers[provider].receiptList.printIndex(index);
     }
+    // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 }
 
 /*
