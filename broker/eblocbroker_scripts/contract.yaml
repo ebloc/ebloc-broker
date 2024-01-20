@@ -18,11 +18,11 @@ networks:
     project_dir: ~/ebloc-broker/contract
     name: sepolia
     eBlocBroker:
-      address: '0x00A7413ACb69D7F9a03ab92B77c49628bD340274'
-      tx_hash: '0x7a32155daaef5d9884cabb91136966c672746847157fa06ed2f0236f101ad7f2'
+      address: '0xE4EB4A044F77b7526622AAC12CCF5b9B3F1C30F6'
+      tx_hash: '0x591d34f18f04ef80b308a5ac267b341e1e2be54fb561247ad5ee29c67dce34b1'
     USDTmy:
-      address: '0x7449585EaB2106B3c2c7f625d3Ad26640Fc14cec'
-      tx_hash: '0x62ef4bb70b6e4a8e9ab3c976974e5978244f0790784d6176ab4b650d73ee337c'
+      address: '0x76339502DbE9aaD271cabc8638074cBc0DD49dbF'
+      tx_hash: '0xbfcfe11d68ecb00808c80bde31dcecfc2b7465e2f092d09b27e8c17252443fe6'
     ResearchCertificate:
       address: '0x17e85EF468e5e085659d0443e29856a9054f0E7A'
       tx_hash: '0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07'

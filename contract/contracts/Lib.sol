@@ -124,6 +124,7 @@ library Lib {
         bytes32 sourceCodeHash; // keccak256 of the list of sourceCodeHash list concatinated with the cacheType list
         bytes32 jobInfo;
         uint256 receivedRegisteredDataFee;
+        string resultIpfsHash;
         mapping(uint256 => Job) jobs;
     }
 

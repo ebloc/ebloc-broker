@@ -58,9 +58,9 @@ def process_payment(
     """
     try:
         if result_ipfs_hash == b"" or not result_ipfs_hash:
-            result_ipfs_hash = ""
+            _result_ipfs_hash = ""
         else:
-            result_ipfs_hash = ipfs_to_bytes32(result_ipfs_hash)
+            _result_ipfs_hash = ipfs_to_bytes32(result_ipfs_hash)
 
         args = [
             int(index),
@@ -73,7 +73,7 @@ def process_payment(
             run_time,
             job_type,
         ]
-        tx = self._process_payment(job_key, args, result_ipfs_hash)
+        tx = self._process_payment(job_key, args, _result_ipfs_hash, result_ipfs_hash)
     except Exception as e:
         raise e
 
