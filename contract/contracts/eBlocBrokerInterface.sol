@@ -36,11 +36,11 @@ interface eBlocBrokerInterface {
         address indexed owner,
         string jobKey,
         uint32 index,
-        uint8[] cloudStorageID,
-        bytes32[] sourceCodeHash,
-        uint8[] cacheType,
-        uint16[] core,
-        uint16[] runTime,
+        uint8 cloudStorageID,
+        string[] sourceCodeHash,
+        uint8 cacheType,
+        uint16 core,
+        uint16 runTime,
         uint256 received, // equal to estimated cost
         uint256 refunded,
         uint256 workflowId

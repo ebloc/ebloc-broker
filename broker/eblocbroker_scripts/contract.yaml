@@ -1,48 +1,49 @@
 networks:
-  active_network: sepolia # bloxberg change me at cfg.py file as well
-  bloxberg:
-    project_dir: ~/ebloc-broker/contract
-    eBlocBroker:
-      address: '0x75a7357764379F26d2CF42E27e274D795B0fC977'
-      tx_hash: '0xcfc50ce3c89b54db1dda88329674c25c6fdcbf9d8e559021c1251bcea8ba6fc1'
-    USDTmy:
-      address: '0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7'
-      tx_hash: '0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6'
-    ResearchCertificate:
-      address: '0xD6397bf1A42f01C753dcD638C6eD3486963A09eD'
-      tx_hash: '0x8cf7bab8993c192c0de1b56aa8f9f0b706cbd341b35b425d500803509026c653'
-    AutonomousSoftwareOrg:
-      address: '0x06EE74fa579C771f182624a3f71845697270A9fF'
-      tx_hash: '0xe76315a96d47584b7da739a3a4d96e1bf64fbe913f35ed85ac4a1e7c4ca7c14e'
-  sepolia:
-    project_dir: ~/ebloc-broker/contract
-    name: sepolia
-    eBlocBroker:
-      address: '0xE4EB4A044F77b7526622AAC12CCF5b9B3F1C30F6'
-      tx_hash: '0x591d34f18f04ef80b308a5ac267b341e1e2be54fb561247ad5ee29c67dce34b1'
-    USDTmy:
-      address: '0x76339502DbE9aaD271cabc8638074cBc0DD49dbF'
-      tx_hash: '0xbfcfe11d68ecb00808c80bde31dcecfc2b7465e2f092d09b27e8c17252443fe6'
-    ResearchCertificate:
-      address: '0x17e85EF468e5e085659d0443e29856a9054f0E7A'
-      tx_hash: '0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07'
-    AutonomousSoftwareOrg:
-      address: '0xC26ad052140a483f0342DD6e58c3D3A49DBfc106'
-      tx_hash: '0x596adaa251729551525850d913424946f3096821fc8a12e6bb5de0c6094cd29a'
-  bloxberg-docker:
-    project_dir: /workspace/ebloc-broker/contract
-      # eBlocBroker:
-      #   address: '0x35F8ecb17a9EB63cB12cc0D15404A41946371F00'
-      #   tx_hash: '0xa3b58df370bce393762ed92ec2d7dcd6d54e53381d42f76c6a18f9d4d1b2662c'
-      # USDTmy:
-      #   address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
-      #   tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
+    active_network: sepolia # bloxberg change me at cfg.py file as well
+    bloxberg:
+        project_dir: ~/ebloc-broker/contract
+        eBlocBroker:
+            address: "0x75a7357764379F26d2CF42E27e274D795B0fC977"
+            tx_hash: "0xcfc50ce3c89b54db1dda88329674c25c6fdcbf9d8e559021c1251bcea8ba6fc1"
+        USDTmy:
+            address: "0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7"
+            tx_hash: "0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6"
+        ResearchCertificate:
+            address: "0xD6397bf1A42f01C753dcD638C6eD3486963A09eD"
+            tx_hash: "0x8cf7bab8993c192c0de1b56aa8f9f0b706cbd341b35b425d500803509026c653"
+        AutonomousSoftwareOrg:
+            address: "0x06EE74fa579C771f182624a3f71845697270A9fF"
+            tx_hash: "0xe76315a96d47584b7da739a3a4d96e1bf64fbe913f35ed85ac4a1e7c4ca7c14e"
+    sepolia:
+        project_dir: ~/ebloc-broker/contract
+        name: sepolia
+        eBlocBroker:
+            address: "0xAf3095FA409a4043d679a65D287658346bf38E7A"
+            tx_hash: "0x2367d61682bd291e753db62b99f19af14f04046daf30655916fd623a6ea2d83a"
+        USDTmy:
+            address: "0x98A9BCfdE638D24B289B99936882428389457D1f"
+            tx_hash: "0x836eda0ce124d9e81b26ca513add8784110a20cd48329cf61e80f442a758cc7b"
+        ResearchCertificate:
+            address: "0x17e85EF468e5e085659d0443e29856a9054f0E7A"
+            tx_hash: "0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07"
+        AutonomousSoftwareOrg:
+            address: "0xC26ad052140a483f0342DD6e58c3D3A49DBfc106"
+            tx_hash: "0x596adaa251729551525850d913424946f3096821fc8a12e6bb5de0c6094cd29a"
+    bloxberg-docker:
+        project_dir:
+            /workspace/ebloc-broker/contract
+            # eBlocBroker:
+            #   address: '0x35F8ecb17a9EB63cB12cc0D15404A41946371F00'
+            #   tx_hash: '0xa3b58df370bce393762ed92ec2d7dcd6d54e53381d42f76c6a18f9d4d1b2662c'
+            # USDTmy:
+            #   address: '0x499331123D9861A8A812ccFB81552a4A00786ee2'
+            #   tx_hash: '0x88780cb86701fab9df24c3d1808f21bc2395d70338a527b767942d353fe9299e'
 networks_old:
-  bloxberg:
-    project_dir: ~/ebloc-broker/contract
-    eBlocBroker:
-      address: '0x81aF3aeACbE068e7513443572d998bC2A20A83C1'
-      tx_hash: '0x39b3fb95d0258e42f71c5da835a32e7a197cab4eee2cea9373d627d2f5593d9d'
-    USDTmy: # dummy
-      address: '0x56B59aFC0Df1fcc1B42cf6135f94604cf7F7eb77'
-      tx_hash: '0x3a47a7971f80bf1a320a8409951a7830bf86bffb5005a65df4973c8943ec45f5'
+    bloxberg:
+        project_dir: ~/ebloc-broker/contract
+        eBlocBroker:
+            address: "0x81aF3aeACbE068e7513443572d998bC2A20A83C1"
+            tx_hash: "0x39b3fb95d0258e42f71c5da835a32e7a197cab4eee2cea9373d627d2f5593d9d"
+        USDTmy: # dummy
+            address: "0x56B59aFC0Df1fcc1B42cf6135f94604cf7F7eb77"
+            tx_hash: "0x3a47a7971f80bf1a320a8409951a7830bf86bffb5005a65df4973c8943ec45f5"

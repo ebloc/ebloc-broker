@@ -164,7 +164,7 @@ def _remove(path: str, is_verbose=False) -> None:
             raise ValueError("E: Attempting to remove root(/)")
 
         if not path:
-            raise ValueError("E: Attempting to empty Path()")
+            raise ValueError("E: Attempting to remove Path()")
 
         if os.path.isfile(path):
             with suppress(FileNotFoundError):

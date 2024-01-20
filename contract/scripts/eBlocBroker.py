@@ -8,9 +8,9 @@ from brownie import Lib, USDTmy, accounts, eBlocBroker, network  # noqa
 def main():
     # acct = accounts[0]
     acct = accounts.load("alper.json", password="alper")
-    tx = acct.deploy(USDTmy)
+    # tx = acct.deploy(USDTmy)
     acct.deploy(Lib)
-    ebb = eBlocBroker.deploy(tx.address, {"from": acct})
+    ebb = eBlocBroker.deploy("0x98A9BCfdE638D24B289B99936882428389457D1f", {"from": acct})
     if network.show_active() == "private":
         from os.path import expanduser
 
