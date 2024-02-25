@@ -10,7 +10,7 @@ from broker.errors import QuietExit
 import networkx as nx
 from typing import List
 
-fn = "/home/alper/git/AutonomousSoftwareOrg/graph/original.gv"
+fn = "/home/alper/git/AutonomousSoftwareOrg/graph-tools/original.gv"
 G = nx.drawing.nx_pydot.read_dot(fn)
 
 
@@ -26,7 +26,7 @@ data_map = {
     "17.14": "059dc553c65d19c917e94291016b6714",
     "14.6": "468e6561b82c811bb3c2324e2ca0865f",
     "14.10": "0e975e19d841b2d5e7facc93eaf3db2e",
-    "4.7": "c69dc79f17e20e4ba5014f56492cddaf",
+    "4.7": "b69dc79f17e20e4ba5014f56492cddaf",  # c
     "4.8": "c2fee597bc585140bb2f214c6f19d89e",
     "17.12": "42742ab7bfc995a7fc3490e663705590",
     "17.11": "5a259600f0c0a7984f380cd00b89d1fe",
@@ -104,11 +104,8 @@ def add_software_exec_record(sw, input_hashes, output_hashes):
     else:
         log(f"=> [blue]sw({sw}) to be registered")
         args = {"from": env.PROVIDER_ID, "gas": 9900000, "allow_revert": True}
-        tx = config.auto.setNextCounter(sw, args)
-        index = tx.return_value
-        log(f"global_index={index}")
-        config.auto.addSoftwareExecRecord(sw, index, input_hashes, output_hashes, args)
-        breakpoint()  # DEBUG
+        # tx = config.auto.setNextCounter(sw, args)
+        tx = config.auto.addSoftwareExecRecord(sw, 0, input_hashes, output_hashes, args)
 
 
 def commit_software():
@@ -200,6 +197,7 @@ def md5_hash():
 
 
 def commit_hash(_hash):
+    Ebb = cfg.Ebb
     roc_num = config.roc.getTokenIndex(_hash)
     if roc_num == 0:
         fn = env.PROVIDER_ID.lower().replace("0x", "") + ".json"

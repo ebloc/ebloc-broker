@@ -9,11 +9,11 @@ networks:
       address: '0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7'
       tx_hash: '0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6'
     ResearchCertificate:
-      address: '0xD6397bf1A42f01C753dcD638C6eD3486963A09eD'
-      tx_hash: '0x8cf7bab8993c192c0de1b56aa8f9f0b706cbd341b35b425d500803509026c653'
+      address: '0xB17dE8C64DC6BB678043457F1A7d992F583A37A0'
+      tx_hash: '0x22dc1725d46c0844e6fc198e37c3c72d55e151aa192adad959c05848a86bb760'
     AutonomousSoftwareOrg:
-      address: '0xf08fd6412B2dC386b5DfA11ADC8bCAf740B9B010'
-      tx_hash: '0x3f561b36bb00e7229b77374fdc722f392d8b4a023dd8ce5bacd4a3006b06bf48'
+      address: '0x450eb7EC90418E9D768f85Ffa1b29187AD57251a'
+      tx_hash: '0xc07dc41d0e435728a5e405a8697470c57db19db26a16aac6c97bdb1e81110359'
   sepolia:
     project_dir: ~/ebloc-broker/contract
     name: sepolia

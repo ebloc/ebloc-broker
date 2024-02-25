@@ -1,4 +1,4 @@
-## network=sepolia
+## network=bloxberg_core
 Brownie v1.19.3 - Python development framework for Ethereum
 
 New compatible solc version available: 0.8.22
@@ -31,9 +31,9 @@ ResearchCertificateProject is the active project.
 
 Running '[0;1;34mscripts/ResearchCertificate.py[0;m::[0;1;36mmain[0;m'...
 from=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49
-Transaction sent: [0;1;34m0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07[0;m
-  Gas price: [0;1;34m1.138964003[0;m gwei   Gas limit: [0;1;34m1232479[0;m   Nonce: [0;1;34m8[0;m
-  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  ResearchCertificate.constructor confirmed   Block: [0;1;34m4936991[0;m   Gas used: [0;1;34m1120436[0;m ([0;1;34m90.91%[0;m)
-  ResearchCertificate deployed at: [0;1;34m0x17e85EF468e5e085659d0443e29856a9054f0E7A[0;m
+Transaction sent: [0;1;34m0x22dc1725d46c0844e6fc198e37c3c72d55e151aa192adad959c05848a86bb760[0;m
+  Gas price: [0;1;34m0.002[0;m gwei   Gas limit: [0;1;34m1229258[0;m   Nonce: [0;1;34m4042[0;m
+  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  Waiting for confirmation... \  Waiting for confirmation... |  Waiting for confirmation... /  Waiting for confirmation... -  ResearchCertificate.constructor confirmed   Block: [0;1;34m24136402[0;m   Gas used: [0;1;34m1117508[0;m ([0;1;34m90.91%[0;m)
+  ResearchCertificate deployed at: [0;1;34m0xB17dE8C64DC6BB678043457F1A7d992F583A37A0[0;m
 
 ## setting abi... done
