@@ -54,7 +54,6 @@ def roc_log():
             G.add_edge(sw_str, out)
 
     nx.nx_pydot.write_dot(G, "original_from_bloxberg.gv")
-    breakpoint()  # DEBUG
 
 
 def roc():
@@ -68,8 +67,6 @@ def roc():
     for logged_receipt in event_filter.get_all_entries():
         log(logged_receipt.args)
         token_id = logged_receipt.args["tokenId"]
-
-    breakpoint()  # DEBUG
 
 
 def main():

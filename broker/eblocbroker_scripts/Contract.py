@@ -28,7 +28,7 @@ from brownie.network.transaction import TransactionReceipt
 if cfg.NETWORK_ID == "sepolia":
     GAS_PRICE = 5
 else:  #: for bloxberg
-    GAS_PRICE = 0.25  # was 1.21 Gwei
+    GAS_PRICE = 0.004  # was 1.21 Gwei
 
 EXIT_AFTER = 1000  # seconds
 

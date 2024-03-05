@@ -1,11 +1,13 @@
 * Random Workflow Generator
 To run:
 #+begin_src bash
-./generate_w.py
+./generate_w.py 6 10
 ~/ebloc-broker/broker/ipfs/submit_w.py
+
+./my_layer_heft.py 6 10
 #+end_src
 
-On provider
+** On the provider
 #+begin_src bash
 while ~/.ebloc-broker/start.sh; do sleep 15; done
 #

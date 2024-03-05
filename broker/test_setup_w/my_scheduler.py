@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-# >10 running jobs should be carried to FAILED
 import datetime
 import networkx as nx
 import pickle
@@ -23,6 +22,8 @@ from broker.errors import QuietExit
 from broker.ipfs.submit import submit_ipfs
 from broker.lib import state
 from broker.workflow.Workflow import Workflow
+
+#: >10 running jobs should be carried to FAILED
 
 wf = Workflow()
 
@@ -226,6 +227,7 @@ class Ewe:
             print(f"dt_in={yaml_cfg['config']['dt_in']}")
             while True:
                 try:
+                    #: TODO: check load of the providers
                     submit_ipfs(job)  # submits the job
                     break
                 except:
