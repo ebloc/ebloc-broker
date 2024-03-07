@@ -9,7 +9,7 @@ To run:
 
 ** On the provider
 #+begin_src bash
-while ~/.ebloc-broker/start.sh; do sleep 15; done
+~/.ebloc-broker/broker/start.sh
 #
-while ~/.ebloc-broker/end.sh; do sleep 15; done
+~/.ebloc-broker/broker/end.sh
 #+end_src

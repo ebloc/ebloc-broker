@@ -14,7 +14,7 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import log
-from broker._utils.tools import print_tb
+from broker._utils.tools import print_tb, get_online_idle_core
 from broker._utils.yaml import Yaml
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
@@ -50,6 +50,11 @@ provider_id = {}
 provider_id["a"] = "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
 provider_id["b"] = "0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24"
 provider_id["c"] = "0xe2e146d6B456760150d78819af7d276a1223A6d4"
+
+provider_ip = {}
+provider_ip["a"] = "192.168.1.117"
+provider_ip["b"] = "192.168.1.21"
+provider_ip["c"] = "192.168.1.104"
 
 try:
     with open(BASE / "heft_submitted_dict.pkl", "rb") as f:
@@ -152,7 +157,23 @@ class Ewe:
             G_copy = wf.G.copy()
             yaml_cfg = Yaml(yaml_fn_wf)
             yaml_cfg["config"]["source_code"]["path"] = str(BASE)
-            yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
+            # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            idle_code = get_online_idle_core(provider_ip[batch_key])
+            log(f"provider {batch_key} idle cores: {idle_code}")
+            if idle_code > 0:
+                yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
+            else:
+                yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
+                for pr in provider_ip:
+                    idle_code = get_online_idle_core(provider_ip[pr])
+                    if idle_code > 0:
+                        print(
+                            f"#: Load changed to provider={pr} #########################################################################"
+                        )
+                        yaml_cfg["config"]["provider_address"] = provider_id[pr]
+                        break
+
+            # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
             g_list = []
             for node in list(wf.G.nodes):
                 if node != "\\n" and int(node) not in self.batch_to_submit[batch_key]:
@@ -227,7 +248,6 @@ class Ewe:
             print(f"dt_in={yaml_cfg['config']['dt_in']}")
             while True:
                 try:
-                    #: TODO: check load of the providers
                     submit_ipfs(job)  # submits the job
                     break
                 except:
@@ -241,6 +261,7 @@ class Ewe:
                     except:
                         self.submitted_dict[key] = [int(node)]
 
+            #: save operation is done
             with open(BASE / "heft_submitted_dict.pkl", "wb") as f:
                 pickle.dump(self.submitted_dict, f)
 
