@@ -696,3 +696,12 @@ def gdrive_about_user() -> str:
             return ret[1]
 
     raise Exception()
+
+
+def get_online_idle_core(ip) -> int:
+    while True:
+        with suppress(Exception):
+            return int(run(["curl", "-s", f"http://{ip}:5000"]))
+
+        log("|", end="")
+        time.sleep(2)

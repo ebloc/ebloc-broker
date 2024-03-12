@@ -2,7 +2,7 @@
 
 import json
 
-from brownie import accounts, network, ResearchCertificate
+from brownie import ResearchCertificate, accounts, network
 
 
 def main():

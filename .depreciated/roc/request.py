@@ -20,10 +20,10 @@ curl 'https://certify.bloxberg.org/createBloxbergCertificate' \
   --compressed
 """
 
-from broker.lib import run
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
+from broker.lib import run
 
 
 def main():

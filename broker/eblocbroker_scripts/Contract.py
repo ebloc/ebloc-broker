@@ -26,9 +26,9 @@ from brownie.network.account import Account, LocalAccount
 from brownie.network.transaction import TransactionReceipt
 
 if cfg.NETWORK_ID == "sepolia":
-    GAS_PRICE = 5
+    GAS_PRICE = 5.0
 else:  #: for bloxberg
-    GAS_PRICE = 0.25  # was 1.21 Gwei
+    GAS_PRICE = 0.004  # was 1.21 Gwei
 
 EXIT_AFTER = 1000  # seconds
 
@@ -168,6 +168,8 @@ class Contract(Base):
                 tx_receipt = cfg.w3.eth.get_transaction_receipt(tx_hash)
             except TransactionNotFound as e:
                 log(f"warning: TransactionNotFound tx={tx_hash} {e}")
+                if attempt == 5:
+                    raise Exception("TransactionNotFound")
             except Exception as e:
                 print_tb(e)
                 tx_receipt = None
@@ -439,7 +441,6 @@ class Contract(Base):
                     log(f"warning: Tx: {e}", is_code=True)
                 else:
                     log(f"E: Tx: {e}")
-                    breakpoint()  # DEBUG
 
                 if ("Try increasing the gas price" in str(e)) or (
                     "Transaction with the same hash was already imported." in str(e)
@@ -512,6 +513,7 @@ class Contract(Base):
         except Exception as e:
             raise Exception(f"Approve transaction is failed, {e}")
 
+        time.sleep(2)
         self.gas_price = GAS_PRICE
         method_name = "submitJob"
         idx = 0
@@ -566,6 +568,7 @@ class Contract(Base):
 
                     continue
 
+            time.sleep(2)
             idx += 1
         raise Exception("No valid Tx receipt for 'submitJob' is generated")
 

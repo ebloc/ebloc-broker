@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
+import fileinput
+import sys
+
+from broker import cfg, config
 from broker._utils._log import log
 from broker._utils.tools import print_tb
+from broker.config import env
 from broker.errors import QuietExit
 from broker.lib import run
-from broker import cfg, config
-from broker.config import env
-import sys
-import fileinput
 
 Ebb = cfg.Ebb
 

@@ -13,7 +13,7 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import log
-from broker._utils.tools import print_tb
+from broker._utils.tools import get_online_idle_core, print_tb
 from broker._utils.yaml import Yaml
 from broker.eblocbroker_scripts import Contract
 from broker.eblocbroker_scripts.job import Job
@@ -35,6 +35,13 @@ provider_id = {}
 provider_id["a"] = "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
 provider_id["b"] = "0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24"
 provider_id["c"] = "0xe2e146d6B456760150d78819af7d276a1223A6d4"
+
+provider_ip = {}
+provider_ip["a"] = "192.168.1.117"
+provider_ip["b"] = "192.168.1.21"
+provider_ip["c"] = "192.168.1.104"
+
+
 if len(sys.argv) == 3:
     n = int(sys.argv[1])
     edges = int(sys.argv[2])
@@ -109,6 +116,7 @@ class Ewe:
 
                         self.refunded.append(key)
 
+        #: save operation is done
         with open(BASE / "layer_submitted_dict.pkl", "wb") as f:
             pickle.dump(self.submitted_node_dict, f)
 
@@ -376,7 +384,23 @@ def submit_layering():
                         continue_flag = True
 
                     if not continue_flag:
-                        yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                        # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+                        idle_code = get_online_idle_core(provider_ip[provider_char])
+                        log(f"provider {provider_char} idle cores: {idle_code}")
+                        if idle_code > 0:
+                            yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                        else:
+                            yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                            for pr in provider_ip:
+                                idle_code = get_online_idle_core(provider_ip[pr])
+                                if idle_code > 0:
+                                    print(
+                                        f"#: Load changed to provider={pr} #########################################################################"
+                                    )
+                                    yaml_original["config"]["provider_address"] = provider_id[pr]
+                                    break
+
+                        # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                         yaml_original["config"]["source_code"]["path"] = str(BASE)
                         log(
                             f"* w{_idx} => {sorted(partial_layer)} | provider to submit => [bold cyan]{provider_char}[/bold cyan] "

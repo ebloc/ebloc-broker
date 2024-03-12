@@ -49,7 +49,7 @@ def main():
     except:
         pass
 
-    print(f"Generate random DAG for {n} {edges}...")
+    print(f"Generating random DAG for (node, edge) {n} {edges} ...")
     wf = Workflow()
     while True:
         #: to be sure nodes are generated with the exact given node number
@@ -66,7 +66,7 @@ def main():
         nx.draw_spring(wf.G, with_labels=True)
         plt.savefig(BASE / "job.png")
 
-    base_size = 200
+    base_dt_in_size = 200
     base_dt_out_size = 250
     for i in range(1, job_num + 1):
         sleep_dur = random.randint(2, 5)  # 2 <= x <= 5
@@ -75,7 +75,7 @@ def main():
         _job = yaml["config"]["jobs"][f"job{i}"]
         _job["run_time"] = sleep_dur
         _job["cores"] = 1
-        _job["dt_in"] = base_size
+        _job["dt_in"] = base_dt_in_size
         _job["dt_out"] = 0
         dt_out = 0
         for edge in wf.out_edges(i):

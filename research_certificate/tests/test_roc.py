@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
-import brownie
 import pytest
 import random
+
+import brownie
 
 roc = None
 zero = "0x00000000000000000000000000000000"

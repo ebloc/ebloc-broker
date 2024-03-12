@@ -1,44 +1,41 @@
 #!/usr/bin/env python3
 
+import networkx as nx
 import random
+from typing import List
 
 from broker import cfg, config
 from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.config import env
 from broker.errors import QuietExit
-import networkx as nx
-from typing import List
 
-fn = "/home/alper/git/AutonomousSoftwareOrg/graph/original.gv"
+fn = "/home/alper/git/AutonomousSoftwareOrg/graph-tools/original.gv"
 G = nx.drawing.nx_pydot.read_dot(fn)
 
-"""
-Ebb = cfg.Ebb
-Ebb.get_block_number()
-"""
 
 data_map = {
     "17.2": "9ea971a966ec0f612b268d7e089b1f9e",
-    "10.0": "110e00c9266bf7cb964cd68f5e0a6b96",
-    "7.0": "3930b695da4c9f46aa0ef0153d8ca288",
-    "7.1": "8d7506d81cf589cc7603093272b68bef",
-    "7.2": "b04e7dd0ef6ecd43eb3973b0d6952733",
-    "7.3": "7080d03c288977b88812b865b761bffa",
-    "7.4": "84f310b307a08955e01d9c2347adf77e",
-    "17.1": "0f2290337f9cc909e62e4375a0353d7d",
-    "17.4": "059dc553c65d19c917e94291016b6714",
-    "14.0": "468e6561b82c811bb3c2324e2ca0865f",
-    "14.1": "0e975e19d841b2d5e7facc93eaf3db2e",
-    "4.0": "c69dc79f17e20e4ba5014f56492cddaf",
-    "4.1": "c2fee597bc585140bb2f214c6f19d89e",
-    "17.3": "42742ab7bfc995a7fc3490e663705590",
-    "17.0": "5a259600f0c0a7984f380cd00b89d1fe",
-    "22.3": "feb2c4b74f898c2064707843e0585fbe",
-    "19.0": "be293b48fa60443023e308bea4ec4df8",
-    "22.0": "a7e8fe2dcfeb2f4ddce864682133b60e",
-    "22.1": "a715e0a320e144335bb0974acdbe3847",
-    "22.2": "be038e12f93a275eb013192ab896c8a2",
+    "10.1": "110e00c9266bf7cb964cd68f5e0a6b96",
+    "7.16": "3930b695da4c9f46aa0ef0153d8ca288",
+    "7.9": "8d7506d81cf589cc7603093272b68bef",
+    "7.3": "b04e7dd0ef6ecd43eb3973b0d6952733",
+    "7.4": "7080d03c288977b88812b865b761bffa",
+    "7.5": "84f310b307a08955e01d9c2347adf77e",
+    "17.17": "0f2290337f9cc909e62e4375a0353d7d",
+    "17.14": "059dc553c65d19c917e94291016b6714",
+    "14.6": "468e6561b82c811bb3c2324e2ca0865f",
+    "14.10": "0e975e19d841b2d5e7facc93eaf3db2e",
+    "4.7": "b69dc79f17e20e4ba5014f56492cddaf",  # c
+    "4.8": "c2fee597bc585140bb2f214c6f19d89e",
+    "17.12": "42742ab7bfc995a7fc3490e663705590",
+    "17.11": "5a259600f0c0a7984f380cd00b89d1fe",
+    "22.15": "feb2c4b74f898c2064707843e0585fbe",
+    "19.13": "be293b48fa60443023e308bea4ec4df8",
+    "22.18": "a7e8fe2dcfeb2f4ddce864682133b60e",
+    "22.19": "a715e0a320e144335bb0974acdbe3847",
+    "22.20": "be038e12f93a275eb013192ab896c8a2",
+    #
     "1": "7dca945940426af6fb934a8ffb78cc8d",
     "2": "44f8657617b4d88473d19c3265b8aaa3",
     "3": "6e006040b06789a03549d4d383ad7d12",
@@ -95,7 +92,10 @@ generated_data: List[str] = []
 completed_sw = []
 
 
-def add_software_exec_record(sw, index, input_hashes, output_hashes):
+def add_software_exec_record(sw, input_hashes, output_hashes):
+    Ebb = cfg.Ebb
+    Ebb.get_block_number()
+
     fn = env.PROVIDER_ID.lower().replace("0x", "") + ".json"
     Ebb.brownie_load_account(fn)
 
@@ -103,9 +103,9 @@ def add_software_exec_record(sw, index, input_hashes, output_hashes):
         log(f"=> sw({sw}) is already created")
     else:
         log(f"=> [blue]sw({sw}) to be registered")
-        config.auto.addSoftwareExecRecord(
-            sw, index, input_hashes, output_hashes, {"from": env.PROVIDER_ID, "gas": 9900000, "allow_revert": True}
-        )
+        args = {"from": env.PROVIDER_ID, "gas": 9900000, "allow_revert": True}
+        # tx = config.auto.setNextCounter(sw, args)
+        tx = config.auto.addSoftwareExecRecord(sw, 0, input_hashes, output_hashes, args)
 
 
 def commit_software():
@@ -129,8 +129,8 @@ def commit_software():
 
                     completed_sw.append(sw_node)
 
-                    #: save to blockchain
-                    add_software_exec_record(data_map[sw_node], int(sw_node.split(".")[1]), input_hashes, output_hashes)
+                    #: save to the blockchain
+                    add_software_exec_record(data_map[sw_node], input_hashes, output_hashes)
 
 
 sw_nodes = []
@@ -138,7 +138,7 @@ for node in list(G.nodes):
     if "." in node:
         sw_nodes.append(node)
 
-# commit_software()
+commit_software()
 """
 order = {}
 for sw_node in sw_nodes:
@@ -149,27 +149,28 @@ sorted_order = {k: v for k, v in sorted(order.items(), key=lambda item: item[1])
 log(sorted_order)
 """
 
+#: this will be change in new smart contract
 sorted_order = {
-    "10.0": 13,
+    "10.1": 13,
     "17.2": 14,
-    "7.2": 19,
-    "7.3": 21,
-    "7.4": 23,
-    "14.0": 26,
-    "4.0": 29,
-    "4.1": 33,
-    "7.1": 35,
-    "14.1": 38,
-    "17.0": 42,
-    "17.3": 45,
-    "19.0": 46,
-    "17.4": 48,
-    "22.3": 50,
-    "7.0": 53,
-    "17.1": 57,
-    "22.0": 60,
-    "22.1": 64,
-    "22.2": 66,
+    "7.3": 19,
+    "7.4": 21,
+    "7.5": 23,
+    "14.6": 26,
+    "4.7": 29,
+    "4.8": 33,
+    "7.9": 35,
+    "14.10": 38,
+    "17.11": 42,
+    "17.12": 45,
+    "19.13": 46,
+    "17.14": 48,
+    "22.15": 50,
+    "7.16": 53,
+    "17.17": 57,
+    "22.18": 60,
+    "22.19": 64,
+    "22.20": 66,
 }
 
 hit_data = {}
@@ -183,7 +184,7 @@ for node in sorted_order:
             hit_data[succ] = True
 
     log(f"{node} => {owned_data}")
-    # breakpoint()  # DEBUG
+    breakpoint()  # DEBUG
 
 
 #  set(G.predecessors("17.2"))
@@ -196,6 +197,7 @@ def md5_hash():
 
 
 def commit_hash(_hash):
+    Ebb = cfg.Ebb
     roc_num = config.roc.getTokenIndex(_hash)
     if roc_num == 0:
         fn = env.PROVIDER_ID.lower().replace("0x", "") + ".json"
