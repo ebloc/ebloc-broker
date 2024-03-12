@@ -138,7 +138,7 @@ def tools(bn):
                 check_output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
                 if not check_output:
                     log(
-                        f"E: provider's registered gmail=[m]{gmail}[/m] does not match with the set gdrive's gmail=[m]{gdrive_gmail}[/m]",
+                        f"E: provider's registered gmail=[m]{gmail}[/m] does not match with the already set gdrive's gmail=[m]{gdrive_gmail}[/m]",
                         is_code=True,
                         h=False,
                     )

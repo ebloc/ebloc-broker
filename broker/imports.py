@@ -133,6 +133,7 @@ def connect_to_eblocbroker() -> None:
                 env.ROC_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_ResearchCertificate.json")
             )
             # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            """
             from brownie import project as pro_auto
 
             _project = pro_auto.load("/home/alper/git/AutonomousSoftwareOrg")  # TODO: add as sub-module
@@ -141,6 +142,8 @@ def connect_to_eblocbroker() -> None:
             config._auto = cfg.w3.eth.contract(
                 env.AUTO_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_AutonomousSoftwareOrg.json")
             )
+            """
+
             """ depreciated
             from brownie import project as pro
 

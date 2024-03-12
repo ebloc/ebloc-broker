@@ -11,6 +11,7 @@ countdown () {
 
 num=$(ps axuww | grep -E "[h]ypercorn app_ebb:app" | \
           grep -v -e "grep" -e "emacsclient" -e "flycheck_" | wc -l)
+
 if [ $num -ge 1 ]; then
     echo "warning: app_ebb is already running"
     exit

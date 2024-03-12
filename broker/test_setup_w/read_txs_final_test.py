@@ -11,7 +11,7 @@ from broker.eblocbroker_scripts.utils import Cent
 
 Ebb: "Contract.Contract" = cfg.Ebb
 
-is_excel = True
+is_excel = False
 if is_excel:
     log(
         "type,provider_label,id,sourceCodeHash,index,job_id,received_bn,w_type,elapsed_time,processPayment_tx_hash,"
@@ -181,14 +181,15 @@ def read_txs(n, edges, fn):
 
 def main():
     test = [(16, 28), (32, 56), (64, 112), (128, 224), (256, 448)]
-    test = [(16, 28)]
+    # test = [(16, 28)]
     # test = [(32, 56)]
     # test = [(64, 112)]
-    # test = [(128, 224)]
+    test = [(128, 224)]
     # test = [(256, 448)]
     test = dict(test)
     for n, edges in test.items():
-        read_txs(n, edges, "heft_submitted_dict_1.pkl")
+        read_txs(n, edges, "heft_submitted_dict.pkl")
+        """
         log("\n\n\n")
         read_txs(n, edges, "heft_submitted_dict_2.pkl")
         log("\n\n\n")
@@ -201,6 +202,7 @@ def main():
         read_txs_layer(n, edges, "layer_submitted_dict_3.pkl")
         if not is_excel:
             log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "yellow")
+        """
 
 
 if __name__ == "__main__":

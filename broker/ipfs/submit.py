@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from sys import platform
 from web3.logs import DISCARD
-
+import time
 from broker import cfg
 from broker._utils.tools import _remove, log
 from broker._utils.web3_tools import get_tx_status
@@ -97,7 +97,14 @@ def _ipfs_add(job, target, idx, is_verbose=False):
 def _submit(provider_addr, job, requester, targets, required_confs):
     tx_hash = Ebb.submit_job(provider_addr, job.key, job, requester, required_confs)
     if required_confs >= 1:
-        tx_receipt = get_tx_status(tx_hash)
+        while True:
+            try:
+                tx_receipt = get_tx_status(tx_hash)
+                break
+            except:
+                time.sleep(2)
+                tx_hash = Ebb.submit_job(provider_addr, job.key, job, requester, required_confs)
+
         if tx_receipt["status"] == 1:
             processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
             try:
