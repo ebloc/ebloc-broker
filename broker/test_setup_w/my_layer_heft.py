@@ -41,8 +41,15 @@ provider_ip["a"] = "192.168.1.117"
 provider_ip["b"] = "192.168.1.21"
 provider_ip["c"] = "192.168.1.104"
 
+is_load = False
 
-if len(sys.argv) == 3:
+if len(sys.argv) == 4:
+    n = int(sys.argv[1])
+    edges = int(sys.argv[2])
+    load = str(sys.argv[3])
+    if load == "load":
+        is_load = True
+elif len(sys.argv) == 3:
     n = int(sys.argv[1])
     edges = int(sys.argv[2])
 else:
@@ -384,22 +391,24 @@ def submit_layering():
                         continue_flag = True
 
                     if not continue_flag:
-                        # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-                        idle_code = get_online_idle_core(provider_ip[provider_char])
-                        log(f"provider {provider_char} idle cores: {idle_code}")
-                        if idle_code > 0:
+                        #: Load -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+                        if not is_load:
                             yaml_original["config"]["provider_address"] = provider_id[provider_char]
                         else:
-                            yaml_original["config"]["provider_address"] = provider_id[provider_char]
-                            for pr in provider_ip:
-                                idle_code = get_online_idle_core(provider_ip[pr])
-                                if idle_code > 0:
-                                    print(
-                                        f"#: Load changed to provider={pr} #########################################################################"
-                                    )
-                                    yaml_original["config"]["provider_address"] = provider_id[pr]
-                                    break
-
+                            idle_code = get_online_idle_core(provider_ip[provider_char])
+                            log(f"provider {provider_char} idle cores: {idle_code}")
+                            if idle_code > 0:
+                                yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                            else:
+                                yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                                for pr in provider_ip:
+                                    idle_code = get_online_idle_core(provider_ip[pr])
+                                    if idle_code > 0:
+                                        print(
+                                            f"#: Load changed to provider={pr} #########################################################################"
+                                        )
+                                        yaml_original["config"]["provider_address"] = provider_id[pr]
+                                        break
                         # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                         yaml_original["config"]["source_code"]["path"] = str(BASE)
                         log(

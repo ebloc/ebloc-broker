@@ -2,9 +2,12 @@
 To run:
 #+begin_src bash
 ./generate_w.py 6 10
-~/ebloc-broker/broker/ipfs/submit_w.py
+# ~/ebloc-broker/broker/ipfs/submit_w.py
 
-./my_layer_heft.py 6 10
+# "load" at the end as an parameter is optional
+./my_scheduler.py <n> <edge> <load>
+# or
+./my_layer_heft.py <n> <edge> <load>
 #+end_src
 
 ** On the provider

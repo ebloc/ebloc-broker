@@ -29,7 +29,15 @@ wf = Workflow()
 
 _log.ll.LOG_FILENAME = Path.home() / ".ebloc-broker" / "test.log"
 
-if len(sys.argv) == 3:
+is_load = False
+
+if len(sys.argv) == 4:
+    n = int(sys.argv[1])
+    edges = int(sys.argv[2])
+    load = str(sys.argv[3])
+    if load == "load":
+        is_load = True
+elif len(sys.argv) == 3:
     n = int(sys.argv[1])
     edges = int(sys.argv[2])
 else:
@@ -157,22 +165,24 @@ class Ewe:
             G_copy = wf.G.copy()
             yaml_cfg = Yaml(yaml_fn_wf)
             yaml_cfg["config"]["source_code"]["path"] = str(BASE)
-            # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-            idle_code = get_online_idle_core(provider_ip[batch_key])
-            log(f"provider {batch_key} idle cores: {idle_code}")
-            if idle_code > 0:
+            #: Load -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            if not is_load:
                 yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
             else:
-                yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
-                for pr in provider_ip:
-                    idle_code = get_online_idle_core(provider_ip[pr])
-                    if idle_code > 0:
-                        print(
-                            f"#: Load changed to provider={pr} #########################################################################"
-                        )
-                        yaml_cfg["config"]["provider_address"] = provider_id[pr]
-                        break
-
+                idle_code = get_online_idle_core(provider_ip[batch_key])
+                log(f"provider {batch_key} idle cores: {idle_code}")
+                if idle_code > 0:
+                    yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
+                else:
+                    yaml_cfg["config"]["provider_address"] = provider_id[batch_key]
+                    for pr in provider_ip:
+                        idle_code = get_online_idle_core(provider_ip[pr])
+                        if idle_code > 0:
+                            print(
+                                f"#: Load changed to provider={pr} #########################################################################"
+                            )
+                            yaml_cfg["config"]["provider_address"] = provider_id[pr]
+                            break
             # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
             g_list = []
             for node in list(wf.G.nodes):

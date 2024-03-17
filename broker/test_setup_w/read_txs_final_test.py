@@ -12,7 +12,7 @@ from broker.errors import QuietExit
 
 Ebb: "Contract.Contract" = cfg.Ebb
 
-is_excel = False
+is_excel = True
 if is_excel:
     log(
         "type,provider_label,id,sourceCodeHash,index,job_id,received_bn,w_type,elapsed_time,processPayment_tx_hash,"
@@ -26,8 +26,11 @@ provider_id["0x4934a70Ba8c1C3aCFA72E809118BDd9048563A24".lower()] = "b"
 provider_id["0xe2e146d6B456760150d78819af7d276a1223A6d4".lower()] = "c"
 
 
+# BASE = Path.home() / "test_eblocbroker" / "workflow" / "HEFT_LAYER_128"
+BASE = Path.home() / "test_eblocbroker" / "workflow" / "32_LAYER"
+
+
 def read_txs_layer(n, edges, fn):
-    BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
     try:
         with open(BASE / fn, "rb") as f:
             loaded_dict = pickle.load(f)
@@ -104,7 +107,6 @@ def read_txs_layer(n, edges, fn):
 
 
 def read_txs(n, edges, fn):
-    BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
     try:
         with open(BASE / fn, "rb") as f:
             loaded_dict = pickle.load(f)
@@ -183,27 +185,35 @@ def read_txs(n, edges, fn):
 def main():
     test = [(16, 28), (32, 56), (64, 112), (128, 224), (256, 448)]
     # test = [(16, 28)]
-    # test = [(32, 56)]
+    test = [(32, 56)]
     # test = [(64, 112)]
-    test = [(128, 224)]
+    # test = [(128, 224)]
     # test = [(256, 448)]
     test = dict(test)
     for n, edges in test.items():
-        read_txs(n, edges, "heft_submitted_dict.pkl")
         """
+        read_txs(n, edges, "heft_submitted_dict_hoe2_1.pkl")
         log("\n\n\n")
-        read_txs(n, edges, "heft_submitted_dict_2.pkl")
+        read_txs(n, edges, "heft_submitted_dict_hoe2_2.pkl")
         log("\n\n\n")
-        read_txs(n, edges, "heft_submitted_dict_3.pkl")
-        # -----------------------------------------------------
+        read_txs(n, edges, "heft_submitted_dict_hoe2_3.pkl")
+        """
+        # ====================================================================
+        """
         read_txs_layer(n, edges, "layer_submitted_dict_1.pkl")
         log("\n\n\n")
         read_txs_layer(n, edges, "layer_submitted_dict_2.pkl")
         log("\n\n\n")
         read_txs_layer(n, edges, "layer_submitted_dict_3.pkl")
+        """
+        read_txs_layer(n, edges, "layer_submitted_dict_hoe2_1.pkl")
+        log("\n\n\n")
+        read_txs_layer(n, edges, "layer_submitted_dict_hoe2_2.pkl")
+        log("\n\n\n")
+        read_txs_layer(n, edges, "layer_submitted_dict_hoe2_3.pkl")
+
         if not is_excel:
             log("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-", "yellow")
-        """
 
 
 if __name__ == "__main__":

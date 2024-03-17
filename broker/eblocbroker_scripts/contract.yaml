@@ -3,11 +3,11 @@ networks:
   bloxberg:
     project_dir: ~/ebloc-broker/contract
     eBlocBroker:
-      address: "0x75a7357764379F26d2CF42E27e274D795B0fC977"
-      tx_hash: "0xcfc50ce3c89b54db1dda88329674c25c6fdcbf9d8e559021c1251bcea8ba6fc1"
+      address: '0x75a7357764379F26d2CF42E27e274D795B0fC977'
+      tx_hash: '0xcfc50ce3c89b54db1dda88329674c25c6fdcbf9d8e559021c1251bcea8ba6fc1'
     USDTmy:
-      address: "0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7"
-      tx_hash: "0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6"
+      address: '0xbCc68aEa77cf128A7ae9eB7588f363Efc76349a7'
+      tx_hash: '0x99004818f181cac56c49d502f871db1a7ecb03a6a6f714a7072ee79f8ad025a6'
     ResearchCertificate:
       address: '0xB17dE8C64DC6BB678043457F1A7d992F583A37A0'
       tx_hash: '0x22dc1725d46c0844e6fc198e37c3c72d55e151aa192adad959c05848a86bb760'
@@ -18,17 +18,17 @@ networks:
     project_dir: ~/ebloc-broker/contract
     name: sepolia
     eBlocBroker:
-      address: "0x00A7413ACb69D7F9a03ab92B77c49628bD340274"
-      tx_hash: "0x7a32155daaef5d9884cabb91136966c672746847157fa06ed2f0236f101ad7f2"
+      address: '0x00A7413ACb69D7F9a03ab92B77c49628bD340274'
+      tx_hash: '0x7a32155daaef5d9884cabb91136966c672746847157fa06ed2f0236f101ad7f2'
     USDTmy:
-      address: "0x7449585EaB2106B3c2c7f625d3Ad26640Fc14cec"
-      tx_hash: "0x62ef4bb70b6e4a8e9ab3c976974e5978244f0790784d6176ab4b650d73ee337c"
+      address: '0x7449585EaB2106B3c2c7f625d3Ad26640Fc14cec'
+      tx_hash: '0x62ef4bb70b6e4a8e9ab3c976974e5978244f0790784d6176ab4b650d73ee337c'
     ResearchCertificate:
-      address: "0x17e85EF468e5e085659d0443e29856a9054f0E7A"
-      tx_hash: "0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07"
+      address: '0x17e85EF468e5e085659d0443e29856a9054f0E7A'
+      tx_hash: '0x5b7eb179c6a54cf86ccee595de71a9f2d31c55b0e4bb7f57a46a5a19f5e66a07'
     AutonomousSoftwareOrg:
-      address: "0xC26ad052140a483f0342DD6e58c3D3A49DBfc106"
-      tx_hash: "0x596adaa251729551525850d913424946f3096821fc8a12e6bb5de0c6094cd29a"
+      address: '0xC26ad052140a483f0342DD6e58c3D3A49DBfc106'
+      tx_hash: '0x596adaa251729551525850d913424946f3096821fc8a12e6bb5de0c6094cd29a'
   bloxberg-docker:
     project_dir: /workspace/ebloc-broker/contract
             # eBlocBroker:
