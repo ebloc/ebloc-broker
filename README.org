@@ -8,7 +8,7 @@ computational and data resources to research communities.
 
 # ** Website: [[http://ebloc.cmpe.boun.edu.tr]] # http://ebloc.org
 
-For more info see: [[https://ebloc-broker-readthedocs.duckdns.org/][documentation]].
+# For more info see: [[https://ebloc-broker-readthedocs.duckdns.org/][documentation]].
 
 ** Prerequisites
 - [[https://github.com/SchedMD/slurm][Slurm]],
