@@ -1,0 +1,11 @@
+prompt
+"Explain the exploration–exploitation trade-off in reinforcement learning."
+"Describe how policy gradient methods differ from value-based approaches."
+"How can reward shaping accelerate reinforcement learning?"
+"Explain how Q-learning updates value estimates."
+"Discuss the role of simulators in training autonomous agents."
+"What are the challenges of deploying reinforcement learning in real-world robotics?"
+"How can hierarchical reinforcement learning improve sample efficiency?"
+"Explain how imitation learning differs from reinforcement learning."
+"Describe how model-based RL approaches reduce data requirements."
+"What safety mechanisms are necessary for reinforcement learning in critical systems?"

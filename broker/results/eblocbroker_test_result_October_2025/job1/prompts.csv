@@ -1,0 +1,11 @@
+prompt
+"Explain how attention mechanisms improve sequence modeling in neural networks."
+"Describe how transformers differ from recurrent neural networks (RNNs)."
+"What are the main advantages of self-supervised learning?"
+"Discuss how large language models are fine-tuned for specific domains."
+"Explain the concept of model distillation and why it is useful."
+"How can synthetic data generation help address data scarcity in AI training?"
+"Compare gradient descent variants such as SGD, Adam, and RMSProp."
+"Explain the purpose of activation functions in deep learning models."
+"What are the challenges of interpretability in deep reinforcement learning?"
+"Describe how adversarial attacks can manipulate AI model predictions."

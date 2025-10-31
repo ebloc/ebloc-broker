@@ -1,0 +1,11 @@
+prompt
+"Explain the difference between symmetric and asymmetric encryption."
+"Describe how differential privacy adds noise to protect individuals."
+"What are the main types of cryptographic hash functions and their properties?"
+"Explain how secure multiparty computation enables joint analysis without sharing data."
+"Describe the role of public key infrastructure (PKI) in digital communication."
+"How can blockchain enhance auditability in data-sharing platforms?"
+"Discuss methods to anonymize sensitive data in large datasets."
+"Explain the trade-off between data utility and privacy preservation."
+"How do zero-knowledge proofs enable private verification?"
+"Describe how federated analytics differ from centralized analytics."

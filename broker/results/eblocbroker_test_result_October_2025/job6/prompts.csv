@@ -1,0 +1,11 @@
+prompt
+"Explain how microservices architecture supports scalability."
+"Describe how message queues enable fault-tolerant communication."
+"What is the role of containerization in reproducible research environments?"
+"Explain how caching improves system performance in distributed applications."
+"Compare serverless computing and container-based deployments."
+"How do distributed consensus algorithms prevent double spending?"
+"Discuss the advantages of using event-driven architectures."
+"Explain how data replication improves availability in distributed systems."
+"Describe how edge computing reduces latency in IoT networks."
+"How can workflow orchestration tools automate complex data pipelines?"
