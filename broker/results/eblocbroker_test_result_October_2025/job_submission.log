@@ -1,0 +1,905 @@
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/feda9aea6f66969e3446a8cdbad7be51
+
+ * data1 => ../data_link/feda9aea6f66969e3446a8cdbad7be51
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / ? [----------------------------------------------------------------------------------------------=------------------------------] QmR2aC9pmNPoVGnuZS2uKZPhxwW7iv3n8E4AWJddKHTxxc
+==> ipfs_hash=QmR2aC9pmNPoVGnuZS2uKZPhxwW7iv3n8E4AWJddKHTxxc | md5sum=53dfd9d2ff1f0ff1d468906069b4938a
+ 729 B / 729 B [=====================================================================================================================] 100.00%QmdQ9kfKsX2MymLwQjBLsFfKRxW9cLbCvbxQibUnuS9VKL
+==> ipfs_hash=QmdQ9kfKsX2MymLwQjBLsFfKRxW9cLbCvbxQibUnuS9VKL | md5sum=feda9aea6f66969e3446a8cdbad7be51
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmR2aC9pmNPoVGnuZS2uKZPhxwW7iv3n8E4AWJddKHTxxc': False, 'QmdQ9kfKsX2MymLwQjBLsFfKRxW9cLbCvbxQibUnuS9VKL': False}
+** for QmdQ9kfKsX2MymLwQjBLsFfKRxW9cLbCvbxQibUnuS9VKL cost of storage is not paid
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmR2aC9pmNPoVGnuZS2uKZPhxwW7iv3n8E4AWJddKHTxxc)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmR2aC9pmNPoVGnuZS2uKZPhxwW7iv3n8E4AWJddKHTxxc',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmdQ9kfKsX2MymLwQjBLsFfKRxW9cLbCvbxQibUnuS9VKL',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0xe1939d1484cf76eace80012cf4850a30c7e93ded73c32e986cdc33455e34719f
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14108
+  USDTmy.approve confirmed   Block: 29588158   Gas used: 44148 (0.45%)
+
+Transaction sent: 0xce9e750c6764ea6955ce26396dfc8908033203f395e6559b5fa511478a6b3277
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14109
+  eBlocBroker.submitJob confirmed   Block: 29588159   Gas used: 211191 (2.13%)
+
+tx_hash=0xce9e750c6764ea6955ce26396dfc8908033203f395e6559b5fa511478a6b3277
+tx={
+│   'blockHash': HexBytes('0x0d1d4ea1bd02ecddf63a81e36d50df1a6f95c882ba35b41cf3c7a5f5888780e9'),
+│   'blockNumber': 29588159,
+│   'cumulativeGasUsed': 211191,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 211191,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0xce9e750c6764ea6955ce26396dfc8908033203f395e6559b5fa511478a6b3277'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmR2aC9pmNPoVGnuZS2uKZPhxwW7iv3n8E4AWJddKHTxxc',
+│   'index': 1,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b"'\xf1\x7f\xdcoo1b\xdd\x97\x17%\x83\xfa\x04\x8c7\xab\x06\x7fMj\x1dT\xf8\xab*?N\x9fg\xa5",
+│   │   b"\xdf\xc4\xe2\xf4\x00\x8a\x08\x1a\x0c\x7ft\x9cC\xb1\x11\xec]\x84sD\x05\xc7\x88\x1b\xa1\x82A1x\x1b\x05'"
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/e622e4a26506c06ebac84d0a34a4be42
+
+ * data1 => ../data_link/e622e4a26506c06ebac84d0a34a4be42
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / 5.81 KiB [===============================================================================================================] 100.00%QmZVazUCgJ1C3CGQNnMeiwh7DkojuqVCSYTrdY4hj4cwn4
+==> ipfs_hash=QmZVazUCgJ1C3CGQNnMeiwh7DkojuqVCSYTrdY4hj4cwn4 | md5sum=3ca97abf912b2f96cd615482a4ee071c
+ 717 B / ? [--------------------------------------------------------=-----------------------------------------------------------------------] QmUpnyjN2pzgGZZXFh2XXTTqrcWBNrM7CsVV6BLcfqSeHf
+==> ipfs_hash=QmUpnyjN2pzgGZZXFh2XXTTqrcWBNrM7CsVV6BLcfqSeHf | md5sum=e622e4a26506c06ebac84d0a34a4be42
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmZVazUCgJ1C3CGQNnMeiwh7DkojuqVCSYTrdY4hj4cwn4': False, 'QmUpnyjN2pzgGZZXFh2XXTTqrcWBNrM7CsVV6BLcfqSeHf': False}
+** for QmUpnyjN2pzgGZZXFh2XXTTqrcWBNrM7CsVV6BLcfqSeHf cost of storage is not paid
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmZVazUCgJ1C3CGQNnMeiwh7DkojuqVCSYTrdY4hj4cwn4)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmZVazUCgJ1C3CGQNnMeiwh7DkojuqVCSYTrdY4hj4cwn4',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmUpnyjN2pzgGZZXFh2XXTTqrcWBNrM7CsVV6BLcfqSeHf',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0xe54bf911b03874dee3cbad8c8242cae59d6a3475904fb85cb3a123302d2c7b0e
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14110
+  USDTmy.approve confirmed   Block: 29588161   Gas used: 44148 (0.45%)
+
+Transaction sent: 0x8081d1a6e4ec7e5875fc9c666ae264b95a5d9c46919010a88563db2e7990f0f5
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14111
+  eBlocBroker.submitJob confirmed   Block: 29588162   Gas used: 211203 (2.13%)
+
+tx_hash=0x8081d1a6e4ec7e5875fc9c666ae264b95a5d9c46919010a88563db2e7990f0f5
+tx={
+│   'blockHash': HexBytes('0xa8ed0c3e7c5ddeeec0a1269fb32dac6ccf309e4ba80ef119b305fa72ee28b881'),
+│   'blockNumber': 29588162,
+│   'cumulativeGasUsed': 211203,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 211203,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0x8081d1a6e4ec7e5875fc9c666ae264b95a5d9c46919010a88563db2e7990f0f5'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmZVazUCgJ1C3CGQNnMeiwh7DkojuqVCSYTrdY4hj4cwn4',
+│   'index': 1,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b'\xa5\xba\x94dH\xe1\xb7K/2O4\xc1\xf7\xcd\\\t\xfd\xc8\xf2\x0e\t\x13D\xae\xf4\\*\x84\xad;5',
+│   │   b'`[\xbc\x04F\x9c\xb7]\x8d\x9bL\xc3<\xfa\xa8\xe1\xfc\xcd2\xbd\xb7\xf8N[\x07\xc1\xa1\xd1\xb5\x83\x1e\xe2'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/8f6c7ae246138ab6b52ea5f62d00e6bc
+
+ * data1 => ../data_link/8f6c7ae246138ab6b52ea5f62d00e6bc
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / 5.81 KiB [===============================================================================================================] 100.00%QmNRFCD4f9vmVYLuqNzRTM18xLkWYyQ5Xpw1Sz3ziws5bN
+==> ipfs_hash=QmNRFCD4f9vmVYLuqNzRTM18xLkWYyQ5Xpw1Sz3ziws5bN | md5sum=1d83fc70aa9cc0b5de0f91456935ba73
+ 751 B / 751 B [=====================================================================================================================] 100.00%QmP8NRThjbqcZ6RhtsJGNw6TpNK9YauVj1pq7URv4CHayu
+==> ipfs_hash=QmP8NRThjbqcZ6RhtsJGNw6TpNK9YauVj1pq7URv4CHayu | md5sum=8f6c7ae246138ab6b52ea5f62d00e6bc
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmNRFCD4f9vmVYLuqNzRTM18xLkWYyQ5Xpw1Sz3ziws5bN': False, 'QmP8NRThjbqcZ6RhtsJGNw6TpNK9YauVj1pq7URv4CHayu': False}
+** for QmP8NRThjbqcZ6RhtsJGNw6TpNK9YauVj1pq7URv4CHayu cost of storage is not paid
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmNRFCD4f9vmVYLuqNzRTM18xLkWYyQ5Xpw1Sz3ziws5bN)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmNRFCD4f9vmVYLuqNzRTM18xLkWYyQ5Xpw1Sz3ziws5bN',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmP8NRThjbqcZ6RhtsJGNw6TpNK9YauVj1pq7URv4CHayu',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0xb6a5f1165331cf6a060d105fe3ffb93d3cc8a4aa3e1af4f2f9437628ef4a718e
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14112
+  USDTmy.approve confirmed   Block: 29588164   Gas used: 44148 (0.45%)
+
+Transaction sent: 0x9d7d941c14756bff2262c268432fb8863b789ee607499a2d39fdfe23058308c6
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14113
+  eBlocBroker.submitJob confirmed   Block: 29588165   Gas used: 211179 (2.13%)
+
+tx_hash=0x9d7d941c14756bff2262c268432fb8863b789ee607499a2d39fdfe23058308c6
+tx={
+│   'blockHash': HexBytes('0x30074d61d6421f0b4eb3eb1ec0156bd8955a08564879f0a2adae0f7a3f9c810f'),
+│   'blockNumber': 29588165,
+│   'cumulativeGasUsed': 211179,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 211179,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0x9d7d941c14756bff2262c268432fb8863b789ee607499a2d39fdfe23058308c6'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmNRFCD4f9vmVYLuqNzRTM18xLkWYyQ5Xpw1Sz3ziws5bN',
+│   'index': 1,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b'\x01-P\xa4R\xb7\xfef\xae\xa1l\xeb\x84\x97\xee\xf1(#\x1c<!!mf\xc4\xdb\xb3b\x14\x8eli',
+│   │   b'\x0b\xb6M,g\x00\xff\xdc\xe3\x0c~g\xf4I\xca\x8ao\xff\x9f_!\xe5\xfe=\xb1\x00\x9c\xfa\xef\x99\x87\xd8'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/a0d7312d7fad21309be6dd59400fafad
+
+ * data1 => ../data_link/a0d7312d7fad21309be6dd59400fafad
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / 5.81 KiB [===============================================================================================================] 100.00%QmPWMgVMdiRVpsVcfSrPaSSaQDG5nKrwTZFYEgpyr8EgpY
+==> ipfs_hash=QmPWMgVMdiRVpsVcfSrPaSSaQDG5nKrwTZFYEgpyr8EgpY | md5sum=9e2d0eba43d179195c3054eb85f7674b
+ 726 B / ? [-----------------------------------------------=--------------------------------------------------------------------------------] Qmc8aKWoHfP5nN3QQxd5gNyQeawZ4ANRFyLxs5DTPUFX36
+==> ipfs_hash=Qmc8aKWoHfP5nN3QQxd5gNyQeawZ4ANRFyLxs5DTPUFX36 | md5sum=a0d7312d7fad21309be6dd59400fafad
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmPWMgVMdiRVpsVcfSrPaSSaQDG5nKrwTZFYEgpyr8EgpY': False, 'Qmc8aKWoHfP5nN3QQxd5gNyQeawZ4ANRFyLxs5DTPUFX36': False}
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmPWMgVMdiRVpsVcfSrPaSSaQDG5nKrwTZFYEgpyr8EgpY)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmPWMgVMdiRVpsVcfSrPaSSaQDG5nKrwTZFYEgpyr8EgpY',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'Qmc8aKWoHfP5nN3QQxd5gNyQeawZ4ANRFyLxs5DTPUFX36',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0x3090def2b418723ef4e22f83730801e58d926a6e51fff982f458a1072fbb168a
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14114
+  USDTmy.approve confirmed   Block: 29588168   Gas used: 44148 (0.45%)
+
+Transaction sent: 0x660bae53f086495f9de21fb8542646d00b2e09a372adcb67f574873bad12ceb8
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14115
+  eBlocBroker.submitJob confirmed   Block: 29588169   Gas used: 254436 (2.57%)
+
+tx_hash=0x660bae53f086495f9de21fb8542646d00b2e09a372adcb67f574873bad12ceb8
+tx={
+│   'blockHash': HexBytes('0x14267346b6a762c335c831ac21b7ab8a1ab748ff11a7491dff988f0748b23aed'),
+│   'blockNumber': 29588169,
+│   'cumulativeGasUsed': 254436,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 254436,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0x660bae53f086495f9de21fb8542646d00b2e09a372adcb67f574873bad12ceb8'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmPWMgVMdiRVpsVcfSrPaSSaQDG5nKrwTZFYEgpyr8EgpY',
+│   'index': 0,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b'\x11X=\xd5*\xa9\x15\xf4[J+#\x13l\x00\xf6j"}$L\x00+\x8b\x86\xcb\xbf\x91\xebxn\xd9',
+│   │   b'\xcc\xeb\xaf\x1b\xa9\x02\xd7\xcah2fy\xca\x0f\xb0\xab&\xa0go:\x7f\xb8\xb2\xe0!|\xaaR*A\xd1'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/d94aba939e0be4535bb02236ad14d7d2
+
+ * data1 => ../data_link/d94aba939e0be4535bb02236ad14d7d2
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / ? [----------------------------------------------------------------------------------------------=------------------------------] QmSHiRHKNPQqWkTLnnyhanoparpYsRfDrHYxqcVreoD8Hv
+==> ipfs_hash=QmSHiRHKNPQqWkTLnnyhanoparpYsRfDrHYxqcVreoD8Hv | md5sum=09d46626fff42f7d2a54212b8db06116
+ 733 B / ? [----------------------------------------=---------------------------------------------------------------------------------------] QmTjy5GMkjKV9y7iy5JPpsVGFXWkT93CLpFswi7Aarrt3p
+==> ipfs_hash=QmTjy5GMkjKV9y7iy5JPpsVGFXWkT93CLpFswi7Aarrt3p | md5sum=d94aba939e0be4535bb02236ad14d7d2
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmSHiRHKNPQqWkTLnnyhanoparpYsRfDrHYxqcVreoD8Hv': False, 'QmTjy5GMkjKV9y7iy5JPpsVGFXWkT93CLpFswi7Aarrt3p': False}
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmSHiRHKNPQqWkTLnnyhanoparpYsRfDrHYxqcVreoD8Hv)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmSHiRHKNPQqWkTLnnyhanoparpYsRfDrHYxqcVreoD8Hv',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmTjy5GMkjKV9y7iy5JPpsVGFXWkT93CLpFswi7Aarrt3p',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0x721b6d0a4c107cb85f88ed3dd719026f4ddcba15c15f6358ccedeee4780dfd5a
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14116
+  USDTmy.approve confirmed   Block: 29588172   Gas used: 44148 (0.45%)
+
+Transaction sent: 0xc8444bd3e17f2d3d1b90982baa675dd64184b4195ae0ee07b40402930f07c751
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14117
+  eBlocBroker.submitJob confirmed   Block: 29588173   Gas used: 254460 (2.57%)
+
+tx_hash=0xc8444bd3e17f2d3d1b90982baa675dd64184b4195ae0ee07b40402930f07c751
+tx={
+│   'blockHash': HexBytes('0xc6d289b3570418e5e0bb400d8a1ecae321c7533ad3a9e8a0a034a501b087fb5c'),
+│   'blockNumber': 29588173,
+│   'cumulativeGasUsed': 254460,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 254460,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0xc8444bd3e17f2d3d1b90982baa675dd64184b4195ae0ee07b40402930f07c751'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmSHiRHKNPQqWkTLnnyhanoparpYsRfDrHYxqcVreoD8Hv',
+│   'index': 0,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b':\xae39\xcec{\x93\xa6N\xd0\xdfh\x81;\xb4\xb2c,#\x7f!1m\x05b\x11u_\xc5\x81\xf1',
+│   │   b'PC\x8e\xf3\x1c\x88\xb3\x10u\xdfH\xe8g\xde\xba>{wh\x9aK\xeb\xb0\xcc8\xcc\x14\xf7\xec\xdf.g'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/a9612098cdb4c9c19766873a341c873a
+
+ * data1 => ../data_link/a9612098cdb4c9c19766873a341c873a
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / ? [----------------------------------------------------------------------------------------------=------------------------------] QmbktfpdTfmRmct198NB6fvRFaTwFQhmhqeyHGrS8ynGn4
+==> ipfs_hash=QmbktfpdTfmRmct198NB6fvRFaTwFQhmhqeyHGrS8ynGn4 | md5sum=2db2282ff364b95b53e59e9dad945058
+ 699 B / 699 B [=====================================================================================================================] 100.00%QmWpgGUStPcPXJcSnVy17vM5a1ZR7TQw2wW56AuAWmH6Np
+==> ipfs_hash=QmWpgGUStPcPXJcSnVy17vM5a1ZR7TQw2wW56AuAWmH6Np | md5sum=a9612098cdb4c9c19766873a341c873a
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmbktfpdTfmRmct198NB6fvRFaTwFQhmhqeyHGrS8ynGn4': False, 'QmWpgGUStPcPXJcSnVy17vM5a1ZR7TQw2wW56AuAWmH6Np': False}
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmbktfpdTfmRmct198NB6fvRFaTwFQhmhqeyHGrS8ynGn4)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmbktfpdTfmRmct198NB6fvRFaTwFQhmhqeyHGrS8ynGn4',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmWpgGUStPcPXJcSnVy17vM5a1ZR7TQw2wW56AuAWmH6Np',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0x9eb191c27e91fd6d7d5081d2a766af9c3467ea73bee74c2cc2ca2b17eb014b65
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14118
+  USDTmy.approve confirmed   Block: 29588175   Gas used: 44148 (0.45%)
+
+Transaction sent: 0x1ca797191c1e4004fe4a576d3ddf5308cb795bdb8c5de5c687105ef71451d806
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14119
+  eBlocBroker.submitJob confirmed   Block: 29588176   Gas used: 254460 (2.57%)
+
+tx_hash=0x1ca797191c1e4004fe4a576d3ddf5308cb795bdb8c5de5c687105ef71451d806
+tx={
+│   'blockHash': HexBytes('0xa7d81e51411ed3e7c81315c96020a952c728069b4f385985c04ac5888220e15d'),
+│   'blockNumber': 29588176,
+│   'cumulativeGasUsed': 254460,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 254460,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0x1ca797191c1e4004fe4a576d3ddf5308cb795bdb8c5de5c687105ef71451d806'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmbktfpdTfmRmct198NB6fvRFaTwFQhmhqeyHGrS8ynGn4',
+│   'index': 0,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b"\xc7]\xa7\x9f#\xb9\xab\x95\x84P\x16\x94\xb0\xcb/p\xf6{\xe98]\x85\x7f\x9c'X\xed\x13SC0\xf9",
+│   │   b"~\x0b\x85\x0fvr\xd8'r>\xe9\x92\xe7]\x13\x96\x01T\xf4\xe5\xe1\x15\x87W\xb5\xdb\xd2\xeb\xf7\\\xd8E"
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/21bfb69f91bb817b618beb9345047aa0
+
+ * data1 => ../data_link/21bfb69f91bb817b618beb9345047aa0
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / 5.81 KiB [===============================================================================================================] 100.00%QmayfXxxGtRUjPdHQGoki1xBhAYHGj8J3ffJmpa7wRdnSj
+==> ipfs_hash=QmayfXxxGtRUjPdHQGoki1xBhAYHGj8J3ffJmpa7wRdnSj | md5sum=2b7e80715c4bb449371f9a2b294c345b
+ 779 B / ? [---------------------------------------------------------------------------------------------------------------------------=----] QmYMibSozet5ooqdkTmEbtvM23KbnZJim3SxtbnuqXdgAN
+==> ipfs_hash=QmYMibSozet5ooqdkTmEbtvM23KbnZJim3SxtbnuqXdgAN | md5sum=21bfb69f91bb817b618beb9345047aa0
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmayfXxxGtRUjPdHQGoki1xBhAYHGj8J3ffJmpa7wRdnSj': False, 'QmYMibSozet5ooqdkTmEbtvM23KbnZJim3SxtbnuqXdgAN': False}
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmayfXxxGtRUjPdHQGoki1xBhAYHGj8J3ffJmpa7wRdnSj)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmayfXxxGtRUjPdHQGoki1xBhAYHGj8J3ffJmpa7wRdnSj',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmYMibSozet5ooqdkTmEbtvM23KbnZJim3SxtbnuqXdgAN',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0x1d0c6e9215cd14d8e397748a8394c14455090a6fa5f3d54a02920b58747f55cd
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14120
+  USDTmy.approve confirmed   Block: 29588184   Gas used: 44148 (0.45%)
+
+Transaction sent: 0x47a62b86f470e83607ec87b6072731e74c18ce9d9aedc9294ebe5292fe6786ae
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14121
+  eBlocBroker.submitJob confirmed   Block: 29588185   Gas used: 254460 (2.57%)
+
+tx_hash=0x47a62b86f470e83607ec87b6072731e74c18ce9d9aedc9294ebe5292fe6786ae
+tx={
+│   'blockHash': HexBytes('0x504a16eba704b52bc16de47b6880866a53598779290cdd68814b16c7d7287f22'),
+│   'blockNumber': 29588185,
+│   'cumulativeGasUsed': 254460,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 254460,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0x47a62b86f470e83607ec87b6072731e74c18ce9d9aedc9294ebe5292fe6786ae'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmayfXxxGtRUjPdHQGoki1xBhAYHGj8J3ffJmpa7wRdnSj',
+│   'index': 0,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b'\xbb\xc7\xaa\x82\x9f\x87\xfa\xcf\x14)\x9f\x07cB!\x81\xf9\x8d\xcel\xb5g\x01\xf4\x13f\xa2\x90\x82w\xa7\x08',
+│   │   b'\x94\xda\xd7\xd1%}R\xbcxl\xa8\x01\xba\xfd\xe1\xb8\xce\x9f\xae\xb5N\xe8\x8b\xcfG\xc6\x94\xc1d@w\x9b'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/52cf915d67a1548c44f96ba2fc15e3d4
+
+ * data1 => ../data_link/52cf915d67a1548c44f96ba2fc15e3d4
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / 5.81 KiB [===============================================================================================================] 100.00%QmcQnhKM3pwL2GHKuiBGeVoEaBbSXpSEP8Thr98ArwAL9K
+==> ipfs_hash=QmcQnhKM3pwL2GHKuiBGeVoEaBbSXpSEP8Thr98ArwAL9K | md5sum=ce2c4ea5e8dfe12dc5cb2fee5c0f4f11
+ 760 B / ? [-------------=------------------------------------------------------------------------------------------------------------------] Qmd1aS2eCrwrQ5qr9DK2XtB2LLcsaLEe3bFKTCBe819H3s
+==> ipfs_hash=Qmd1aS2eCrwrQ5qr9DK2XtB2LLcsaLEe3bFKTCBe819H3s | md5sum=52cf915d67a1548c44f96ba2fc15e3d4
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmcQnhKM3pwL2GHKuiBGeVoEaBbSXpSEP8Thr98ArwAL9K': False, 'Qmd1aS2eCrwrQ5qr9DK2XtB2LLcsaLEe3bFKTCBe819H3s': False}
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmcQnhKM3pwL2GHKuiBGeVoEaBbSXpSEP8Thr98ArwAL9K)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmcQnhKM3pwL2GHKuiBGeVoEaBbSXpSEP8Thr98ArwAL9K',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'Qmd1aS2eCrwrQ5qr9DK2XtB2LLcsaLEe3bFKTCBe819H3s',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0x7193ef7e68240d6a7d5dacbee71b1f23456be7e14542e173eecf814c69bbccbd
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14122
+  USDTmy.approve confirmed   Block: 29588188   Gas used: 44148 (0.45%)
+
+Transaction sent: 0x231763e71d29c1c5df4687b2d091f531abde817b526b258004bfd43fcd41f630
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14123
+  eBlocBroker.submitJob confirmed   Block: 29588189   Gas used: 254448 (2.57%)
+
+tx_hash=0x231763e71d29c1c5df4687b2d091f531abde817b526b258004bfd43fcd41f630
+tx={
+│   'blockHash': HexBytes('0x722979fde1732375049655c399cc8f99601ca628c6c6f392e55095b67295e24d'),
+│   'blockNumber': 29588189,
+│   'cumulativeGasUsed': 254448,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 254448,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0x231763e71d29c1c5df4687b2d091f531abde817b526b258004bfd43fcd41f630'),
+│   'transactionIndex': 0,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmcQnhKM3pwL2GHKuiBGeVoEaBbSXpSEP8Thr98ArwAL9K',
+│   'index': 0,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b'\xd1\x12\xf8n\xeb\x1a\x01\tt@\xff\x0f15\x06u\xab\x90\xe8\xda@\x83,\x1bk\xb0\x9fh\xa2\xc1\x8f\xb6',
+│   │   b'\xd9\xfcn\xa9\xd4\x8c\xb4\\\xb8\xef\xe7\xa7\xfb8K\xde\x162%\xf4\xdc\x00>\x02\xc6\x89$YITr\xc6'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/014f730cf198ebce64b8782c8f9ce43a
+
+ * data1 => ../data_link/014f730cf198ebce64b8782c8f9ce43a
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / ? [----------------------------------------------------------------------------------------------=------------------------------] QmPAeoWkidUoX44qHGiiQrNAyTekiznkFYRKnctj35Kh1k
+==> ipfs_hash=QmPAeoWkidUoX44qHGiiQrNAyTekiznkFYRKnctj35Kh1k | md5sum=b7b6ed6ebb80ee73bb2d50f361bc718f
+ 972 B / ? [-----------------------------------------------------------=--------------------------------------------------------------------] QmUQFdA4rZwLdUFGUHQPP2EVGH8GKbuqCHxE6ayFUPTdVs
+==> ipfs_hash=QmUQFdA4rZwLdUFGUHQPP2EVGH8GKbuqCHxE6ayFUPTdVs | md5sum=014f730cf198ebce64b8782c8f9ce43a
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmPAeoWkidUoX44qHGiiQrNAyTekiznkFYRKnctj35Kh1k': False, 'QmUQFdA4rZwLdUFGUHQPP2EVGH8GKbuqCHxE6ayFUPTdVs': False}
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmPAeoWkidUoX44qHGiiQrNAyTekiznkFYRKnctj35Kh1k)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmPAeoWkidUoX44qHGiiQrNAyTekiznkFYRKnctj35Kh1k',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmUQFdA4rZwLdUFGUHQPP2EVGH8GKbuqCHxE6ayFUPTdVs',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0x371afea117e4a059f089e397dac3fa2d5174dec8e97c891165ab403141952e3b
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14124
+  USDTmy.approve confirmed   Block: 29588200   Gas used: 44148 (0.45%)
+
+Transaction sent: 0xb04fd29834c1c7b9dcfadde49e5cb6a4316728680e10a31da6994fdb4e70d5ea
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14125
+  eBlocBroker.submitJob confirmed   Block: 29588201   Gas used: 254448 (2.57%)
+
+tx_hash=0xb04fd29834c1c7b9dcfadde49e5cb6a4316728680e10a31da6994fdb4e70d5ea
+tx={
+│   'blockHash': HexBytes('0xf3fb2b6a2742bd83cf3b42a7f3239e5dbe5425839fbbcb97d65b716d2a8a6ea2'),
+│   'blockNumber': 29588201,
+│   'cumulativeGasUsed': 304692,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 254448,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0xb04fd29834c1c7b9dcfadde49e5cb6a4316728680e10a31da6994fdb4e70d5ea'),
+│   'transactionIndex': 1,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmPAeoWkidUoX44qHGiiQrNAyTekiznkFYRKnctj35Kh1k',
+│   'index': 0,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b'\x0cK\xfb\xf7\xaaJ\xe8XUqX\xfc\xf6e\xbc%\xec\xe9\xec\x9f\xd9\x87\xdb{Pi\xa09U\xa1\xaf\x1b',
+│   │   b'Z\x12W\x95EE\xcb1oW2B\x85\xa0B\x0fX\xcbQq]\xca\x08QJumC\x00\xf1!j'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+❯ ./submit.py
+==> attemptting to submit job (/home/alper/test_eblocbroker/test_data/base/source_code) using IPFS
+ ┌── /home/alper/test_eblocbroker/test_data/base/data/data1
+ └─> /home/alper/.ebloc-broker/links/base/data_link/dbf6aab21c008165057fa356f1335c91
+
+ * data1 => ../data_link/dbf6aab21c008165057fa356f1335c91
+
+==> Would you like to continue with the linked folder path in your `run.sh` file?
+If no, feel free to update your run.sh file and continue [Y/n]: y
+==> submitting source code through IPFS
+ 5.81 KiB / 5.81 KiB [===============================================================================================================] 100.00%QmNhcniH941zWDuX8v8DAVj1Vy2rgkHhCshmSr1ajTqYD2
+==> ipfs_hash=QmNhcniH941zWDuX8v8DAVj1Vy2rgkHhCshmSr1ajTqYD2 | md5sum=661a63989e74bf5d6efd67eb27d97f0d
+ 661 B / ? [----------------------------------------------------------------------------------------------------------------=---------------] QmY9ZU4bqe1bosCoEv4vU3BFmsD8MxCBHFWRcWY12W8bbn
+==> ipfs_hash=QmY9ZU4bqe1bosCoEv4vU3BFmsD8MxCBHFWRcWY12W8bbn | md5sum=dbf6aab21c008165057fa356f1335c91
+
+* Entered into the cost calculation for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+** is_private={'QmNhcniH941zWDuX8v8DAVj1Vy2rgkHhCshmSr1ajTqYD2': False, 'QmY9ZU4bqe1bosCoEv4vU3BFmsD8MxCBHFWRcWY12W8bbn': False}
+** price_core_min=0.005 usd
+** price_data_transfer=0.000001 usd
+** price_storage=0.000001 usd
+** price_cache=0.000001 usd
+{
+│ job_price=0.07501 usd for provider=0xd118b6ef83ccf11b34331f1e7285542ddf70bc49
+│   * computational=0.075 usd
+│   * cache=0.000004 usd
+│   * storage=0 usd
+│   * data_transfer=0.000006 usd
+│       * in=0.000004 usd
+│       * out=0.000002 usd
+}
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+==> provider_to_share=0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49 | best_price=0.07501 usd
+==> Submitting the job(QmNhcniH941zWDuX8v8DAVj1Vy2rgkHhCshmSr1ajTqYD2)
+==> Would you like to continue? [Y/n]: y
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/source_code'),
+│   'code_hash': 'QmNhcniH941zWDuX8v8DAVj1Vy2rgkHhCshmSr1ajTqYD2',
+│   'folder_size_mb': 4,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+{
+│   'path': PosixPath('/home/alper/test_eblocbroker/test_data/base/data/data1'),
+│   'code_hash': 'QmY9ZU4bqe1bosCoEv4vU3BFmsD8MxCBHFWRcWY12W8bbn',
+│   'folder_size_mb': 0,
+│   'storage_ids': 'IPFS',
+│   'cache_type': 'PUBLIC'
+}
+
+Transaction sent: 0x939c1a5f07c0ef3a5aa87bfe843bac1989928c5c9f61e7b62c240af8fc947abc
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14126
+  USDTmy.approve confirmed   Block: 29588209   Gas used: 44148 (0.45%)
+
+Transaction sent: 0x02807a478cdf41cfd650857fa7d24e156ba373583680395e8defcf63e905ffb2
+  Gas price: 0.004 gwei   Gas limit: 9900000   Nonce: 14127
+  eBlocBroker.submitJob confirmed   Block: 29588210   Gas used: 254460 (2.57%)
+
+tx_hash=0x02807a478cdf41cfd650857fa7d24e156ba373583680395e8defcf63e905ffb2
+tx={
+│   'blockHash': HexBytes('0x435053a6add705bf07dae518a09a2df9bee4be0afa9e76c0abfa3c38d9533429'),
+│   'blockNumber': 29588210,
+│   'cumulativeGasUsed': 304704,
+│   'effectiveGasPrice': 4000000,
+│   'from': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'gasUsed': 254460,
+│   'logs': [...],
+│   'status': 1,
+│   'to': '0x75a7357764379F26d2CF42E27e274D795B0fC977',
+│   'transactionHash': HexBytes('0x02807a478cdf41cfd650857fa7d24e156ba373583680395e8defcf63e905ffb2'),
+│   'transactionIndex': 1,
+│   'type': '0x0'
+}
+==> Is transaction successfully deployed?  [ok]
+job_info={
+│   'provider': '0xD118b6EF83ccF11b34331F1E7285542dDf70Bc49',
+│   'owner': '0x72C1A89fF3606aa29686Ba8d29e28dcCff06430a',
+│   'jobKey': 'QmNhcniH941zWDuX8v8DAVj1Vy2rgkHhCshmSr1ajTqYD2',
+│   'index': 0,
+│   'cloudStorageID': [0, 0],
+│   'sourceCodeHash': [
+│   │   b'\x05_\x06~\xee\x11\x01=?\x9a\\M\xd0\xcb\xb8\xdaM\x89\xfd\xbcXj\xe6\x0b:\xa4:,d\xf0\xfa\xb5',
+│   │   b'\x91\xbd\x8d\x95\xa1\xa4\x83\xd2\x7f\xeb\xab.H\xe3\x19f&\xf6\xa0\x1d,\xff|\x8aJ\xa2\x0c`\x96\xd3\xc6\xb1'
+│   ],
+│   'cacheType': [0, 0],
+│   'core': [1],
+│   'runTime': [15],
+│   'received': 7501000,
+│   'refunded': 0,
+│   'workflowId': 0
+}
+homevm ~/ebloc-broker/broker/ipfs ❯                                                                                      dev +2 !10 ?3 1m 54s
