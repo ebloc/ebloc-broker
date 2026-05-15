@@ -55,7 +55,9 @@ hashes_medium_2 = B + C
 
 def print_prices(hashes):
     for code_hash in hashes:
-        (price, _commitment_dur) = get_data_price(env.PROVIDER_ID, code_hash, is_verbose=False)
+        (price, _commitment_dur) = get_data_price(
+            env.PROVIDER_ID, code_hash, is_verbose=False
+        )
         log(f"{code_hash}={Cent(price)._to()} usd")
 
 

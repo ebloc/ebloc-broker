@@ -44,7 +44,9 @@ def _collect_all_into_base(account, min_balance_amount):
     if balance_to_transfer > min_balance_amount:
         _amount = balance_to_transfer - min_balance_amount
         _required_confs = 1
-        tx = Ebb.transfer(f"{_amount} ether", account, base_account, required_confs=_required_confs)
+        tx = Ebb.transfer(
+            f"{_amount} ether", account, base_account, required_confs=_required_confs
+        )
         log(tx)
         if _required_confs > 0:
             log(Ebb._get_balance(account))

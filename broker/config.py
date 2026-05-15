@@ -82,7 +82,9 @@ class ENV(ENV_BASE):
         # if "bloxberg_host" in self.cfg:
         #     self.BLOXBERG_HOST = self.cfg["bloxberg_host"]
         self.config = Yaml(self.LOG_DIR.joinpath("config.yaml"))
-        self.BASH_SCRIPTS_PATH = Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
+        self.BASH_SCRIPTS_PATH = (
+            Path(self.cfg["ebloc_path"]) / "broker" / "bash_scripts"
+        )
         self.GDRIVE_METADATA = self._HOME.joinpath(".gdrive")
         self.IPFS_LOG = self.LOG_DIR.joinpath("ipfs.out")
         self.GANACHE_LOG = self.LOG_DIR.joinpath("ganache.out")
@@ -91,7 +93,9 @@ class ENV(ENV_BASE):
         self.JOBS_READ_FROM_FILE = self.LOG_DIR.joinpath("test.txt")
         self.GPG_PASS_FILE = self.LOG_DIR.joinpath(".gpg_pass.txt")
         self.CANCEL_JOBS_READ_FROM_FILE = self.LOG_DIR.joinpath("cancelled_jobs.txt")
-        self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_DIR.joinpath("cancelled_block_read_from.txt")
+        self.CANCEL_BLOCK_READ_FROM_FILE = self.LOG_DIR.joinpath(
+            "cancelled_block_read_from.txt"
+        )
         self.OC_CLIENT = self.LOG_DIR.joinpath(".oc_client.pckl")
         if self.cfg["eth_address"]:
             self.PROVIDER_ID = cfg.w3.toChecksumAddress(self.cfg["eth_address"].lower())

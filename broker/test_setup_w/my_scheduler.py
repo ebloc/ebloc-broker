@@ -50,7 +50,9 @@ BASE = Path.home() / "test_eblocbroker" / "workflow" / f"{n}_{edges}"
 # BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
 yaml_fn = BASE / "jobs.yaml"
 #: dummy file updated anyway
-yaml_fn_wf = Path.home() / "ebloc-broker" / "broker" / "test_setup_w" / "job_workflow.yaml"
+yaml_fn_wf = (
+    Path.home() / "ebloc-broker" / "broker" / "test_setup_w" / "job_workflow.yaml"
+)
 yaml = Yaml(yaml_fn)
 
 slots = {}  # type: ignore
@@ -133,7 +135,9 @@ class Ewe:
                 if v in self.ready:
                     dependent_jobs = wf.in_edges(v)
                     with suppress(Exception):
-                        dependent_jobs = list(set(dependent_jobs) - set(self.batch_to_submit[key]))
+                        dependent_jobs = list(
+                            set(dependent_jobs) - set(self.batch_to_submit[key])
+                        )
 
                     flag = False
                     for dependent_job in dependent_jobs:
@@ -200,7 +204,9 @@ class Ewe:
                 node = self.batch_to_submit[batch_key][0]
                 yaml_cfg["config"]["jobs"] = {}
                 yaml_cfg["config"]["jobs"][f"job{node}"]["cores"] = 1
-                yaml_cfg["config"]["jobs"][f"job{node}"]["run_time"] = yaml["config"]["jobs"][f"job{node}"]["run_time"]
+                yaml_cfg["config"]["jobs"][f"job{node}"]["run_time"] = yaml["config"][
+                    "jobs"
+                ][f"job{node}"]["run_time"]
                 if self.very_first_job[batch_key]:
                     yaml_cfg["config"]["dt_in"] = 201
                     self.very_first_job[batch_key] = False
@@ -281,7 +287,9 @@ class Ewe:
                         self.ready.remove(int(node))
                     except:
                         print(node)
-                        log("================================================== something is wrong")
+                        log(
+                            "================================================== something is wrong"
+                        )
 
                     if int(node) not in self.submitted:
                         self.submitted.append(int(node))
@@ -303,7 +311,10 @@ def check_jobs(ewe):
     for job in ewe.jobs_started_run_time:
         if job in ewe.running:
             run_time = round(default_timer() - ewe.jobs_started_run_time[job])
-            if run_time > (int(yaml["config"]["jobs"][f"job{job}"]["run_time"]) + 2) * 60:
+            if (
+                run_time
+                > (int(yaml["config"]["jobs"][f"job{job}"]["run_time"]) + 2) * 60
+            ):
                 log(f"* CHECKME {job} <======================", "alert")
 
     """
@@ -329,7 +340,9 @@ def check_jobs(ewe):
             if val in ewe.ready or val in ewe.submitted or val in ewe.running:
                 keys = key.split("_")
                 log(f"{val} => ", end="")
-                _job = Ebb.get_job_info(keys[0], keys[1], keys[2], idx, keys[3], is_print=True)
+                _job = Ebb.get_job_info(
+                    keys[0], keys[1], keys[2], idx, keys[3], is_print=True
+                )
                 state_val = state.inv_code[_job["stateCode"]]
                 if state_val == "SUBMITTED":
                     pass
@@ -371,7 +384,11 @@ def check_jobs(ewe):
 
                 if val in ewe.running:
                     run_time = round(default_timer() - ewe.jobs_started_run_time[val])
-                    if run_time > (int(yaml["config"]["jobs"][f"job{val}"]["run_time"]) + 5) * 60:
+                    if (
+                        run_time
+                        > (int(yaml["config"]["jobs"][f"job{val}"]["run_time"]) + 5)
+                        * 60
+                    ):
                         with suppress(Exception):
                             ewe.running.remove(val)
 

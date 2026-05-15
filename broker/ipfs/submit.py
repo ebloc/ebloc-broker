@@ -63,7 +63,10 @@ def pre_check(job: Job, requester):
             raise Exception("Install pigz.\nbrew install pigz")
 
     if not os.path.isfile(env.GPG_PASS_FILE):
-        log(f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption", is_wrap=True)
+        log(
+            f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption",
+            is_wrap=True,
+        )
         raise QuietExit
 
     start_ipfs_daemon()
@@ -104,10 +107,14 @@ def _submit(provider_addr, job, requester, targets, required_confs):
                 break
             except:
                 time.sleep(2)
-                tx_hash = Ebb.submit_job(provider_addr, job.key, job, requester, required_confs)
+                tx_hash = Ebb.submit_job(
+                    provider_addr, job.key, job, requester, required_confs
+                )
 
         if tx_receipt["status"] == 1:
-            processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+            processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(
+                tx_receipt, errors=DISCARD
+            )
             try:
                 if processed_logs:
                     job.info = vars(processed_logs[0].args)
@@ -136,13 +143,17 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
 
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
+    check_link_folders(
+        job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass
+    )
     if main_storage_id == StorageID.IPFS:
         log("==> submitting source code through [blue]IPFS[/blue]")
     elif main_storage_id == StorageID.IPFS_GPG:
         log("==> submitting source code through [blue]IPFS_GPG[/blue]")
     else:
-        raise Exception("Please provide IPFS or IPFS_GPG storage type for the source code")
+        raise Exception(
+            "Please provide IPFS or IPFS_GPG storage type for the source code"
+        )
 
     # provider_info = Ebb.get_provider_info(job.provider_addr)
     targets = []
@@ -186,11 +197,17 @@ def submit_ipfs(job: Job, is_pass=False, required_confs=1):
                 if job.storage_ids[idx] == StorageID.IPFS_GPG:
                     is_ipfs_gpg = True
                     try:
-                        from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
+                        from_gpg_fingerprint = ipfs.get_gpg_fingerprint(
+                            env.GMAIL
+                        ).upper()
                         #: target is updated
-                        target = ipfs.gpg_encrypt(from_gpg_fingerprint, provider_gpg_fingerprint, target)
+                        target = ipfs.gpg_encrypt(
+                            from_gpg_fingerprint, provider_gpg_fingerprint, target
+                        )
                         log(f"==> gpg_file={target}")
-                        targets.append(target)  #: created gpg file will be removed since its already in ipfs
+                        targets.append(
+                            target
+                        )  #: created gpg file will be removed since its already in ipfs
                     except Exception as e:
                         raise e
 

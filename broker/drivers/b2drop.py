@@ -16,7 +16,15 @@ from broker._utils.tools import _remove, mkdir, read_json
 from broker.config import env
 from broker.drivers.storage_class import Storage
 from broker.lib import calculate_size, run
-from broker.utils import CacheID, StorageID, cd, generate_md5sum, get_date, print_tb, untar
+from broker.utils import (
+    CacheID,
+    StorageID,
+    cd,
+    generate_md5sum,
+    get_date,
+    print_tb,
+    untar,
+)
 
 Ebb = cfg.Ebb
 
@@ -48,7 +56,9 @@ class B2dropClass(Storage):
         f_id = f_id.replace("@b2drop.eudat.eu", "")  # check in case
         share_key = f"{folder_name}_{self.requester_id[:16]}"
         if not is_verbose:
-            log(f"==> searching share tokens for the related source_code_folder={share_key}")
+            log(
+                f"==> searching share tokens for the related source_code_folder={share_key}"
+            )
 
         for idx in range(len(share_list) - 1, -1, -1):
             # starts iterating from last item to the first one
@@ -62,12 +72,16 @@ class B2dropClass(Storage):
                     "share_id": int(share_id),
                     "share_token": self.share_token,
                 }
-                if Ebb.mongo_broker.add_item_share_id(share_key, share_id, self.share_token):
+                if Ebb.mongo_broker.add_item_share_id(
+                    share_key, share_id, self.share_token
+                ):
                     log(f"==> Added into mongoDB {ok()}")
                 else:
                     log("E: Something is wrong, not added into mongoDB")
 
-                log(f"==> name={folder_name} | share_id={share_id} | share_token={self.share_token} {ok()}")
+                log(
+                    f"==> name={folder_name} | share_id={share_id} | share_token={self.share_token} {ok()}"
+                )
                 try:
                     config.oc.accept_remote_share(int(share_id))
                     log(f"==> share_id={share_id} is accepted")
@@ -100,7 +114,10 @@ class B2dropClass(Storage):
                 if tar_hash == folder_name:
                     # checking is already downloaded folder's hash matches with the given hash
                     self.folder_type_dict[folder_name] = "folder"
-                    log(f"==> {folder_name} is already cached under the public directory", "bg")
+                    log(
+                        f"==> {folder_name} is already cached under the public directory",
+                        "bg",
+                    )
                     return True
                 self.folder_type_dict[folder_name] = "tar.gz"
                 try:
@@ -202,7 +219,9 @@ class B2dropClass(Storage):
                     return
             except Exception as e:
                 print_tb(e)
-                log("E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach...")
+                log(
+                    "E: Failed to download B2DROP file via wget.\nTrying `config.oc.get_file()` approach..."
+                )
                 log("==> Sleeping for 30 seconds")
                 time.sleep(30)
                 """Since config.oc.get_file is not mounted in current test
@@ -219,7 +238,9 @@ class B2dropClass(Storage):
     def download_folder(self, cache_folder, folder_name):
         """Wrap download folder function."""
         self._download_folder(cache_folder, folder_name)
-        self.check_downloaded_folder_hash(cache_folder / f"{folder_name}.tar.gz", folder_name)
+        self.check_downloaded_folder_hash(
+            cache_folder / f"{folder_name}.tar.gz", folder_name
+        )
 
     def accept_given_shares(self) -> None:
         for *_, v in self.share_id.items():
@@ -239,16 +260,24 @@ class B2dropClass(Storage):
             if "HTTP error: 404" in str(e):
                 try:
                     folder_fn = folder_name
-                    _list = fnmatch.filter(os.listdir(env.OWNCLOUD_PATH), f"{folder_fn} *")
+                    _list = fnmatch.filter(
+                        os.listdir(env.OWNCLOUD_PATH), f"{folder_fn} *"
+                    )
                     for _dir in _list:
-                        shutil.move(f"{env.OWNCLOUD_PATH}/{_dir}", f"{env.OWNCLOUD_PATH}/{folder_fn}")
+                        shutil.move(
+                            f"{env.OWNCLOUD_PATH}/{_dir}",
+                            f"{env.OWNCLOUD_PATH}/{folder_fn}",
+                        )
 
                     return config.oc.file_info(fn).get_size()
                 except Exception as e:
                     log(f"E: {e}")
                     _list = config.oc.list(".")
                     for path in _list:
-                        if folder_name in path.get_name() and folder_name != path.get_name:
+                        if (
+                            folder_name in path.get_name()
+                            and folder_name != path.get_name
+                        ):
                             config.oc.move(path.get_name(), folder_name)
 
                 return config.oc.file_info(fn).get_size()
@@ -301,7 +330,9 @@ class B2dropClass(Storage):
                     folder_token_flag[folder_name] = True
                     log(f"==> index={br(idx)}: /{source_fn} => {size} bytes")
                 except:
-                    log(f"warning: shared_folder{br(source_code_hash_text, 'green')} is not accepted yet")
+                    log(
+                        f"warning: shared_folder{br(source_code_hash_text, 'green')} is not accepted yet"
+                    )
                     folder_token_flag[folder_name] = False
 
         with suppress(Exception):
@@ -316,7 +347,9 @@ class B2dropClass(Storage):
         for share_key, value in self.share_id.items():  # there is only single item
             try:
                 # TODO: if added before or some do nothing
-                if Ebb.mongo_broker.add_item_share_id(share_key, value["share_id"], value["share_token"]):
+                if Ebb.mongo_broker.add_item_share_id(
+                    share_key, value["share_id"], value["share_token"]
+                ):
                     # adding into mongoDB for future usage
                     log(f"==> [g]{share_key}[/g] is added into mongoDB {ok()}")
             except Exception as e:
@@ -397,7 +430,10 @@ class B2dropClass(Storage):
             time.sleep(0.25)
 
     def _run(self) -> bool:
-        log(f"{br(get_date())} new job has been received through B2DROP: {self.job_key} {self.index} ", "cyan")
+        log(
+            f"{br(get_date())} new job has been received through B2DROP: {self.job_key} {self.index} ",
+            "cyan",
+        )
         # TODO: refund check
         try:
             provider_info = Ebb.get_provider_info(self.logged_job.args["provider"])
@@ -406,10 +442,16 @@ class B2dropClass(Storage):
             print_tb(f"E: could not get the share id. {e}")
             # return False
 
-        if int(self.data_transfer_in_to_download_mb) > int(self.data_transfer_in_requested):
-            log(f" * data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}")
+        if int(self.data_transfer_in_to_download_mb) > int(
+            self.data_transfer_in_requested
+        ):
+            log(
+                f" * data_transfer_in_to_download_MB={self.data_transfer_in_to_download_mb}"
+            )
             log(f" * data_transfer_in_requested={self.data_transfer_in_requested}")
-            log("E: Requested size to download the source code and data files is greater than the given amount")
+            log(
+                "E: Requested size to download the source code and data files is greater than the given amount"
+            )
             return self.full_refund()
 
         if not self.cache_wrapper():
@@ -453,7 +495,9 @@ class B2dropClass(Storage):
                         log(shared_id)
                     except Exception as e:
                         print_tb(e)
-                        log(f"E: [yellow]share_id[/yellow] cannot be detected from the key={share_key}")
+                        log(
+                            f"E: [yellow]share_id[/yellow] cannot be detected from the key={share_key}"
+                        )
                         return False
 
         return self.sbatch_call()

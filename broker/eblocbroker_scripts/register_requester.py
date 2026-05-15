@@ -54,7 +54,9 @@ def register_requester(self, yaml_fn, is_question=True):
 
     log(f"==> registering {account} as requester")
     if is_byte_str_zero(account):
-        log(f"E: account={account} is not valid, change it in [m]~/.ebloc-broker/cfg.yaml")
+        log(
+            f"E: account={account} is not valid, change it in [m]~/.ebloc-broker/cfg.yaml"
+        )
         raise QuietExit
 
     if len(f_id) >= 128:
@@ -93,11 +95,15 @@ def register_requester(self, yaml_fn, is_question=True):
         }
         log("new_requester_info=", "yellow", end="")
         log(_requester_info)
-        if is_question and not question_yes_no("==> Would you like to update requester info?"):
+        if is_question and not question_yes_no(
+            "==> Would you like to update requester info?"
+        ):
             return
 
     try:
-        tx = self._register_requester(account, gpg_fingerprint, gmail, f_id, ipfs_address)
+        tx = self._register_requester(
+            account, gpg_fingerprint, gmail, f_id, ipfs_address
+        )
         return self.tx_id(tx)
     except Exception as e:
         print_tb(e)

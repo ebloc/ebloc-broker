@@ -196,7 +196,12 @@ class Workflow:
             self.job_ids[i] = job_id
             log(f"job_id={job_id} | TimeLimit={time_limit}")
             if slurm:
-                cmd = ["scontrol", "update", f"jobid={job_id}", f"TimeLimit={time_limit}"]
+                cmd = [
+                    "scontrol",
+                    "update",
+                    f"jobid={job_id}",
+                    f"TimeLimit={time_limit}",
+                ]
                 run(cmd)
         else:
             job_id = self.dependent_submit_job(i, list(self.G.predecessors(i)), slurm)
@@ -204,7 +209,12 @@ class Workflow:
             log(f"job_id={job_id} | TimeLimit={time_limit}")
             print(list(self.G.predecessors(i)))
             if slurm:
-                cmd = ["scontrol", "update", f"jobid={job_id}", f"TimeLimit={time_limit}"]
+                cmd = [
+                    "scontrol",
+                    "update",
+                    f"jobid={job_id}",
+                    f"TimeLimit={time_limit}",
+                ]
                 run(cmd)
 
     def not_dependent_submit_job(self, i, slurm):
@@ -255,7 +265,7 @@ class Workflow:
             core_num = self.core_numbers[self.job_map[int(i)]]
 
         if len(predecessors) == 1:
-            if not predecessors[0] in self.job_ids:
+            if predecessors[0] not in self.job_ids:
                 #: if the required job is not submitted to Slurm, recursive call
                 self.dependency_job(predecessors[0], slurm)
 
@@ -304,7 +314,9 @@ class Workflow:
         else:
             job_id_str = ""
             for j in predecessors:
-                if j not in self.job_ids:  # if the required job is not submitted to Slurm, recursive call
+                if (
+                    j not in self.job_ids
+                ):  # if the required job is not submitted to Slurm, recursive call
                     self.dependency_job(j, slurm)
 
                 job_id_str += f"{self.job_ids[j]}:"
@@ -384,7 +396,15 @@ class Workflow:
 
         return G
 
-    def sbatch_from_dot(self, dot_fn, job_key="job", index="", job_bn="", core_numbers=1, time_limits="0-0:2"):
+    def sbatch_from_dot(
+        self,
+        dot_fn,
+        job_key="job",
+        index="",
+        job_bn="",
+        core_numbers=1,
+        time_limits="0-0:2",
+    ):
         self.job_count = 0
         for node in list(self.G.nodes):
             if node != "\\n":
@@ -445,7 +465,16 @@ def test_0():
 
 def test_1():
     G = nx.DiGraph(directed=True)
-    edges = [("A", "D"), ("B", "D"), ("C", "D"), ("A", "E"), ("B", "E"), ("C", "E"), ("D", "F"), ("E", "F")]
+    edges = [
+        ("A", "D"),
+        ("B", "D"),
+        ("C", "D"),
+        ("A", "E"),
+        ("B", "E"),
+        ("C", "E"),
+        ("D", "F"),
+        ("E", "F"),
+    ]
     G.add_edges_from(edges)
     log(nx.to_dict_of_dicts(G))
     w = Workflow(G)

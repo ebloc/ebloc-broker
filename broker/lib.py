@@ -13,7 +13,14 @@ from threading import Thread
 
 from broker import cfg, config
 from broker._utils._log import WHERE, br
-from broker._utils.tools import _remove, gdrive_about_user, is_process_on, log, mkdir, print_tb
+from broker._utils.tools import (
+    _remove,
+    gdrive_about_user,
+    is_process_on,
+    log,
+    mkdir,
+    print_tb,
+)
 from broker.config import env
 from broker.errors import Terminate
 from broker.utils import byte_to_mb, popen_communicate, run
@@ -99,7 +106,9 @@ def session_start_msg(bn):
 def calculate_size(path, _type="MB") -> float:
     """Return the size of the given path in MB, bytes if wanted."""
     p1 = subprocess.Popen(["du", "-sb", path], stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(
+        ["awk", "{print $1}"], stdin=p1.stdout, stdout=subprocess.PIPE
+    )
     p1.stdout.close()  # type: ignore
     output = p2.communicate()[0].decode("utf-8").strip()
     byte_size = float(output)
@@ -177,7 +186,9 @@ def echo_grep_awk(str_data, grep_str, column):
     p1 = subprocess.Popen(["echo", str_data], stdout=subprocess.PIPE)
     p2 = subprocess.Popen(["grep", grep_str], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
-    p3 = subprocess.Popen(["awk", "{print $" + column + "}"], stdin=p2.stdout, stdout=subprocess.PIPE)
+    p3 = subprocess.Popen(
+        ["awk", "{print $" + column + "}"], stdin=p2.stdout, stdout=subprocess.PIPE
+    )
     p2.stdout.close()
     return p3.communicate()[0].decode("utf-8").strip()
 
@@ -187,7 +198,9 @@ def eblocbroker_function_call(func, max_retries):
         try:
             return func()
         except Exception as e:
-            log(f"E: {e} {func} | attempt={idx} {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}")
+            log(
+                f"E: {e} {func} | attempt={idx} {datetime.today().strftime('%Y-%m-%d %H:%M:%S')}"
+            )
             log("sleep 15 seconds, will try again...")
             time.sleep(15)
 
@@ -246,7 +259,9 @@ def pre_check():
     if env.IS_GDRIVE_USE:
         output = gdrive_about_user()
         if "@gmail.com" in output and output != env.GMAIL:
-            raise Terminate("User at 'gdrive about' does not match with the registered gmail.")
+            raise Terminate(
+                "User at 'gdrive about' does not match with the registered gmail."
+            )
 
     if not exists(env.PROGRAM_PATH / "slurm_mail_prog.sh"):
         msg = f"The `slurm_mail_prog.sh` scripts is not located in {env.PROGRAM_PATH}"

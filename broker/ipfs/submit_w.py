@@ -69,7 +69,10 @@ def pre_check(job: Job, requester):
             raise Exception("Install pigz.\nbrew install pigz")
 
     if not os.path.isfile(env.GPG_PASS_FILE):
-        log(f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption", is_wrap=True)
+        log(
+            f"E: Please store your gpg password in the [m]{env.GPG_PASS_FILE}[/m] file for decryption",
+            is_wrap=True,
+        )
         raise QuietExit
 
     start_ipfs_daemon()
@@ -115,7 +118,9 @@ def submit_ipfs_calc(job: Job, is_pass=False, is_verbose=True):
 
     main_storage_id = job.storage_ids[0]
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
+    check_link_folders(
+        job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass
+    )
     if main_storage_id == StorageID.IPFS:
         if is_verbose:
             log("==> submitting source code through [blue]IPFS[/blue]")
@@ -123,7 +128,9 @@ def submit_ipfs_calc(job: Job, is_pass=False, is_verbose=True):
         if is_verbose:
             log("==> submitting source code through [blue]IPFS_GPG[/blue]")
     else:
-        raise Exception("Please provide IPFS or IPFS_GPG storage type for the source code")
+        raise Exception(
+            "Please provide IPFS or IPFS_GPG storage type for the source code"
+        )
 
     # provider_info = Ebb.get_provider_info(job.provider_addr)
     targets = []
@@ -159,8 +166,16 @@ def main():
 
     yaml_fn = Path.home() / "ebloc-broker" / "broker" / "ipfs" / "job_workflow.yaml"
     yaml_original = Yaml(yaml_fn)
-    yaml_original["config"]["source_code"]["path"] = f"/home/alper/test_eblocbroker/workflow/{n}_{edges}"
-    BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
+    yaml_original["config"]["source_code"]["path"] = (
+        f"/home/alper/test_eblocbroker/workflow/{n}_{edges}"
+    )
+    BASE = (
+        Path.home()
+        / "test_eblocbroker"
+        / "test_data"
+        / "base"
+        / "source_code_wf_random"
+    )
     yaml_fn_jobs = BASE / "jobs.yaml"
     yaml_jobs = Yaml(yaml_fn_jobs)
     for _job in yaml_jobs["config"]["jobs"]:

@@ -92,9 +92,13 @@ def is_on() -> bool:
     log("==> Checking slurm[yellow]... ", end="")
     processes = ["\<slurmd\>", "\<slurmdbd\>", "\<slurmctld\>"]
     for process_name in processes:
-        if not is_process_on(process_name, process_name, process_count=0, is_print=False):
+        if not is_process_on(
+            process_name, process_name, process_count=0, is_print=False
+        ):
             log("[  [red]failed[/red]  ]", "bold")
-            process_name = process_name.replace("\\", "").replace(">", "").replace("<", "")
+            process_name = (
+                process_name.replace("\\", "").replace(">", "").replace("<", "")
+            )
             raise Terminate(
                 f"E: '{process_name}' is not running in the background. Please run:\n"
                 f"'sudo {env.BASH_SCRIPTS_PATH}/run_slurm.sh'"
@@ -102,7 +106,9 @@ def is_on() -> bool:
 
     output = run(["sinfo", "-N", "-l"])
     if "PARTITION" not in output:
-        log("E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n")
+        log(
+            "E: sinfo returns invalid string. Please run:\nsudo ./bash_scripts/run_slurm.sh\n"
+        )
         if not output:
             log(f"E: {output}")
         try:
@@ -112,7 +118,9 @@ def is_on() -> bool:
         except:
             return False
     elif "sinfo: error" in output:
-        log(f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start")
+        log(
+            f"Error on munged: \n {output}\nrun:\nsudo munged -f \n/etc/init.d/munge start"
+        )
         return False
     else:
         log(ok())
@@ -163,7 +171,9 @@ def get_elapsed_time(slurm_job_id) -> int:
         elapsed_day = elapsed_hour[0]
         elapsed_hour = elapsed_hour[1]
 
-    elapsed_time = int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
+    elapsed_time = (
+        int(elapsed_day) * 1440 + int(elapsed_hour) * 60 + int(elapsed_minute) + 1
+    )
     log(f"[cyan]{elapsed_time}[/cyan] minuntes")
     return elapsed_time
 

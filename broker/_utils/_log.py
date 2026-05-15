@@ -103,7 +103,9 @@ class Log:
     #     with Halo(text="Loading", spinner="line", placement="right"):
     #         time.sleep(6)
     #
-    def print_color(self, text: str, color=None, is_bold=True, end="\n", highlight=True) -> None:
+    def print_color(
+        self, text: str, color=None, is_bold=True, end="\n", highlight=True
+    ) -> None:
         """Print string in color format."""
         if text[0:3] in self.inner_bullets:
             if color and text == "==> ":
@@ -120,12 +122,16 @@ class Log:
             text = text[2:]
 
         if is_bold:
-            console.print(f"[bold][{color}]{text}[{color}][/bold]", end=end, highlight=highlight)
+            console.print(
+                f"[bold][{color}]{text}[{color}][/bold]", end=end, highlight=highlight
+            )
         else:
             if color in ("white", "", None) and "[" not in text:
                 print(text, end=end)
             else:
-                console.print(f"[{color}]{text}[/{color}]", end=end, highlight=highlight)
+                console.print(
+                    f"[{color}]{text}[/{color}]", end=end, highlight=highlight
+                )
 
     def pre_color_check(self, text, color, is_bold):
         """Check color for substring."""
@@ -218,7 +224,9 @@ def console_ruler(msg="", character="=", color="cyan", style="green", fn=""):
             fn = "program.log"
 
     if fn not in ll.console:
-        ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
+        ll.console[fn] = Console(
+            file=open(fn, "a"), force_terminal=True, theme=custom_theme
+        )
 
     if msg:
         console.rule(f"[bold][{color}]{msg}", characters=character, style=style)
@@ -228,7 +236,9 @@ def console_ruler(msg="", character="=", color="cyan", style="green", fn=""):
         ll.console[fn].rule(characters=character, style=style)
 
 
-def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, highlight=True):
+def _log(
+    text, color, is_bold, fn, end="\n", is_write=True, is_output=True, highlight=True
+):
     if not is_output:
         is_print = is_output
     else:
@@ -238,7 +248,9 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
         # prevent writing Thread's output onto console
         is_print = False
 
-    text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(text, color, is_bold)
+    text, _color, _len, is_bullet, is_r, is_bold = ll.pre_color_check(
+        text, color, is_bold
+    )
     if is_bold and not is_bullet:
         _text = f"[bold]{text}[/bold]"
     else:
@@ -249,12 +261,17 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
 
     if color and color != "white":
         if is_print:
-            if not IS_THREADING_MODE_PRINT or threading.current_thread().name == "MainThread":
+            if (
+                not IS_THREADING_MODE_PRINT
+                or threading.current_thread().name == "MainThread"
+            ):
                 if is_bullet:
                     _msg = f"[bold][{_color}]{is_r}{text[:_len]}[/{_color}][/bold][{color}]{text[_len:]}[/{color}]"
                     console.print(_msg, end=end)
                 else:
-                    ll.print_color(str(text), color, is_bold=is_bold, highlight=highlight, end=end)
+                    ll.print_color(
+                        str(text), color, is_bold=is_bold, highlight=highlight, end=end
+                    )
 
         if is_bold:
             _text = f"[bold]{text[_len:]}[\bold]"
@@ -271,9 +288,16 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
                 )
             else:
                 if color:
-                    ll.console[fn].print(f"[{color}]{_text}[/{color}]", end=end, highlight=highlight, soft_wrap=True)
+                    ll.console[fn].print(
+                        f"[{color}]{_text}[/{color}]",
+                        end=end,
+                        highlight=highlight,
+                        soft_wrap=True,
+                    )
                 else:
-                    ll.console[fn].print(_text, end=end, highlight=highlight, soft_wrap=True)
+                    ll.console[fn].print(
+                        _text, end=end, highlight=highlight, soft_wrap=True
+                    )
     else:
         text_to_write = ""
         if is_bullet:
@@ -288,7 +312,9 @@ def _log(text, color, is_bold, fn, end="\n", is_write=True, is_output=True, high
             console.print(text_to_write, highlight=highlight, end=end)
 
         if is_write and IS_WRITE:
-            ll.console[fn].print(text_to_write, end=end, highlight=highlight, soft_wrap=True)
+            ll.console[fn].print(
+                text_to_write, end=end, highlight=highlight, soft_wrap=True
+            )
 
 
 def log(
@@ -368,10 +394,14 @@ def log(
         else:
             base_str = " \ \n    "
 
-        text = base_str.join(textwrap.wrap(text, width, break_long_words=False, break_on_hyphens=False))
+        text = base_str.join(
+            textwrap.wrap(text, width, break_long_words=False, break_on_hyphens=False)
+        )
 
     if is_wrap:
-        text = "\n".join(textwrap.wrap(text, width, break_long_words=False, break_on_hyphens=False))
+        text = "\n".join(
+            textwrap.wrap(text, width, break_long_words=False, break_on_hyphens=False)
+        )
 
     if is_write and IS_WRITE:
         if threading.current_thread().name != "MainThread" and cfg.IS_THREADING_ENABLED:
@@ -387,7 +417,9 @@ def log(
         if fn not in ll.console:
             #: Indicated rich console to write into given fn
             # __ https://stackoverflow.com/a/6826099/2402577
-            ll.console[fn] = Console(file=open(fn, "a"), force_terminal=True, theme=custom_theme)
+            ll.console[fn] = Console(
+                file=open(fn, "a"), force_terminal=True, theme=custom_theme
+            )
 
     if isinstance(text, list):
         pprint(text)

@@ -13,7 +13,11 @@ from broker._utils.yaml import Yaml
 
 def is_docker() -> bool:
     path = "/proc/self/cgroup"
-    return os.path.exists("/.dockerenv") or os.path.isfile(path) and any("docker" in line for line in open(path))
+    return (
+        os.path.exists("/.dockerenv")
+        or os.path.isfile(path)
+        and any("docker" in line for line in open(path))
+    )
 
 
 def get_git_root(path) -> str:

@@ -29,7 +29,9 @@ def submit_b2drop(job: Job, is_pass=False, required_confs=1):
     login(oc_client, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
     provider = Ebb.w3.toChecksumAddress(job.provider_addr)
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
+    check_link_folders(
+        job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass
+    )
     return submit(provider, requester, job, required_confs=required_confs)
 
 

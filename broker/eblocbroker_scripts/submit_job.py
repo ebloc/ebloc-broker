@@ -16,7 +16,9 @@ ipfs = cfg.ipfs
 def is_provider_valid(self, provider):
     provider = self.w3.toChecksumAddress(provider)
     if not self.does_provider_exist(provider):
-        raise ValueError(f"Requested provider's Ethereum address {provider} does not registered")
+        raise ValueError(
+            f"Requested provider's Ethereum address {provider} does not registered"
+        )
 
 
 def is_requester_valid(self, _from):
@@ -27,7 +29,9 @@ def is_requester_valid(self, _from):
 
     if not self._is_orc_id_verified(_from):
         if orcid:
-            raise Exception(f"Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
+            raise Exception(
+                f"Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified"
+            )
 
         raise Exception(f"Requester({_from})'s orcid is not registered")
 
@@ -40,7 +44,9 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
     is_use_ipfs = False
     for storage_id in job.storage_ids:
         if storage_id > 4:
-            raise Exception("Wrong storage_ids value is given. Please provide from 0 to 4")
+            raise Exception(
+                "Wrong storage_ids value is given. Please provide from 0 to 4"
+            )
 
         if storage_id in [StorageID.IPFS, StorageID.IPFS_GPG]:
             is_use_ipfs = True
@@ -68,14 +74,20 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     for idx, core in enumerate(job.cores):
         if core > provider_info["available_core_num"]:
-            raise Exception(f"Requested {core}, which is {core}, is greater than the provider's core number")
+            raise Exception(
+                f"Requested {core}, which is {core}, is greater than the provider's core number"
+            )
 
         if job.run_time[idx] == 0:
-            raise Exception(f"run_time{br(idx)} is provided as 0. Please provide non-zero value")
+            raise Exception(
+                f"run_time{br(idx)} is provided as 0. Please provide non-zero value"
+            )
 
     for core_min in job.run_time:
         if core_min > 14400:
-            raise Exception("run_time provided greater than 14400. Please provide smaller value")
+            raise Exception(
+                "run_time provided greater than 14400. Please provide smaller value"
+            )
 
     for cache_type in job.cache_types:
         if cache_type > 1:
@@ -93,7 +105,9 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
                 ipfs.swarm_connect(provider_info["ipfs_address"])
             except Exception as e:
                 log(f"E: {e}")
-                if not cfg.IS_FULL_TEST and not question_yes_no("==> Would you like to continue?"):
+                if not cfg.IS_FULL_TEST and not question_yes_no(
+                    "==> Would you like to continue?"
+                ):
                     raise QuietExit from e
 
     for idx, source_code_hash in enumerate(job.code_hashes_str):
@@ -105,10 +119,14 @@ def check_before_submit(self, provider, _from, provider_info, key, job):
 
     balance = self.get_balance(job.requester)
     if job.price > Cent(balance):
-        raise Exception(f"E: Calculated job_price={job.price} is greater than requester's balance={Cent(balance)}")
+        raise Exception(
+            f"E: Calculated job_price={job.price} is greater than requester's balance={Cent(balance)}"
+        )
 
 
-def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, is_verbose=False):
+def submit_job(
+    self, provider, key, job: Job, requester=None, required_confs=1, is_verbose=False
+):
     """Submit job.
 
     - How to properly get exception messages in Python:
@@ -125,7 +143,9 @@ def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, 
         provider_info = self.get_provider_info(provider)
         if is_verbose:
             log(f"provider's available_core_num={provider_info['available_core_num']}")
-            log(f"provider's price_core_min={Cent(provider_info['price_core_min'])._to()} [blue]usd")
+            log(
+                f"provider's price_core_min={Cent(provider_info['price_core_min'])._to()} [blue]usd"
+            )
     except Exception as e:
         print_tb(e)
         raise e
@@ -167,9 +187,13 @@ def submit_job(self, provider, key, job: Job, requester=None, required_confs=1, 
         if Ebb.is_transaction_valid(tx_hash):
             return tx_hash
         else:
-            raise Exception(f"tx_hash={tx_hash} is not a valid transaction hash.") from e
+            raise Exception(
+                f"tx_hash={tx_hash} is not a valid transaction hash."
+            ) from e
     except Exception as e:
-        if "authentication needed: password or unlock" in getattr(e, "message", repr(e)):
+        if "authentication needed: password or unlock" in getattr(
+            e, "message", repr(e)
+        ):
             raise QuietExit from None
 
         raise e  # "No valid Tx receipt is generated"

@@ -36,7 +36,10 @@ def get_valid_eth_address(prompt):
 
 
 def main():
-    if not _env.cfg["eth_address"] or _env.cfg["eth_address"] == "0x0000000000000000000000000000000000000000":
+    if (
+        not _env.cfg["eth_address"]
+        or _env.cfg["eth_address"] == "0x0000000000000000000000000000000000000000"
+    ):
         _env.cfg["eth_address"] = get_valid_eth_address("Ethereum Address: ")
     else:
         while True:

@@ -20,7 +20,15 @@ from broker.config import env
 from broker.errors import QuietExit
 from broker.lib import calculate_size, run
 from broker.libs import _git
-from broker.utils import cd, compress_folder, log, popen_communicate, print_tb, sleep_timer, terminate
+from broker.utils import (
+    cd,
+    compress_folder,
+    log,
+    popen_communicate,
+    print_tb,
+    sleep_timer,
+    terminate,
+)
 
 Ebb = cfg.Ebb
 
@@ -53,7 +61,7 @@ def _upload_results(encoded_share_token, output_file_name):
         f"@{output_file_name}",
         f"https://b2drop.eudat.eu/public.php/webdav/{output_file_name}",
         "-w",
-        "%{http_code}\n"
+        "%{http_code}\n",
         # "-v"  # verbose
     ]
 
@@ -111,17 +119,23 @@ def _login(fn, user, password_path, message) -> None:
         except Exception as e:
             log(str(e))
             if "Errno 110" in str(e) or "Connection timed out" in str(e):
-                log(f"warning: sleeping for {sleep_duration} seconds to overcome the max retries that exceeded")
+                log(
+                    f"warning: sleeping for {sleep_duration} seconds to overcome the max retries that exceeded"
+                )
                 sleep_timer(sleep_duration)
             else:
-                terminate("Could not connect into [blue]eudat using config.oc.login()[/blue]")
+                terminate(
+                    "Could not connect into [blue]eudat using config.oc.login()[/blue]"
+                )
 
     log("E: user is `None` object")
     terminate()
 
 
 def login(user, password_path: Path, fn: str) -> None:
-    message = f"Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
+    message = (
+        f"Login into owncloud from the dumped_object=[m]{fn}[/m] [yellow]...[/yellow]"
+    )
     if not user:
         log("E: Given user is empty string")
         terminate()
@@ -171,7 +185,9 @@ def initialize_folder(folder_to_share, username) -> str:
 
     try:
         tar_dst = f"{tar_hash}_{username}/{tar_hash}.tar.gz"
-        log("==> Uploading into [g]B2DROP[/g] this may take some time depending on the file size...")
+        log(
+            "==> Uploading into [g]B2DROP[/g] this may take some time depending on the file size..."
+        )
         is_already_uploaded = False
         with suppress(Exception):
             # File is first time created
@@ -234,7 +250,9 @@ def submit(provider, requester, job, required_confs=1):
         if required_confs >= 1:
             tx_receipt = get_tx_status(tx_hash)
             if tx_receipt["status"] == 1:
-                processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(
+                    tx_receipt, errors=DISCARD
+                )
                 log(vars(processed_logs[0].args))
                 try:
                     processed_logs[0].args["index"]
@@ -262,7 +280,9 @@ def _share_folders(provider_info, username, folders_hash):
             share_single_folder(f"{folder_hash}_{username}", provider_info["f_id"])
         except Exception as e:
             print_tb(e)
-            log(f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}")
+            log(
+                f"E: Failed sharing folder={folder} with [yellow]{provider_info['f_id']}"
+            )
             log("==> Maybe folder with same name is already shared?")
             raise e
 
@@ -321,6 +341,12 @@ def _submit(provider, requester, job, required_confs=1):
                 "transaction from does not have enough funds."
             )
 
-        return job.Ebb.submit_job(provider_addr_to_submit, job_key, job, requester, required_confs=required_confs)
+        return job.Ebb.submit_job(
+            provider_addr_to_submit,
+            job_key,
+            job,
+            requester,
+            required_confs=required_confs,
+        )
     except Exception as e:
         raise e

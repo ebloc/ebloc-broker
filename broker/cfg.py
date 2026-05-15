@@ -4,6 +4,7 @@
 
 __ https://stackoverflow.com/a/12413139/2402577
 """
+
 from rich.console import Console
 
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
@@ -16,7 +17,9 @@ TX_TIMEOUT = 1800
 IS_THREAD_JOIN = False
 IS_FULL_TEST = False  # check whether the full-long test is applied
 IS_FIRST_CYCLE = True
-BERG_CMPE_IP = "79.123.176.66"  # "berg-cmpe-boun.duckdns.org" // may be down once in a while
+BERG_CMPE_IP = (
+    "79.123.176.66"  # "berg-cmpe-boun.duckdns.org" // may be down once in a while
+)
 NETWORK_ID = "bloxberg"
 # NETWORK_ID = "bloxberg_boun"
 # NETWORK_ID = "bloxberg_core"

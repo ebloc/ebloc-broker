@@ -152,7 +152,9 @@ class Contract(Base):
     def to_gwei(self, value):
         return self.w3.toWei(value, "gwei")
 
-    def _wait_for_transaction_receipt(self, tx_hash, compact=False, is_verbose=False) -> TxReceipt:
+    def _wait_for_transaction_receipt(
+        self, tx_hash, compact=False, is_verbose=False
+    ) -> TxReceipt:
         """Wait till the tx is deployed."""
         if isinstance(tx_hash, TransactionReceipt):
             tx_hash = tx_hash.txid
@@ -179,7 +181,10 @@ class Contract(Base):
 
             if is_verbose:
                 log()
-                log(f"==> attempt={attempt} | sleeping_for={poll_latency} seconds ", end="")
+                log(
+                    f"==> attempt={attempt} | sleeping_for={poll_latency} seconds ",
+                    end="",
+                )
 
             attempt += 1
             time.sleep(poll_latency)
@@ -210,9 +215,13 @@ class Contract(Base):
             print_tb(e)
             return False
 
-        block_number: int = self.w3.eth.get_transaction(contract["eBlocBroker"]["tx_hash"]).blockNumber
+        block_number: int = self.w3.eth.get_transaction(
+            contract["eBlocBroker"]["tx_hash"]
+        ).blockNumber
         if not block_number:
-            raise Exception("Contract is not available on the blockchain, is it synced?")
+            raise Exception(
+                "Contract is not available on the blockchain, is it synced?"
+            )
 
         return block_number
 
@@ -275,7 +284,9 @@ class Contract(Base):
                 account = self.w3.eth.accounts[account_id]
                 return self.w3.toChecksumAddress(account)
             except Exception as e:
-                raise Exception("Given index account does not exist, check .eblocpoa/keystore") from e
+                raise Exception(
+                    "Given index account does not exist, check .eblocpoa/keystore"
+                ) from e
         else:
             raise Exception(f"Invalid account {address} is provided")
 
@@ -290,7 +301,12 @@ class Contract(Base):
 
     def transfer(self, amount, from_account, to_account, required_confs=1):
         """Transfer acount's ether balance."""
-        tx = from_account.transfer(to_account, amount, gas_price=f"{GAS_PRICE} gwei", required_confs=required_confs)
+        tx = from_account.transfer(
+            to_account,
+            amount,
+            gas_price=f"{GAS_PRICE} gwei",
+            required_confs=required_confs,
+        )
         return self.tx_id(tx)
 
     def fetch_logs(self):
@@ -334,7 +350,10 @@ class Contract(Base):
             raise e
 
         contract_address = self.w3.toChecksumAddress(contract["eBlocBroker"]["address"])
-        if self.w3.eth.get_code(contract_address) == "0x" or self.w3.eth.get_code(contract_address) == b"":
+        if (
+            self.w3.eth.get_code(contract_address) == "0x"
+            or self.w3.eth.get_code(contract_address) == b""
+        ):
             raise Exception("Empty contract")
 
         log(f"==> [y]contract_address[/y]=[cyan]{contract_address.lower()}", h=False)
@@ -437,7 +456,9 @@ class Contract(Base):
                     print_tb(e)
                     raise QuietExit from e
 
-                if "There is another transaction with same nonce in the queue" in str(e):
+                if "There is another transaction with same nonce in the queue" in str(
+                    e
+                ):
                     log(f"warning: Tx: {e}", is_code=True)
                 else:
                     log(f"E: Tx: {e}")
@@ -473,7 +494,9 @@ class Contract(Base):
                 if "Transaction cost exceeds current gas limit" in str(e):
                     self.gas -= 10000
             except KeyboardInterrupt:
-                log(f"warning: Timeout Awaiting Transaction in the mempool | gas_price={self.gas_price}")
+                log(
+                    f"warning: Timeout Awaiting Transaction in the mempool | gas_price={self.gas_price}"
+                )
                 if self.gas_price < 1:
                     self.gas_price *= 1.13
                     log(f"==> new_gas_price={self.gas_price}")
@@ -502,7 +525,9 @@ class Contract(Base):
     # ~~~~~~~~~~~~ #
     # Transactions #
     # ~~~~~~~~~~~~ #
-    def _submit_job(self, required_confs, requester, job_price, *args) -> "TransactionReceipt":
+    def _submit_job(
+        self, required_confs, requester, job_price, *args
+    ) -> "TransactionReceipt":
         try:
             # self.approve(env.CONTRACT_ADDRESS, requester, job_price)
             log()
@@ -582,7 +607,9 @@ class Contract(Base):
         self.gas_price = GAS_PRICE
         self._from = self.w3.toChecksumAddress(_from)
         self.required_confs = 1
-        return self.timeout_wrapper("depositStorage", "eBlocBroker", data_owner, code_hash)
+        return self.timeout_wrapper(
+            "depositStorage", "eBlocBroker", data_owner, code_hash
+        )
 
     def _register_requester(self, _from, *args) -> "TransactionReceipt":
         self.gas_price = GAS_PRICE
@@ -660,13 +687,20 @@ class Contract(Base):
         self.required_confs = 0
         return self.timeout_wrapper("setDataVerified", "eBlocBroker", *args)
 
-    def set_job_state_running(self, key, index, job_id, start_timestamp) -> "TransactionReceipt":
+    def set_job_state_running(
+        self, key, index, job_id, start_timestamp
+    ) -> "TransactionReceipt":
         """Set the job state as running."""
         _from = self.w3.toChecksumAddress(env.PROVIDER_ID)
         self._from = _from
         self.required_confs = 1  # "1" safer to wait for confirmation
         return self.timeout_wrapper(
-            "setJobStateRunning", "eBlocBroker", key, int(index), int(job_id), int(start_timestamp)
+            "setJobStateRunning",
+            "eBlocBroker",
+            key,
+            int(index),
+            int(job_id),
+            int(start_timestamp),
         )
 
     def _process_payment(self, *args) -> "TransactionReceipt":
@@ -690,7 +724,9 @@ class Contract(Base):
             if env.IS_TESTNET:
                 return self.eBlocBroker.getRegisteredDataBlockNumbers(*args)
             else:
-                return self.eBlocBroker.functions.getRegisteredDataBlockNumbers(*args).call()
+                return self.eBlocBroker.functions.getRegisteredDataBlockNumbers(
+                    *args
+                ).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
@@ -714,7 +750,9 @@ class Contract(Base):
             if env.IS_TESTNET:
                 return self.eBlocBroker.getUpdatedProviderPricesBlocks(account)
             else:
-                return self.eBlocBroker.functions.getUpdatedProviderPricesBlocks(account).call()
+                return self.eBlocBroker.functions.getUpdatedProviderPricesBlocks(
+                    account
+                ).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
@@ -752,9 +790,15 @@ class Contract(Base):
     def _get_requester_info(self, requester):
         if self.eBlocBroker is not None:
             if env.IS_TESTNET:
-                committed_block_num = self.eBlocBroker.getRequesterCommittmedBlock(requester)
+                committed_block_num = self.eBlocBroker.getRequesterCommittmedBlock(
+                    requester
+                )
             else:
-                committed_block_num = self.eBlocBroker.functions.getRequesterCommittmedBlock(requester).call()
+                committed_block_num = (
+                    self.eBlocBroker.functions.getRequesterCommittmedBlock(
+                        requester
+                    ).call()
+                )
 
             return committed_block_num, self.get_user_orcid(requester)
         else:
@@ -831,7 +875,9 @@ class Contract(Base):
             if env.IS_TESTNET:
                 return self.eBlocBroker.getProviderReceiptNode(provideress, index)
             else:
-                return self.eBlocBroker.functions.getProviderReceiptNode(provideress, index).call()
+                return self.eBlocBroker.functions.getProviderReceiptNode(
+                    provideress, index
+                ).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
@@ -865,9 +911,11 @@ class Contract(Base):
                     provider, prices_set_block_number
                 )
             else:
-                block_read_from, provider_price_info = self.eBlocBroker.functions.getProviderInfo(
-                    provider, prices_set_block_number
-                ).call()
+                block_read_from, provider_price_info = (
+                    self.eBlocBroker.functions.getProviderInfo(
+                        provider, prices_set_block_number
+                    ).call()
+                )
 
             return block_read_from, provider_price_info
         else:
@@ -912,7 +960,9 @@ class Contract(Base):
             if env.IS_TESTNET:
                 return self.eBlocBroker.getProviderSetBlockNumbers(provider)[-1]
             else:
-                return self.eBlocBroker.functions.getProviderSetBlockNumbers(provider).call()[-1]
+                return self.eBlocBroker.functions.getProviderSetBlockNumbers(
+                    provider
+                ).call()[-1]
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
@@ -929,11 +979,15 @@ class Contract(Base):
             if env.IS_TESTNET:
                 return self.eBlocBroker.getStorageInfo(provider, requester, code_hash)
             else:
-                return self.eBlocBroker.functions.getStorageInfo(provider, requester, code_hash).call()
+                return self.eBlocBroker.functions.getStorageInfo(
+                    provider, requester, code_hash
+                ).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 
-    def get_storage_info(self, code_hash, provider=env.PROVIDER_ID, data_owner=cfg.ZERO_ADDRESS):
+    def get_storage_info(
+        self, code_hash, provider=env.PROVIDER_ID, data_owner=cfg.ZERO_ADDRESS
+    ):
         """Return the received storage deposit for the corresponding source code hash."""
         if isinstance(code_hash, str):
             if len(code_hash) == 32:
@@ -946,7 +1000,9 @@ class Contract(Base):
             if env.IS_TESTNET:
                 return self.eBlocBroker.getStorageInfo(provider, data_owner, code_hash)
             else:
-                return self.eBlocBroker.functions.getStorageInfo(provider, data_owner, code_hash).call()
+                return self.eBlocBroker.functions.getStorageInfo(
+                    provider, data_owner, code_hash
+                ).call()
         else:
             raise Exception("Contract object's eBlocBroker variable is None")
 

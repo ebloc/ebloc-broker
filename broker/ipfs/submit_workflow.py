@@ -55,7 +55,9 @@ def set_patch_results(jobs):
         job_id = 0
         output = Ebb.get_job_info(provider, key, index, job_id)
         ipfs_hash = output["result_ipfs_hash"]
-        job.patch_ipfs_hash = bytes32_to_ipfs(ipfs_hash)  # QmWWyWXL1kwYYVHq5zrhSQp9GuAV2bKKGeA8LCyRkdzMfk
+        job.patch_ipfs_hash = bytes32_to_ipfs(
+            ipfs_hash
+        )  # QmWWyWXL1kwYYVHq5zrhSQp9GuAV2bKKGeA8LCyRkdzMfk
 
 
 def get_input_files(jobs):

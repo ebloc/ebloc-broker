@@ -31,7 +31,12 @@ def main():
     logged_jobs = event_filter.get_all_entries()
     for job in reversed(logged_jobs):
         job_info = cfg.Ebb.get_job_info(
-            job["args"]["provider"], job["args"]["jobKey"], job["args"]["index"], 0, job["blockNumber"], is_print=False
+            job["args"]["provider"],
+            job["args"]["jobKey"],
+            job["args"]["index"],
+            0,
+            job["blockNumber"],
+            is_print=False,
         )
         jobs.append(job_info)
 
@@ -39,7 +44,7 @@ def main():
     while True:
         with console:
             log(
-                f"\r * {_date() } latest_block_number={block_number} | is_web3_connected={is_connected}",
+                f"\r * {_date()} latest_block_number={block_number} | is_web3_connected={is_connected}",
                 "bold",
                 end="",
             )
@@ -48,13 +53,25 @@ def main():
 
             columns = 80
             columns_size = int(int(columns) / 2 - 12)
-            log("\r" + "=" * columns_size + "[bold cyan] providers [/bold cyan]" + "=" * columns_size, "g")
+            log(
+                "\r"
+                + "=" * columns_size
+                + "[bold cyan] providers [/bold cyan]"
+                + "=" * columns_size,
+                "g",
+            )
             for k, v in providers_info.items():
                 log(f"\r** provider_address={k}")
                 log(v)
 
             columns_size = int(int(columns) / 2 - 9)
-            log("\r" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size, "g")
+            log(
+                "\r"
+                + "=" * columns_size
+                + "[bold cyan] jobs [/bold cyan]"
+                + "=" * columns_size,
+                "g",
+            )
             for job in jobs:
                 log(
                     f"\r==> {job['job_key']} {job['index']} {job['provider']} "

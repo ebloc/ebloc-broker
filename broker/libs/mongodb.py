@@ -56,7 +56,16 @@ class MongoBroker(BaseMongoClass):
         super().__init__(mc, collection)
         self.share_id_coll = self.mc["ebloc_broker"]["share_id"]
 
-    def add_item(self, job_key, index, source_code_hash_list, requester_id, timestamp, cloud_storage_id, job_info):
+    def add_item(
+        self,
+        job_key,
+        index,
+        source_code_hash_list,
+        requester_id,
+        timestamp,
+        cloud_storage_id,
+        job_info,
+    ):
         """Adding job info along with its cache_duration into mongoDB."""
         item = {
             "job_key": job_key,
@@ -71,7 +80,9 @@ class MongoBroker(BaseMongoClass):
             "receieved": False,
             "set_job_state_running_tx": "",
         }
-        res = self.collection.replace_one({"job_key": job_key, "index": index}, item, True)
+        res = self.collection.replace_one(
+            {"job_key": job_key, "index": index}, item, True
+        )
         return res.acknowledged
 
     def find_all_share_id(self):
@@ -111,25 +122,33 @@ class MongoBroker(BaseMongoClass):
     def set_job_state_pid(self, key: str, index: int, pid: int):
         """Set tx hash of the job.status as running."""
         output = self.find_id(key, index)
-        res = self.collection.update_one({"_id": output["_id"]}, {"$set": {"pid": pid}}, upsert=False)
+        res = self.collection.update_one(
+            {"_id": output["_id"]}, {"$set": {"pid": pid}}, upsert=False
+        )
         return res.acknowledged
 
     def set_job_state_running_tx(self, key: str, index: int, value: str):
         """Set tx hash of the job.status as running."""
         output = self.find_id(key, index)
         res = self.collection.update_one(
-            {"_id": output["_id"]}, {"$set": {"set_job_state_running_tx": value}}, upsert=False
+            {"_id": output["_id"]},
+            {"$set": {"set_job_state_running_tx": value}},
+            upsert=False,
         )
         return res.acknowledged
 
     def add_item_share_id(self, key, share_id, share_token):
         # TODO: check
         item = {"job_key": key, "share_id": share_id, "share_token": share_token}
-        res = self.share_id_coll.replace_one({"job_key": key}, item, True)  # , "index": 0
+        res = self.share_id_coll.replace_one(
+            {"job_key": key}, item, True
+        )  # , "index": 0
         return res.acknowledged
 
     def get_job_bn(self, requester_addr, key, index) -> int:
-        cursor = self.collection.find({"requester_addr": requester_addr.lower(), "job_key": key, "index": index})
+        cursor = self.collection.find(
+            {"requester_addr": requester_addr.lower(), "job_key": key, "index": index}
+        )
         for document in cursor:
             return document["received_bn"]
 
@@ -142,7 +161,9 @@ class MongoBroker(BaseMongoClass):
         return self.collection.delete_many({}).acknowledged
 
     def is_received(self, requester_addr, key, index, is_print=False) -> bool:
-        cursor = self.collection.find({"requester_addr": requester_addr.lower(), "job_key": key, "index": index})
+        cursor = self.collection.find(
+            {"requester_addr": requester_addr.lower(), "job_key": key, "index": index}
+        )
         if is_print:
             for document in cursor:
                 pprint(document)
@@ -160,7 +181,12 @@ def main():
     mc = MongoClient()
     ebb_mongo = MongoBroker(mc, mc["ebloc_broker"]["cache"])
     parser = argparse.ArgumentParser(description="Process MongoDB.")
-    parser.add_argument("--delete-all", dest="is_delete_all", action="store_true", help="Clean job [cache]")
+    parser.add_argument(
+        "--delete-all",
+        dest="is_delete_all",
+        action="store_true",
+        help="Clean job [cache]",
+    )
     parser.add_argument("--no-delete-all", dest="is_delete_all", action="store_false")
     #: It's very useful in scripting these CLIs to have the flexibility to
     # declare exactly what behavior you want (then you aren't subject to the

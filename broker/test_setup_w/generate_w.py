@@ -24,7 +24,13 @@ def replace_str(fn, sleep_dur):
 
 
 def main():
-    BASE = Path.home() / "test_eblocbroker" / "test_data" / "base" / "source_code_wf_random"
+    BASE = (
+        Path.home()
+        / "test_eblocbroker"
+        / "test_data"
+        / "base"
+        / "source_code_wf_random"
+    )
     yaml_fn = BASE / "jobs.yaml"
     yaml = Yaml(yaml_fn)
     yaml["config"] = {}

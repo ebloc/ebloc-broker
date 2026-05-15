@@ -30,9 +30,17 @@ def start_call(key, index, jobid, slurm_job_id, sleep_dur=0) -> None:
     pid = os.getpid()
     #: save pid of the process as soon as possible
     Ebb.mongo_broker.set_job_state_pid(str(key), int(index), pid)
-    _log.ll.LOG_FILENAME = env.LOG_DIR / "transactions" / env.PROVIDER_ID.lower() / f"{key}_{index}_{jobid}.txt"
+    _log.ll.LOG_FILENAME = (
+        env.LOG_DIR
+        / "transactions"
+        / env.PROVIDER_ID.lower()
+        / f"{key}_{index}_{jobid}.txt"
+    )
     # _log.ll.IS_PRINT = False
-    log(f"~/ebloc-broker/broker/start_code.py {key} {index} {jobid} {slurm_job_id}", "info")
+    log(
+        f"~/ebloc-broker/broker/start_code.py {key} {index} {jobid} {slurm_job_id}",
+        "info",
+    )
     _, _, error = popen_communicate(["scontrol", "show", "job", slurm_job_id])
     if "slurm_load_jobs error: Invalid job id specified" in str(error):
         log(f"E: {error}")
@@ -48,8 +56,13 @@ def start_call(key, index, jobid, slurm_job_id, sleep_dur=0) -> None:
     )
     p2.stdout.close()  # type: ignore
     date = p3.communicate()[0].decode("utf-8").strip()
-    start_ts = check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
-    log(f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {jobid} {start_ts}", is_code=True)
+    start_ts = (
+        check_output(["date", "-d", date, "+'%s'"]).strip().decode("utf-8").strip("'")
+    )
+    log(
+        f"{env.EBB_SCRIPTS}/set_job_state_running.py {key} {index} {jobid} {start_ts}",
+        is_code=True,
+    )
     log(f"==> date={datetime.today().strftime('%Y-%m-%d %H:%M:%S')}")
     log(f"==> pid={pid}")
     for attempt in range(5):
@@ -60,7 +73,9 @@ def start_call(key, index, jobid, slurm_job_id, sleep_dur=0) -> None:
         job, *_ = Ebb._get_job_info(env.PROVIDER_ID, key, int(index), int(jobid))
         state_code = int(job[0])
         if state_code > 1:
-            log(f"warning: State have already changed state_code={state.inv_code[state_code]}({state_code})")
+            log(
+                f"warning: State have already changed state_code={state.inv_code[state_code]}({state_code})"
+            )
             sys.exit(0)
 
         try:
@@ -70,7 +85,9 @@ def start_call(key, index, jobid, slurm_job_id, sleep_dur=0) -> None:
             d = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             log(f"==> set_job_state_running_started {start_ts} | attempt_date={d}")
             log("==> mongo.set_job_state_running_tx", end="")
-            if Ebb.mongo_broker.set_job_state_running_tx(str(key), int(index), str(tx_hash)):
+            if Ebb.mongo_broker.set_job_state_running_tx(
+                str(key), int(index), str(tx_hash)
+            ):
                 log(ok())
             else:
                 log(br("FAILED"))
@@ -87,7 +104,9 @@ def start_call(key, index, jobid, slurm_job_id, sleep_dur=0) -> None:
 
             log(f"==> attempt={attempt}: {e}")
 
-    log("E: all the attempts for the start_code() function is failed  [  [red]ABORT[/red]  ]")
+    log(
+        "E: all the attempts for the start_code() function is failed  [  [red]ABORT[/red]  ]"
+    )
     sys.exit(1)
 
 

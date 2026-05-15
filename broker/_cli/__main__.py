@@ -78,7 +78,9 @@ def about():
 
 def run():
     if _args.tx_receipt:
-        from broker.eblocbroker_scripts.get_transaction_receipt import get_transaction_receipt
+        from broker.eblocbroker_scripts.get_transaction_receipt import (
+            get_transaction_receipt,
+        )
 
         get_transaction_receipt(_args.tx_receipt)
     elif _args.authenticate_orcid:
@@ -121,7 +123,9 @@ def daemon():
         try:
             f = pathlib.Path(__file__).parent.resolve()
             repo = git.Repo(f, search_parent_directories=True)
-            constantly_print_popen(repo.working_tree_dir / "broker" / "bash_scripts" / "run_slurm.sh")
+            constantly_print_popen(
+                repo.working_tree_dir / "broker" / "bash_scripts" / "run_slurm.sh"
+            )
         except KeyboardInterrupt:
             sys.exit(1)
 
@@ -150,7 +154,9 @@ def providers():
 
 
 def tx_receipt():
-    from broker.eblocbroker_scripts.get_transaction_receipt import get_transaction_receipt
+    from broker.eblocbroker_scripts.get_transaction_receipt import (
+        get_transaction_receipt,
+    )
 
     get_transaction_receipt(_args.transaction_hash)
 
@@ -209,7 +215,9 @@ def main():  # noqa
     try:
         globals()[_args.command]()
     except KeyError:
-        print(f"ebloc-broker {get_tag_version()} - Blockchain based autonomous computational resource broker\n")
+        print(
+            f"ebloc-broker {get_tag_version()} - Blockchain based autonomous computational resource broker\n"
+        )
         parser.print_help()
     except Exception as e:
         print_tb(e)

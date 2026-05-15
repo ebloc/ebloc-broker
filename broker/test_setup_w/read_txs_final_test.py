@@ -62,7 +62,9 @@ def read_txs_layer(n, edges, fn):
             toBlock="latest",
         )
         if int(job_id) == 0:
-            output_g = Ebb.get_job_info(keys[0], keys[1], keys[2], 0, keys[3], is_print=False)
+            output_g = Ebb.get_job_info(
+                keys[0], keys[1], keys[2], 0, keys[3], is_print=False
+            )
             _job_price = output_g["submitJob_received_job_price"]
             jp = float(Cent(_job_price)._to())
             job_price_sum += jp
@@ -75,13 +77,17 @@ def read_txs_layer(n, edges, fn):
                 and logged_receipt.args["index"] == int(index)
                 and logged_receipt.args["jobID"] == int(job_id)
             ):
-                output = Ebb.get_job_info(keys[0], keys[1], keys[2], job_id, keys[3], is_print=False)
+                output = Ebb.get_job_info(
+                    keys[0], keys[1], keys[2], job_id, keys[3], is_print=False
+                )
                 idx += 1
                 recv = logged_receipt.args["receivedCent"]
                 ref = logged_receipt.args["refundedCent"]
                 sum_received += float(Cent(recv)._to())
                 sum_refunded += float(Cent(ref)._to())
-                tx_receipt = Ebb.get_transaction_receipt(logged_receipt["transactionHash"].hex())
+                tx_receipt = Ebb.get_transaction_receipt(
+                    logged_receipt["transactionHash"].hex()
+                )
                 total_processpayment_gas += int(tx_receipt["gasUsed"])
                 if is_excel:
                     if int(job_id) == 0:
@@ -133,7 +139,9 @@ def read_txs(n, edges, fn):
             fromBlock=int(received_bn),
             toBlock="latest",
         )
-        output_g = Ebb.get_job_info(keys[0], keys[1], keys[2], 0, keys[3], is_print=False)
+        output_g = Ebb.get_job_info(
+            keys[0], keys[1], keys[2], 0, keys[3], is_print=False
+        )
         _job_price = output_g["submitJob_received_job_price"]
         jp = float(Cent(_job_price)._to())
         job_price_sum += jp
@@ -143,15 +151,21 @@ def read_txs(n, edges, fn):
         # log(f"{k} => ", end="")
         # log(f"{v}")
         for logged_receipt in event_filter.get_all_entries():
-            if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
+            if logged_receipt.args["jobKey"] == job_key and logged_receipt.args[
+                "index"
+            ] == int(index):
                 idx += 1
                 job_id = logged_receipt.args["jobID"]
-                output = Ebb.get_job_info(keys[0], keys[1], keys[2], job_id, keys[3], is_print=False)
+                output = Ebb.get_job_info(
+                    keys[0], keys[1], keys[2], job_id, keys[3], is_print=False
+                )
                 recv = logged_receipt.args["receivedCent"]
                 # log(f"{Cent(recv)._to()} [pink]USDmy")
                 sum_received += float(Cent(recv)._to())
                 sum_refunded += logged_receipt.args["refundedCent"]
-                tx_receipt = Ebb.get_transaction_receipt(logged_receipt["transactionHash"].hex())
+                tx_receipt = Ebb.get_transaction_receipt(
+                    logged_receipt["transactionHash"].hex()
+                )
                 total_processpayment_gas += int(tx_receipt["gasUsed"])
                 if is_excel:
                     if job_id == 0:

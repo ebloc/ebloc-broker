@@ -10,7 +10,16 @@ from broker._utils.tools import _remove, mkdir, print_tb
 from broker.config import ThreadFilter, env, setup_logger  # noqa: F401
 from broker.drivers.storage_class import Storage
 from broker.libs import _git
-from broker.utils import CacheID, StorageID, byte_to_mb, bytes32_to_ipfs, get_date, is_ipfs_on, log, start_ipfs_daemon
+from broker.utils import (
+    CacheID,
+    StorageID,
+    byte_to_mb,
+    bytes32_to_ipfs,
+    get_date,
+    is_ipfs_on,
+    log,
+    start_ipfs_daemon,
+)
 
 
 class IpfsClass(Storage):
@@ -30,7 +39,9 @@ class IpfsClass(Storage):
                 ipfs_hash, self.requester_info["ipfs_address"], is_verbose=True
             )
             if "CumulativeSize" not in stat:
-                raise Exception("Markle not found! Timeout for the IPFS object stat retrieve")
+                raise Exception(
+                    "Markle not found! Timeout for the IPFS object stat retrieve"
+                )
         except Exception as e:
             print_tb(e)
             raise e
@@ -39,9 +50,9 @@ class IpfsClass(Storage):
         self.cumulative_sizes[self.job_key] = cumulative_size
         size_mb = byte_to_mb(cumulative_size)
         is_storage_payment = self.job_info["is_cached"][ipfs_hash]
-        is_storage_payment_received_when_job_submitted = self.job_info["is_storage_bn_equal_when_job_submitted_bn"][
-            ipfs_hash
-        ]
+        is_storage_payment_received_when_job_submitted = self.job_info[
+            "is_storage_bn_equal_when_job_submitted_bn"
+        ][ipfs_hash]
         log(f"==> Is already stored hash={ipfs_hash} -> {is_storage_payment} ", end="")
         if not cfg.ipfs.is_hash_locally_cached(ipfs_hash):
             if is_storage_payment:
@@ -72,7 +83,11 @@ class IpfsClass(Storage):
             self.thread_log_setup()
 
         start_ipfs_daemon()
-        log(f"{br(get_date())} Source code of the job has been sent through ", "bold cyan", end="")
+        log(
+            f"{br(get_date())} Source code of the job has been sent through ",
+            "bold cyan",
+            end="",
+        )
         if self.cloudStorageID[0] == StorageID.IPFS:
             log("IPFS", "bg")
         else:
@@ -122,7 +137,9 @@ class IpfsClass(Storage):
             log("[ok]")
             if idx > 0:
                 # https://stackoverflow.com/a/31814223/2402577
-                dst_fn = os.path.join(self.results_data_folder, os.path.basename(ipfs_hash))
+                dst_fn = os.path.join(
+                    self.results_data_folder, os.path.basename(ipfs_hash)
+                )
                 if os.path.exists(dst_fn):
                     _remove(dst_fn)
 

@@ -33,14 +33,20 @@ def analyze_data(self, key, provider=None):
             _type = "ipfs_hash"
             code_hash = code_hash_str = bytes32_to_ipfs(code_hash)
             if idx == 0 and key != code_hash:
-                log(f"E: IPFS hash does not match with the given code_hash.\n\t{key} != {code_hash}")
+                log(
+                    f"E: IPFS hash does not match with the given code_hash.\n\t{key} != {code_hash}"
+                )
                 continue
         else:
             _type = "md5sum"
             code_hash_str = cfg.w3.toText(code_hash)
 
-        received_deposit, *_ = Ebb.get_storage_info(code_hash, provider, self.job_info["job_owner"])
-        *_, job_storage_duration = Ebb.get_job_storage_duration(provider, cfg.ZERO_ADDRESS, code_hash)
+        received_deposit, *_ = Ebb.get_storage_info(
+            code_hash, provider, self.job_info["job_owner"]
+        )
+        *_, job_storage_duration = Ebb.get_job_storage_duration(
+            provider, cfg.ZERO_ADDRESS, code_hash
+        )
         ds = DataStorage(job_storage_duration)
         ds.received_deposit = received_deposit
         self.received_block.append(ds.received_block)
@@ -49,9 +55,13 @@ def analyze_data(self, key, provider=None):
         # if remaining time to cache is 0, then caching is requested for the
         # related code_hash
         if ds.received_block == self.job_info["received_bn"]:
-            self.job_info["is_storage_bn_equal_when_job_submitted_bn"][code_hash_str] = True
+            self.job_info["is_storage_bn_equal_when_job_submitted_bn"][
+                code_hash_str
+            ] = True
         else:
-            self.job_info["is_storage_bn_equal_when_job_submitted_bn"][code_hash_str] = False
+            self.job_info["is_storage_bn_equal_when_job_submitted_bn"][
+                code_hash_str
+            ] = False
 
         if ds.received_block + ds.storage_duration >= current_bn:
             if ds.received_block < current_bn:
@@ -116,7 +126,9 @@ def fetch_log_data_storage_request(self, tx_by_block):
             log_data_storage_request_list.append(dict(logged_job["args"]))
 
     if log_data_storage_request_list:
-        self.job_info.update({"submitJob_LogDataStorageRequest": log_data_storage_request_list})
+        self.job_info.update(
+            {"submitJob_LogDataStorageRequest": log_data_storage_request_list}
+        )
 
     storage_payment_list = []
     sum_storage_payment = 0
@@ -143,20 +155,35 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0, job_id=0) 
             toBlock=self.to_block,
         )
         for logged_job in event_filter.get_all_entries():
-            if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(index):
-                self.job_info["received_bn"] = received_bn = int(logged_job["blockNumber"])
+            if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(
+                index
+            ):
+                self.job_info["received_bn"] = received_bn = int(
+                    logged_job["blockNumber"]
+                )
                 self.job_info.update({"core": logged_job.args["core"]})
                 self.job_info.update({"run_time": logged_job.args["runTime"]})
-                self.job_info.update({"cloudStorageID": logged_job.args["cloudStorageID"]})
+                self.job_info.update(
+                    {"cloudStorageID": logged_job.args["cloudStorageID"]}
+                )
                 self.job_info.update({"cacheType": logged_job.args["cacheType"]})
-                self.job_info.update({"submitJob_received_job_price": logged_job.args["received"]})  #
-                self.job_info.update({"submitJob_tx_hash": logged_job["transactionHash"].hex()})
-                self.job_info.update({"submitJob_block_hash": logged_job["blockHash"].hex()})
+                self.job_info.update(
+                    {"submitJob_received_job_price": logged_job.args["received"]}
+                )  #
+                self.job_info.update(
+                    {"submitJob_tx_hash": logged_job["transactionHash"].hex()}
+                )
+                self.job_info.update(
+                    {"submitJob_block_hash": logged_job["blockHash"].hex()}
+                )
                 tx_by_block = Ebb.get_transaction_by_block(
-                    self.job_info["submitJob_block_hash"], logged_job["transactionIndex"]
+                    self.job_info["submitJob_block_hash"],
+                    logged_job["transactionIndex"],
                 )
                 # self.job_info.update({"submitJob_received_job_price": int(tx_by_block["value"] / 10**9)})
-                tx_receipt = Ebb.get_transaction_receipt(self.job_info["submitJob_tx_hash"])
+                tx_receipt = Ebb.get_transaction_receipt(
+                    self.job_info["submitJob_tx_hash"]
+                )
                 tx_by_block = Ebb.get_transaction_by_block(
                     tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
                 )
@@ -167,7 +194,9 @@ def update_job_cores(self, provider, job_key, index=0, received_bn=0, job_id=0) 
                     self.job_info.update({"data_transfer_out_input": output[2][-3]})
                     self.job_info.update({"received": output[2][-2]})
                     self.job_info.update({"storage_duration": output[3]})
-                    self.job_info.update({"data_prices_set_block_numbers": output[2][4]})
+                    self.job_info.update(
+                        {"data_prices_set_block_numbers": output[2][4]}
+                    )
 
                 self.job_info.update({"submitJob_gas_used": int(tx_receipt["gasUsed"])})
                 break
@@ -207,7 +236,9 @@ def get_job_code_hashes(self, provider, job_key, index, received_bn=0):
             toBlock=self.to_block,
         )
         for logged_job in event_filter.get_all_entries():
-            if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(index):
+            if logged_job.args["jobKey"] == job_key and logged_job.args["index"] == int(
+                index
+            ):
                 self.job_info.update({"code_hashes": logged_job.args["sourceCodeHash"]})
                 break
 
@@ -219,13 +250,18 @@ def get_job_code_hashes(self, provider, job_key, index, received_bn=0):
 
 def get_job_info_print(self, provider, _hash, index, received_bn, is_print=True):
     result_ipfs_hash = ""
-    if self.job_info["result_ipfs_hash"] != empty_bytes32 and self.job_info["result_ipfs_hash"] != "":
+    if (
+        self.job_info["result_ipfs_hash"] != empty_bytes32
+        and self.job_info["result_ipfs_hash"] != ""
+    ):
         result_ipfs_hash = bytes32_to_ipfs(self.job_info["result_ipfs_hash"])
         self.job_info.update({"result_ipfs_hash_str": result_ipfs_hash})
 
     if isinstance(self.job_info, dict):
         if is_print:
-            log(f" * state_code={state.inv_code[self.job_info['stateCode']]}({self.job_info['stateCode']})")
+            log(
+                f" * state_code={state.inv_code[self.job_info['stateCode']]}({self.job_info['stateCode']})"
+            )
 
             if result_ipfs_hash:
                 log(f"==> result_ipfs_hash={result_ipfs_hash}")
@@ -241,30 +277,47 @@ def get_job_info_print(self, provider, _hash, index, received_bn, is_print=True)
 def get_job_state(self, provider, job_key, index, job_id):
     provider = cfg.w3.toChecksumAddress(provider)
     try:
-        job, received, job_owner, data_transfer_in, _cacheCost, data_transfer_out = self._get_job_info(
-            provider, job_key, int(index), int(job_id)
+        job, received, job_owner, data_transfer_in, _cacheCost, data_transfer_out = (
+            self._get_job_info(provider, job_key, int(index), int(job_id))
         )
         return job[0]
     except Exception as e:
         if str(e) == "VM execution error: Bad instruction fe":
-            raise QuietExit("Not valid <provider_address, [m]job_key[/m] and [m]index[/m]> is given") from e
+            raise QuietExit(
+                "Not valid <provider_address, [m]job_key[/m] and [m]index[/m]> is given"
+            ) from e
 
         raise e
 
 
 def get_job_info(
-    self, provider, job_key, index, job_id, received_bn=0, is_print=True, is_log_print=False, is_fetch_code_hashes=False
+    self,
+    provider,
+    job_key,
+    index,
+    job_id,
+    received_bn=0,
+    is_print=True,
+    is_log_print=False,
+    is_fetch_code_hashes=False,
 ):
     """Return information of the job."""
     try:
         provider = cfg.w3.toChecksumAddress(provider)
         try:
-            job, received, job_owner, data_transfer_in, _cacheCost, data_transfer_out = self._get_job_info(
-                provider, job_key, int(index), int(job_id)
-            )
+            (
+                job,
+                received,
+                job_owner,
+                data_transfer_in,
+                _cacheCost,
+                data_transfer_out,
+            ) = self._get_job_info(provider, job_key, int(index), int(job_id))
         except Exception as e:
             if str(e) == "VM execution error: Bad instruction fe":
-                raise QuietExit("Not valid <provider_address, [m]job_key[/m] and [m]index[/m]> is given") from e
+                raise QuietExit(
+                    "Not valid <provider_address, [m]job_key[/m] and [m]index[/m]> is given"
+                ) from e
 
             raise e
 
@@ -327,10 +380,14 @@ def get_job_info(
             "processPayment_dataTransferOut_input": None,
             "processPayment_elapsedTime_input": None,
         }
-        received_bn = self.update_job_cores(provider, job_key, index, received_bn, job_id)
+        received_bn = self.update_job_cores(
+            provider, job_key, index, received_bn, job_id
+        )
         if not received_bn or received_bn == self.deployed_block_number:
             # First reading from the mongoDB, this will increase the speed to fetch from the logged data
-            received_bn_temp = self.mongo_broker.get_job_bn(self.job_info["job_owner"], job_key, index)
+            received_bn_temp = self.mongo_broker.get_job_bn(
+                self.job_info["job_owner"], job_key, index
+            )
             if received_bn == 0 and received_bn_temp == 0:
                 received_bn = self.deployed_block_number
 
@@ -346,30 +403,64 @@ def get_job_info(
 
         #: iterate from the first submitted job since its workflow
         for logged_receipt in event_filter.get_all_entries():
-            if logged_receipt.args["jobKey"] == job_key and logged_receipt.args["index"] == int(index):
-                self.job_info.update({"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]})
-                self.job_info.update({"received_cent": logged_receipt.args["receivedCent"]})
-                self.job_info.update({"refunded_cent": logged_receipt.args["refundedCent"]})
-                self.job_info.update({"data_transfer_in_to_download": logged_receipt.args["dataTransferIn"]})
-                self.job_info.update({"data_transfer_out_used": logged_receipt.args["dataTransferOut"]})
-                self.job_info.update({"actual_elapsed_time": logged_receipt.args["elapsedTime"]})
-                self.job_info.update({"processPayment_tx_hash": logged_receipt["transactionHash"].hex()})
-                self.job_info.update({"processPayment_bn": logged_receipt["blockNumber"]})
+            if logged_receipt.args["jobKey"] == job_key and logged_receipt.args[
+                "index"
+            ] == int(index):
+                self.job_info.update(
+                    {"result_ipfs_hash": logged_receipt.args["resultIpfsHash"]}
+                )
+                self.job_info.update(
+                    {"received_cent": logged_receipt.args["receivedCent"]}
+                )
+                self.job_info.update(
+                    {"refunded_cent": logged_receipt.args["refundedCent"]}
+                )
+                self.job_info.update(
+                    {
+                        "data_transfer_in_to_download": logged_receipt.args[
+                            "dataTransferIn"
+                        ]
+                    }
+                )
+                self.job_info.update(
+                    {"data_transfer_out_used": logged_receipt.args["dataTransferOut"]}
+                )
+                self.job_info.update(
+                    {"actual_elapsed_time": logged_receipt.args["elapsedTime"]}
+                )
+                self.job_info.update(
+                    {"processPayment_tx_hash": logged_receipt["transactionHash"].hex()}
+                )
+                self.job_info.update(
+                    {"processPayment_bn": logged_receipt["blockNumber"]}
+                )
                 if self.job_info["result_ipfs_hash"] == empty_bytes32:
                     self.job_info.update({"result_ipfs_hash": b""})
 
-                self.job_info.update({"processPayment_block_hash": logged_receipt["blockHash"].hex()})
-                tx_receipt = Ebb.get_transaction_receipt(self.job_info["processPayment_tx_hash"])
-                self.job_info.update({"processPayment_gas_used": int(tx_receipt["gasUsed"])})
+                self.job_info.update(
+                    {"processPayment_block_hash": logged_receipt["blockHash"].hex()}
+                )
+                tx_receipt = Ebb.get_transaction_receipt(
+                    self.job_info["processPayment_tx_hash"]
+                )
+                self.job_info.update(
+                    {"processPayment_gas_used": int(tx_receipt["gasUsed"])}
+                )
                 tx_by_block = Ebb.get_transaction_by_block(
                     tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
                 )
                 #: fetching input arguments of the processPayment
                 output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
                 self.job_info.update({"processPayment_inputs": output[1][1]})
-                self.job_info.update({"processPayment_dataTransferIn_input": output[1][1][3]})
-                self.job_info.update({"processPayment_dataTransferOut_input": output[1][1][4]})
-                self.job_info.update({"processPayment_elapsedTime_input": output[1][1][5]})
+                self.job_info.update(
+                    {"processPayment_dataTransferIn_input": output[1][1][3]}
+                )
+                self.job_info.update(
+                    {"processPayment_dataTransferOut_input": output[1][1][4]}
+                )
+                self.job_info.update(
+                    {"processPayment_elapsedTime_input": output[1][1][5]}
+                )
                 break
 
     except Exception as e:
@@ -387,7 +478,9 @@ def get_job_info(
 
         log(self.job_info)
     elif is_fetch_code_hashes:
-        self.get_job_info_print(provider, job_key, index, received_bn, is_print=is_print)
+        self.get_job_info_print(
+            provider, job_key, index, received_bn, is_print=is_print
+        )
 
     if not self.job_info["storage_duration"]:
         self.job_info["storage_duration"] = []
@@ -411,7 +504,10 @@ def main():
             job_id = int(sys.argv[4])
             received_bn = int(sys.argv[5])
     else:
-        log("E: Provide <[m]provider[/m], [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments", h=False)
+        log(
+            "E: Provide <[m]provider[/m], [m]job_key[/m], [m]index[/m], and [m]job_id[/m]> as arguments",
+            h=False,
+        )
         sys.exit(1)
 
     Ebb.get_job_info(provider, job_key, index, job_id, received_bn, is_log_print=True)

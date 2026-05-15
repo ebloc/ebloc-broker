@@ -79,7 +79,9 @@ def get_providers():
     log(Ebb.get_providers())
 
 
-@app.command("list_registered_data_files", "Returns registered data files of the provider")
+@app.command(
+    "list_registered_data_files", "Returns registered data files of the provider"
+)
 def list_registered_data_files(eth_address):
     """Return registered data files of the given provider.
 

@@ -8,7 +8,9 @@ from broker import cfg
 from broker._utils._log import log
 
 
-def read_network_config(network_id, fn=Path.home() / ".brownie" / "network-config.yaml") -> str:
+def read_network_config(
+    network_id, fn=Path.home() / ".brownie" / "network-config.yaml"
+) -> str:
     config_data, _, _ = ruamel.yaml.util.load_yaml_guess_indent(open(fn))
     for _config in config_data["live"]:
         if _config["name"] == "Ethereum":

@@ -23,7 +23,9 @@ ipfs = cfg.ipfs
 def _register_provider(self, *args, **kwargs):
     """Register provider."""
     if is_byte_str_zero(env.PROVIDER_ID):
-        log(f"E: PROVIDER_ID={env.PROVIDER_ID} is not valid, change it in [m]~/.ebloc-broker/cfg.yaml")
+        log(
+            f"E: PROVIDER_ID={env.PROVIDER_ID} is not valid, change it in [m]~/.ebloc-broker/cfg.yaml"
+        )
         raise QuietExit
 
     if self.does_provider_exist(env.PROVIDER_ID):
@@ -35,7 +37,9 @@ def _register_provider(self, *args, **kwargs):
         raise QuietExit
 
     if kwargs["commitment_blk"] < cfg.ONE_HOUR_BLOCK_DURATION:
-        raise Exception(f"Commitment block number should be greater than {cfg.ONE_HOUR_BLOCK_DURATION}")
+        raise Exception(
+            f"Commitment block number should be greater than {cfg.ONE_HOUR_BLOCK_DURATION}"
+        )
 
     if len(kwargs["f_id"]) >= 128:
         raise Exception("f_id hould be lesser than 128")
@@ -87,7 +91,9 @@ def register_provider_wrapper(yaml_fn, is_bare=False):
         raise QuietExit
 
     args = Yaml(yaml_fn, auto_dump=False)
-    env.PROVIDER_ID = args["cfg"]["eth_address"]  # read provider address from the yaml file
+    env.PROVIDER_ID = args["cfg"][
+        "eth_address"
+    ]  # read provider address from the yaml file
     f_id = args["cfg"]["oc_username"].replace("@b2drop.eudat.eu", "")
     gmail = args["cfg"]["gmail"]
     _args = args["cfg"]["provider"]
@@ -153,7 +159,9 @@ def register_provider_wrapper(yaml_fn, is_bare=False):
     ip = get_ip()
     if ip not in ipfs_address:
         # public IP should exists in the ipfs id
-        ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip}/tcp", ipfs_address, flags=re.DOTALL)
+        ipfs_address = re.sub(
+            "ip4.*?tcp", f"ip4/{ip}/tcp", ipfs_address, flags=re.DOTALL
+        )
         log(f"==> ipfs_address={ipfs_address}")
 
     gmail = env.GMAIL
@@ -175,7 +183,15 @@ def register_provider_wrapper(yaml_fn, is_bare=False):
         gpg_fingerprint = ""
 
     prices = [price_core_min, price_data_transfer, price_storage, price_cache]
-    args = (gpg_fingerprint, gmail, f_id, ipfs_address, available_core, prices, commitment_blk)
+    args = (
+        gpg_fingerprint,
+        gmail,
+        f_id,
+        ipfs_address,
+        available_core,
+        prices,
+        commitment_blk,
+    )
     kwargs = {
         "gmail": gmail,
         "f_id": f_id,

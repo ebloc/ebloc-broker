@@ -23,9 +23,13 @@ def is_provider_info_match(self, gmail, ipfs_address, gpg_fingerprint, f_id):
             and provider_info["ipfs_address"] == ipfs_address
         ):
             log(provider_info)
-            raise QuietExit("warning: Given information is same as the provider's saved info. Nothing to do.")
+            raise QuietExit(
+                "warning: Given information is same as the provider's saved info. Nothing to do."
+            )
 
-        tx = self._update_provider_info(f"0x{gpg_fingerprint}", gmail, f_id, ipfs_address)
+        tx = self._update_provider_info(
+            f"0x{gpg_fingerprint}", gmail, f_id, ipfs_address
+        )
         return self.tx_id(tx)
     except Exception as e:
         raise e
@@ -61,7 +65,9 @@ if __name__ == "__main__":
     ip_address = get_ip()
     if ip_address not in ipfs_address:
         # public IP should exists in the ipfs id
-        ipfs_address = re.sub("ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_address, flags=re.DOTALL)
+        ipfs_address = re.sub(
+            "ip4.*?tcp", f"ip4/{ip_address}/tcp", ipfs_address, flags=re.DOTALL
+        )
 
     if "/85." in ipfs_address:
         #: local-ip used for test purposes on home VM(s)
@@ -102,7 +108,9 @@ if __name__ == "__main__":
         if gpg_fingerprint:
             cfg.ipfs.is_gpg_published(gpg_fingerprint)
 
-        tx_hash = Ebb.update_provider_info(gpg_fingerprint, env.GMAIL, f_id, ipfs_address)
+        tx_hash = Ebb.update_provider_info(
+            gpg_fingerprint, env.GMAIL, f_id, ipfs_address
+        )
         get_tx_status(tx_hash)
     except Exception as e:
         print_tb(e)

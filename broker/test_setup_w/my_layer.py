@@ -64,7 +64,9 @@ class Ewe:
             key = int(key)
             if key in self.ready or key in self.submitted or key in self.running:
                 keys = value.split("_")
-                job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False)
+                job_info = Ebb.get_job_info(
+                    keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False
+                )
                 state_val = state.inv_code[job_info["stateCode"]]
                 if state_val == "RUNNING":
                     if key in self.submitted:
@@ -164,11 +166,15 @@ def submit_layering():
                     key = ewe.submitted_node_dict[job_id]
                     keys = key.split("_")
                     log(f"{job_id} ", end="")
-                    job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False)
+                    job_info = Ebb.get_job_info(
+                        keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False
+                    )
                     state_val = state.inv_code[job_info["stateCode"]]
                     if state_val != "COMPLETED":
                         #: only for print purposes
-                        Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=True)
+                        Ebb.get_job_info(
+                            keys[0], keys[1], keys[2], keys[4], keys[3], is_print=True
+                        )
 
                     if state_val == "RUNNING":
                         if job_id in ewe.submitted:
@@ -221,25 +227,35 @@ def submit_layering():
                     for i, _job in enumerate(sorted(node_list)):
                         my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
                         yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
-                        yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
+                        yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = (
+                            my_job["run_time"]
+                        )
                         yaml_original["config"]["dt_in"] = 200
                         yaml_original["config"]["data_transfer_out"] = 0
                         for u, v, d in wf.G.edges(data=True):
                             if int(u) in item and int(v) in item:
                                 pass
                             else:
-                                if u not in list(G_copy.nodes) and v in list(G_copy.nodes):
+                                if u not in list(G_copy.nodes) and v in list(
+                                    G_copy.nodes
+                                ):
                                     yaml_original["config"]["dt_in"] += int(d["weight"])
 
-                                if u in list(G_copy.nodes) and v not in list(G_copy.nodes):
-                                    yaml_original["config"]["data_transfer_out"] += int(d["weight"])
+                                if u in list(G_copy.nodes) and v not in list(
+                                    G_copy.nodes
+                                ):
+                                    yaml_original["config"]["data_transfer_out"] += int(
+                                        d["weight"]
+                                    )
                 else:
                     my_job = yaml_jobs["config"]["jobs"][f"job{node_list[0]}"]
                     yaml_original["config"]["dt_in"] = my_job["dt_in"]
                     yaml_original["config"]["data_transfer_out"] = my_job["dt_out"]
                     yaml_original["config"]["jobs"] = {}
                     yaml_original["config"]["jobs"]["job1"]["cores"] = 1
-                    yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
+                    yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job[
+                        "run_time"
+                    ]
 
                 provider_char = random.choice("abc")
                 yaml_original["config"]["provider_address"] = provider_id[provider_char]

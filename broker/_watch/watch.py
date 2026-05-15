@@ -72,7 +72,9 @@ def get_providers_info():
         providers_info[provider_addr] = Ebb.get_provider_info(provider_addr)
 
     providers = Ebb.get_providers()
-    log("\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "g")
+    log(
+        "\r" + "=" * columns_size + "[bold] providers [/bold]" + "=" * columns_size, "g"
+    )
     for k, v in providers_info.items():
         log(f"** provider_address={k}", end="\r")
         log(v, end="\r")
@@ -134,7 +136,9 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
     _job["refunded_usd_to_requester"] = Cent(job["refunded_cent"])._to()
     _job["received_usd_to_provider"] = Cent(job["received_cent"])._to()
     _job["sum_storage_payment_cent"] = job["submitJob_sum_storage_payment_cent"]
-    _job["LogDataStorageRequest_paid"] = str(job["_LogDataStorageRequest"]).replace(" ", "").replace(",", ";")
+    _job["LogDataStorageRequest_paid"] = (
+        str(job["_LogDataStorageRequest"]).replace(" ", "").replace(",", ";")
+    )
     _job["delta=(paid-spent)"] = None
     temp_list = []
     if len(job["code_hashes"]) > 1:
@@ -152,7 +156,9 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
         _job["used_registed_data"] = ";".join(temp_list)
 
     tx_receipt = Ebb.get_transaction_receipt(job["submitJob_tx_hash"])
-    tx_by_block = Ebb.get_transaction_by_block(tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"])
+    tx_by_block = Ebb.get_transaction_by_block(
+        tx_receipt["blockHash"].hex(), tx_receipt["transactionIndex"]
+    )
     #: decode input arguments
     output = Ebb.eBlocBroker.decode_input(tx_by_block["input"])
     data_transfer_in_arg = str(output[1][1]).replace(" ", "").replace(",", ";")
@@ -173,7 +179,9 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
                 log(", ", end="")
 
     value = float(_job["total_payment_usd"])
-    spent = float(_job["refunded_usd_to_requester"]) + float(_job["received_usd_to_provider"])
+    spent = float(_job["refunded_usd_to_requester"]) + float(
+        _job["received_usd_to_provider"]
+    )
     if float(spent) == 0:
         spent = 0
 
@@ -204,8 +212,12 @@ def print_in_csv_format(job, _id, state_val, workload_type, _hash, _index, title
             storage_paid_cent = job["submitJob_sum_storage_payment_cent"]
             if storage_paid_cent != float(_delta):
                 if not (float(_delta) == float(value) and spent == 0):
-                    if (float(value) != float(spent)) and (float(delta) != float(value)):
-                        log(f"warning: delta={_delta.rstrip('0')} value={value} spent={spent}")
+                    if (float(value) != float(spent)) and (
+                        float(delta) != float(value)
+                    ):
+                        log(
+                            f"warning: delta={_delta.rstrip('0')} value={value} spent={spent}"
+                        )
 
 
 def _watch(eth_address, from_block, is_provider, to_block="latest"):
@@ -271,7 +283,9 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
         _hash = _job["job_key"]
         _index = _job["index"]
         if is_export_csv:
-            print_in_csv_format(_job, idx, state_val, workload_type, _hash, _index, title_flag)
+            print_in_csv_format(
+                _job, idx, state_val, workload_type, _hash, _index, title_flag
+            )
             title_flag = False
         else:
             if is_while:
@@ -291,7 +305,13 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
     if is_while:
         job_full = f"{header}\n{job_full}".rstrip()
     elif not is_export_csv:
-        job_ruler = "[g]" + "=" * columns_size + "[bold cyan] jobs [/bold cyan]" + "=" * columns_size + "[/g]"
+        job_ruler = (
+            "[g]"
+            + "=" * columns_size
+            + "[bold cyan] jobs [/bold cyan]"
+            + "=" * columns_size
+            + "[/g]"
+        )
         job_full = f"{job_ruler}\n{header}\n{job_full}".rstrip()
 
     is_connected = Ebb.is_web3_connected()
@@ -299,17 +319,25 @@ def _watch(eth_address, from_block, is_provider, to_block="latest"):
         _console_clear()
 
     if not is_export_csv:
-        open(_log.ll.LOG_FILENAME, "w").close()  # clean file right before write into it again
+        open(
+            _log.ll.LOG_FILENAME, "w"
+        ).close()  # clean file right before write into it again
 
     if is_export_csv:
         log()
 
-    log(f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}")
+    log(
+        f"\r{_date()} bn={bn} | web3={is_connected} | address={eth_address} | {completed_count}/{job_count}"
+    )
     if analyze_long_test:
         log(f"workload_nas_count={workload_nas_completed}/{workload_nas_count}")
         log(f"workload_cppr_count={workload_cppr_completed}/{workload_cppr_count}")
-        log(f"avg_processPayment_gas_consumption={int(sum_processPayment_gas_used / counter_processPayment_gas_used)}")
-        log(f"avg_submitJob_gas_consumption={int(sum_submitJob_gas_used / counter_submitJob_gas_used)}")
+        log(
+            f"avg_processPayment_gas_consumption={int(sum_processPayment_gas_used / counter_processPayment_gas_used)}"
+        )
+        log(
+            f"avg_submitJob_gas_consumption={int(sum_submitJob_gas_used / counter_submitJob_gas_used)}"
+        )
 
     # get_providers_info()
     log(job_full, is_output=False)

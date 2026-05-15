@@ -76,8 +76,13 @@ def user_add(user_address, basedir, slurm_user):
     user_dir = f"{basedir}/{user_name}"
     add_user_to_slurm(user_name)
     if username_check(user_name):
-        run(["sudo", "useradd", "-d", user_dir, "-m", user_name, "--shell", "/bin/bash"])
-        log(f"[pink]{user_address}[/pink] => [yellow]{user_name}[/yellow]) added as user", h=False)
+        run(
+            ["sudo", "useradd", "-d", user_dir, "-m", user_name, "--shell", "/bin/bash"]
+        )
+        log(
+            f"[pink]{user_address}[/pink] => [yellow]{user_name}[/yellow]) added as user",
+            h=False,
+        )
         try:
             set_folder_permission(user_dir, user_name, slurm_user)
             add_user_to_slurm(user_name)
@@ -86,7 +91,10 @@ def user_add(user_address, basedir, slurm_user):
             run(["sudo", "userdel", "--force", user_name])
     else:
         if not os.path.isdir(user_dir):
-            log(f"{user_address} => {user_name} does not exist. Attempting to read the user", "yellow")
+            log(
+                f"{user_address} => {user_name} does not exist. Attempting to read the user",
+                "yellow",
+            )
             run(["sudo", "userdel", "--force", user_name])
             run(["sudo", "useradd", "-d", user_dir, "-m", user_name])
             set_folder_permission(user_dir, user_name, slurm_user)
@@ -99,12 +107,16 @@ def user_add(user_address, basedir, slurm_user):
                 mkdir(f"{user_dir}/cache")
 
         else:
-            log(f"==> [m]{user_address}[/m] => [blue]{user_name}[/blue] has already been created")
+            log(
+                f"==> [m]{user_address}[/m] => [blue]{user_name}[/blue] has already been created"
+            )
 
 
 def main():
     # 0xabd4f78b6a005bdf7543bc2d39edf07b53c926f4
-    user_add("0xabd4fs8b6a005bdf7543bc2d39eds08b53c926q0", "/var/ebloc-broker", "netlab")
+    user_add(
+        "0xabd4fs8b6a005bdf7543bc2d39eds08b53c926q0", "/var/ebloc-broker", "netlab"
+    )
     log(ok())
 
 

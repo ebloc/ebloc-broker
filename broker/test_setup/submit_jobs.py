@@ -49,7 +49,9 @@ if IS_MINI_TEST:
 
     benchmarks = ["cppr"]
     storage_ids = ["ipfs"]
-    _user_set.providers = cfg.TEST_PROVIDERS = ["0x29e613B04125c16db3f3613563bFdd0BA24Cb629"]
+    _user_set.providers = cfg.TEST_PROVIDERS = [
+        "0x29e613B04125c16db3f3613563bFdd0BA24Cb629"
+    ]
     # for provider_addr in providers:
     #     mini_tests_submit(storage_ids, provider_addr)
 
@@ -70,7 +72,9 @@ def check_gdrive_user():
 def test_with_small_dataset(value):
     fn = os.path.expanduser("~/test_eblocbroker/run_cppr/run.sh")
     with open(fn, "w+") as file:
-        changed_filedata = file.read().replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
+        changed_filedata = file.read().replace(
+            "DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'"
+        )
         file.write(changed_filedata)
 
 
@@ -132,7 +136,9 @@ def create_cppr_job_script(idx):
     f.write("current_date=$(LANG=en_us_88591; date)\n")
     f.write(f"DATA_HASH='{hash_medium_data_0}'\n")
     f.write("DATA1_DIR='../data_link/'$DATA_HASH'/'\n")
-    f.write("echo '=================== 0 =================== '$current_date > output.log\n")
+    f.write(
+        "echo '=================== 0 =================== '$current_date > output.log\n"
+    )
     f.write("find $DATA1_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("do\n")
     f.write("    echo $file >> output.log\n")
@@ -141,7 +147,9 @@ def create_cppr_job_script(idx):
     f.write(f"DATA_HASH='{hash_medium_data}'\n")
     f.write("DATA2_DIR='../data_link/'$DATA_HASH'/'\n")
     f.write("current_date=$(LANG=en_us_88591; date)\n")
-    f.write("echo '=================== 1 =================== '$current_date >> output.log\n")
+    f.write(
+        "echo '=================== 1 =================== '$current_date >> output.log\n"
+    )
     f.write("find $DATA2_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("do\n")
     f.write("    echo $file >> output.log\n")
@@ -152,7 +160,9 @@ def create_cppr_job_script(idx):
     f.write("DATA_HASH='change_folder_hash'\n")
     f.write("if [[ '$DATA_HASH' != 'change_folder_hash' ]]; then\n")
     f.write("    DATA3_DIR='../data_link/'$DATA_HASH'/'\n")
-    f.write("    echo '=================== 2 =================== '$current_date >> output.log\n")
+    f.write(
+        "    echo '=================== 2 =================== '$current_date >> output.log\n"
+    )
     f.write("    find $DATA3_DIR -name '*.max' -print0 | while read -d $'\\0' file\n")
     f.write("    do\n")
     f.write("        echo $file >> output.log\n")
@@ -211,7 +221,9 @@ def mini_tests_submit(storage_ids, provider_addr):
         if required_confs >= 1:
             tx_receipt = get_tx_status(tx_hash, is_verbose=True)
             if tx_receipt["status"] == 1:
-                processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(
+                    tx_receipt, errors=DISCARD
+                )
                 try:
                     if processed_logs:
                         job_result = vars(processed_logs[0].args)
@@ -241,7 +253,9 @@ def run_job(counter, cycleid) -> None:
                 storage = random.choice(ipfs_types)
 
         if not FIRST_CYCLE:
-            print("                                                                                                   ")
+            print(
+                "                                                                                                   "
+            )
 
         if selected_benchmark == "nas":
             log(
@@ -262,14 +276,20 @@ def run_job(counter, cycleid) -> None:
             yaml_cfg["config"]["data"]["data1"]["hash"] = hash_medium_data_0
             yaml_cfg["config"]["data"]["data2"]["hash"] = hash_medium_data
             yaml_cfg["config"]["data"]["data3"]["storage_id"] = storage
-            dirs = [d for d in os.listdir(small_datasets_dir) if os.path.isdir(os.path.join(small_datasets_dir, d))]
+            dirs = [
+                d
+                for d in os.listdir(small_datasets_dir)
+                if os.path.isdir(os.path.join(small_datasets_dir, d))
+            ]
             if IS_MINI_TEST:
                 dir_name = "BVZ-venus"
             else:
                 dir_name = random.choice(dirs)
 
             yaml_cfg["config"]["data"]["data3"]["storage_hours"] = 1
-            yaml_cfg["config"]["data"]["data3"]["path"] = str(small_datasets_dir / dir_name)
+            yaml_cfg["config"]["data"]["data3"]["path"] = str(
+                small_datasets_dir / dir_name
+            )
 
         yaml_cfg["config"]["source_code"]["storage_id"] = storage
         yaml_cfg["config"]["provider_address"] = provider_addr
@@ -289,7 +309,9 @@ def run_job(counter, cycleid) -> None:
             log(f"tx_hash={tx_hash}")
             tx_receipt = get_tx_status(tx_hash, is_verbose=True)
             if tx_receipt["status"] == 1:
-                processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+                processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(
+                    tx_receipt, errors=DISCARD
+                )
                 job_result = vars(processed_logs[0].args)
                 job_result["submit_date"] = submission_date
                 job_result["submit_timestamp"] = submission_timestamp
@@ -297,7 +319,9 @@ def run_job(counter, cycleid) -> None:
                 if selected_benchmark == "nas":
                     job_result["job_kind"] = f"{selected_benchmark}_{benchmark_name}"
                 elif selected_benchmark == "cppr":
-                    job_result["job_kind"] = f"{selected_benchmark}_{hash_medium_data_0}_{hash_medium_data}"
+                    job_result["job_kind"] = (
+                        f"{selected_benchmark}_{hash_medium_data_0}_{hash_medium_data}"
+                    )
 
                 ebb_mongo.add_item(tx_hash, job_result)
                 log(job_result)

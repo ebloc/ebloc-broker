@@ -48,7 +48,12 @@ def appy_patch(base_dir, patch_fn):
             good_patch = f"{base_dir}/good.patch"
             sep = "~"
             popen_communicate(
-                ["perl", "-pe", "s/\x1b.*?[mGKH]//g", str(Path(patch_file)).replace(f"{sep}", f"\{sep}")],
+                [
+                    "perl",
+                    "-pe",
+                    "s/\x1b.*?[mGKH]//g",
+                    str(Path(patch_file)).replace(f"{sep}", f"\{sep}"),
+                ],
                 stdout_fn=good_patch,
             )
             git.apply_patch(base_dir, good_patch, is_gpg=False)
@@ -62,10 +67,10 @@ def main(base_dir, patch_fn):
 
 if __name__ == "__main__":
     base_dir = expanduser("~/test_eblocbroker/test_data/base/source_code")
-    base_dir_results = expanduser("~/test_eblocbroker/test_data/base/source_code/results")
-    patch_fn = (
-        "patch~a4fb77ea35ea6dfeed7aa300879a73b76268c136~QmTDHuL6HPC6WMWSRHwHmboasfWsrjpLJEvh9D9pUuRqiy~11.diff.gz"
+    base_dir_results = expanduser(
+        "~/test_eblocbroker/test_data/base/source_code/results"
     )
+    patch_fn = "patch~a4fb77ea35ea6dfeed7aa300879a73b76268c136~QmTDHuL6HPC6WMWSRHwHmboasfWsrjpLJEvh9D9pUuRqiy~11.diff.gz"
     # main(base_dir, patch_fn)
     ipfs_hash = ""
     if len(sys.argv) == 2:

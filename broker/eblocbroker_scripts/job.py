@@ -121,7 +121,9 @@ class Job:
                 if not self.Ebb:
                     log("warning: self.Ebb is an empty object")
 
-                logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(tx_receipt, errors=self.w3.DISCARD)
+                logs = self.Ebb.eBlocBroker.events.LogJob().processReceipt(
+                    tx_receipt, errors=self.w3.DISCARD
+                )
                 log(vars(logs[0].args))
                 log(f"==> job_index={logs[0].args['index']}")
             except IndexError:
@@ -147,8 +149,13 @@ class Job:
             raise e
 
         for idx, code_hash in enumerate(self.code_hashes):
-            if self.data_prices_set_block_numbers[idx] > 0 or self.storage_ids[idx] == StorageID.NONE:
-                registered_data_bn_list = self.Ebb.get_registered_data_bn(self.provider, code_hash)
+            if (
+                self.data_prices_set_block_numbers[idx] > 0
+                or self.storage_ids[idx] == StorageID.NONE
+            ):
+                registered_data_bn_list = self.Ebb.get_registered_data_bn(
+                    self.provider, code_hash
+                )
                 try:
                     registered_data_bn_list[-1]
                 except Exception as e:
@@ -186,7 +193,9 @@ class Job:
             if not self.Ebb.is_orcid_verified(_from):
                 if orcid != empty_bytes32:
                     try:
-                        log(f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified")
+                        log(
+                            f"E: Requester({_from})'s orcid: {orcid.decode('UTF')} is not verified"
+                        )
                     except:
                         log(f"E: Requester({_from})'s orcid: {orcid} is not verified")
                 else:
@@ -205,7 +214,10 @@ class Job:
             raise QuietExit
 
         self.cfg = Yaml(fn)
-        if "requester_address" in self.cfg["config"] and self.cfg["config"]["requester_address"]:
+        if (
+            "requester_address" in self.cfg["config"]
+            and self.cfg["config"]["requester_address"]
+        ):
             self.requester_addr = self.cfg["config"]["requester_address"]
         else:
             log(f"==> requester_address={env.PROVIDER_ID}")
@@ -213,19 +225,25 @@ class Job:
 
         self.provider_addr = self.cfg["config"]["provider_address"]
         if "search_cheapest_provider" in self.cfg["config"]:
-            self.search_cheapest_provider = self.cfg["config"]["search_cheapest_provider"]
+            self.search_cheapest_provider = self.cfg["config"][
+                "search_cheapest_provider"
+            ]
         else:
             self.search_cheapest_provider = True
 
         # self.gmail = self.cfg["config"]["provider_address"]
-        self.source_code_storage_id = storage_id = self.cfg["config"]["source_code"]["storage_id"]
+        self.source_code_storage_id = storage_id = self.cfg["config"]["source_code"][
+            "storage_id"
+        ]
         self.storage_ids.append(STORAGE_IDs[storage_id])
         if storage_id == StorageID.NONE:
             self.add_empty_data_item()
         else:
             cache_type = self.cfg["config"]["source_code"]["cache_type"]
             self.cache_types.append(CACHE_TYPES[cache_type])
-            self.source_code_path = Path(os.path.expanduser(self.cfg["config"]["source_code"]["path"]))
+            self.source_code_path = Path(
+                os.path.expanduser(self.cfg["config"]["source_code"]["path"])
+            )
             size_mb = calculate_size(self.source_code_path)
             try:
                 if self.cfg["config"]["dt_in"] > 0:
@@ -236,7 +254,9 @@ class Job:
 
             self.paths.append(self.source_code_path)
             self.data_transfer_ins.append(size_mb)
-            self.storage_hours.append(self.cfg["config"]["source_code"]["storage_hours"])
+            self.storage_hours.append(
+                self.cfg["config"]["source_code"]["storage_hours"]
+            )
             self.data_prices_set_block_numbers.append(0)
 
         # data files are re-ordered, if a registered data is requested from
@@ -282,17 +302,25 @@ class Job:
                     else:
                         cache_type = self.cfg["config"]["data"][key]["cache_type"]
                         self.cache_types.append(CACHE_TYPES[cache_type])
-                        path = Path(os.path.expanduser(self.cfg["config"]["data"][key]["path"]))
+                        path = Path(
+                            os.path.expanduser(self.cfg["config"]["data"][key]["path"])
+                        )
                         size_mb = calculate_size(path)
                         self.paths.append(path)
                         self.data_paths.append(path)
                         self.data_transfer_ins.append(size_mb)
-                        self.storage_hours.append(self.cfg["config"]["data"][key]["storage_hours"])
+                        self.storage_hours.append(
+                            self.cfg["config"]["data"][key]["storage_hours"]
+                        )
                         self.data_prices_set_block_numbers.append(0)
 
-                if is_data_hash and not is_data_registered(self.provider_addr, data_hash):
+                if is_data_hash and not is_data_registered(
+                    self.provider_addr, data_hash
+                ):
                     d = data_hash.decode("utf-8")
-                    raise QuietExit(f"Requested data={d} is not registered into the provider={self.provider_addr}.")
+                    raise QuietExit(
+                        f"Requested data={d} is not registered into the provider={self.provider_addr}."
+                    )
 
         if len(self.cfg["config"]["jobs"]) == 0:
             raise QuietExit("Provided cores is empty.")
@@ -378,7 +406,9 @@ class Job:
     def search_best_provider(self, requester, is_verbose=True, is_force=False):
         # is_verbose = False
         if not is_force or not self.provider_addr:
-            provider_to_share, best_price, is_all_equal = self._search_best_provider(requester, is_verbose=is_verbose)
+            provider_to_share, best_price, is_all_equal = self._search_best_provider(
+                requester, is_verbose=is_verbose
+            )
         else:  #: instead force the given provider address from `self.provider_addr`
             _price, *_ = self.cost(self.provider_addr, requester, is_verbose=True)
             best_price = _price
@@ -387,13 +417,17 @@ class Job:
 
         self.price, *_ = self.cost(provider_to_share, requester)
         if self.price != best_price:
-            raise Exception(f"job_price={self.price} and best_price={best_price} does not match")
+            raise Exception(
+                f"job_price={self.price} and best_price={best_price} does not match"
+            )
 
         if is_all_equal:  # force to submit given provider address
             provider_to_share = self.Ebb.w3.toChecksumAddress(self.provider_addr)
 
         if is_verbose:
-            log(f"[g]==>[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd")
+            log(
+                f"[g]==>[/g] provider_to_share={provider_to_share} | best_price={Cent(best_price)._to()} [blue]usd"
+            )
 
         return self.Ebb.w3.toChecksumAddress(provider_to_share)
 
@@ -444,7 +478,9 @@ class JobPrices:
         """Set computational cost within the object."""
         self.computational_cost = 0
         for idx, core in enumerate(self.job.cores):
-            self.computational_cost += int(self.price_core_min * core * self.job.run_time[idx])
+            self.computational_cost += int(
+                self.price_core_min * core * self.job.run_time[idx]
+            )
 
     def new_contract_function_call(self, code_hash):
         """Call contract function with new brownie object.
@@ -466,7 +502,9 @@ class JobPrices:
                 self.job.provider, self.job.requester, code_hash
             )
         else:
-            received_deposit, job_storage_duration = self.new_contract_function_call(code_hash)
+            received_deposit, job_storage_duration = self.new_contract_function_call(
+                code_hash
+            )
 
         ds = DataStorage(job_storage_duration)
         ds.received_deposit = received_deposit
@@ -512,16 +550,26 @@ class JobPrices:
 
             # print(received_block + storage_duration >= self.w3.eth.block_number)
             # if ds.received_deposit > 0 or
-            if (ds.received_deposit > 0 and ds.received_block + ds.storage_duration >= self.w3.eth.block_number) or (
+            if (
+                ds.received_deposit > 0
+                and ds.received_block + ds.storage_duration >= self.w3.eth.block_number
+            ) or (
                 ds.received_block + ds.storage_duration >= self.w3.eth.block_number
                 and not ds.is_private
                 and ds.is_verified_used
             ):
                 if is_verbose:
-                    log(f"** for {bytes32_to_ipfs(code_hash)} cost of storage is not paid")
-            elif self.job.data_prices_set_block_numbers[idx] > 0 or self.job.storage_ids[idx] == StorageID.NONE:
+                    log(
+                        f"** for {bytes32_to_ipfs(code_hash)} cost of storage is not paid"
+                    )
+            elif (
+                self.job.data_prices_set_block_numbers[idx] > 0
+                or self.job.storage_ids[idx] == StorageID.NONE
+            ):
                 if self.job.data_prices_set_block_numbers[idx] == 0:
-                    registered_data_bn_list = self.Ebb.get_registered_data_bn(self.job.provider, code_hash)
+                    registered_data_bn_list = self.Ebb.get_registered_data_bn(
+                        self.job.provider, code_hash
+                    )
                     if bn > registered_data_bn_list[-1]:
                         data_fee_set_bn = registered_data_bn_list[-1]
                     else:
@@ -537,20 +585,34 @@ class JobPrices:
                 )
                 self.storage_cost += data_price
                 self.registered_data_cost_list[_code_hash] = data_price
-                self.registered_data_cost_list_usd[_code_hash] = self.to_usd(data_price, is_color=False)
+                self.registered_data_cost_list_usd[_code_hash] = self.to_usd(
+                    data_price, is_color=False
+                )
                 self.registered_data_cost += data_price
-            elif not ds.received_deposit:  # and (received_block + storage_duration < w3.eth.block_number)
+            elif (
+                not ds.received_deposit
+            ):  # and (received_block + storage_duration < w3.eth.block_number)
                 self.data_transfer_in_sum += self.job.data_transfer_ins[idx]
                 if self.job.storage_hours[idx] > 0:
                     self.storage_cost += (
-                        self.price_storage * self.job.data_transfer_ins[idx] * self.job.storage_hours[idx]
+                        self.price_storage
+                        * self.job.data_transfer_ins[idx]
+                        * self.job.storage_hours[idx]
                     )
                 else:
-                    self.cache_cost += self.price_cache * self.job.data_transfer_ins[idx]
+                    self.cache_cost += (
+                        self.price_cache * self.job.data_transfer_ins[idx]
+                    )
 
-        self.data_transfer_in_cost = self.data_transfer_in_sum * self.price_data_transfer
-        self.data_transfer_out_cost = self.job.data_transfer_out * self.price_data_transfer
-        self.data_transfer_cost = self.data_transfer_in_cost + self.data_transfer_out_cost
+        self.data_transfer_in_cost = (
+            self.data_transfer_in_sum * self.price_data_transfer
+        )
+        self.data_transfer_out_cost = (
+            self.job.data_transfer_out * self.price_data_transfer
+        )
+        self.data_transfer_cost = (
+            self.data_transfer_in_cost + self.data_transfer_out_cost
+        )
 
     def to_usd(self, amount, is_color=True) -> str:
         if is_color:
@@ -561,7 +623,12 @@ class JobPrices:
 
     def set_job_price(self, is_verbose=False) -> None:
         """Set job price in the object."""
-        self.job_price = self.computational_cost + self.data_transfer_cost + self.cache_cost + self.storage_cost
+        self.job_price = (
+            self.computational_cost
+            + self.data_transfer_cost
+            + self.cache_cost
+            + self.storage_cost
+        )
         self.cost["computational"] = self.computational_cost
         self.cost["cache"] = self.cache_cost
         self.cost["storage"] = self.storage_cost
@@ -586,8 +653,12 @@ class JobPrices:
                             log(f"{c1} in={self.to_usd(self.cost['data_transfer_in'])}")
 
                         if self.registered_data_cost > 0:
-                            log(f"{c1} registered_data={self.to_usd(self.registered_data_cost)}")
-                            log(f"{straight_line}         {self.registered_data_cost_list_usd}")
+                            log(
+                                f"{c1} registered_data={self.to_usd(self.registered_data_cost)}"
+                            )
+                            log(
+                                f"{straight_line}         {self.registered_data_cost_list_usd}"
+                            )
 
                 if k == "data_transfer":
                     log(f"{c1} in={self.to_usd(self.cost['data_transfer_in'])}")

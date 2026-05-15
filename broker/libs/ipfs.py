@@ -3,7 +3,6 @@
 import ipfshttpclient
 import os
 import re
-import signal
 import socket
 import time
 from cid import make_cid
@@ -13,7 +12,7 @@ from subprocess import check_output
 
 from broker import cfg
 from broker._utils._log import br, ok
-from broker._utils.tools import _remove, constantly_print_popen, handler, log, print_tb
+from broker._utils.tools import _remove, constantly_print_popen, log, print_tb
 from broker.config import env
 from broker.errors import IpfsNotConnected, QuietExit
 from broker.lib import subprocess_call
@@ -80,7 +79,9 @@ class Ipfs:
 
         __ https://stackoverflow.com/questions/69929289/how-to-check-is-the-given-ipfs-hash-is-already-fully-downloaded-or-not
         """
-        output = run(["ipfs", "files", "stat", "--with-local", "--size", f"/ipfs/{ipfs_hash}"])
+        output = run(
+            ["ipfs", "files", "stat", "--with-local", "--size", f"/ipfs/{ipfs_hash}"]
+        )
         if "(100.00%)" in output:
             log("already fully cached", "green")
             log(output)
@@ -171,9 +172,17 @@ class Ipfs:
 
         for attempt in range(5):
             try:
-                cmd = ["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--recv-key", recipient_gpg_fingerprint]
+                cmd = [
+                    "gpg",
+                    "--keyserver",
+                    "hkps://keyserver.ubuntu.com",
+                    "--recv-key",
+                    recipient_gpg_fingerprint,
+                ]
                 log(f"{br(attempt)} cmd: [w]{' '.join(cmd)}")
-                run(cmd, suppress_stderr=True)  # this may not work if it is requested too much in short time
+                run(
+                    cmd, suppress_stderr=True
+                )  # this may not work if it is requested too much in short time
                 break
             except Exception as e:
                 log(f"warning: {e}")
@@ -232,10 +241,14 @@ class Ipfs:
                     log()
                     if "failure: dial to self attempted" in e:
                         log(f"E: {e}")
-                        if not cfg.IS_FULL_TEST and not question_yes_no("==> Would you like to continue?"):
+                        if not cfg.IS_FULL_TEST and not question_yes_no(
+                            "==> Would you like to continue?"
+                        ):
                             raise QuietExit
                     else:
-                        log("E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001")
+                        log(
+                            "E: connection into provider's IPFS node via swarm is not accomplished.\nTry: nc <ip> 4001"
+                        )
                         raise Exception(e)
             else:
                 if is_verbose:
@@ -265,11 +278,15 @@ class Ipfs:
 
         msg = f"$ ipfs object stat {ipfs_hash} --timeout={cfg.IPFS_TIMEOUT}s "
         with Halo(text=msg, spinner="line", placement="right"):
-            return subprocess_call(["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"])
+            return subprocess_call(
+                ["ipfs", "object", "stat", ipfs_hash, f"--timeout={cfg.IPFS_TIMEOUT}s"]
+            )
 
         log()
 
-    def is_hash_exists_online(self, ipfs_hash: str, ipfs_address=None, is_verbose=False):
+    def is_hash_exists_online(
+        self, ipfs_hash: str, ipfs_address=None, is_verbose=False
+    ):
         log(f"==> Attempting to check IPFS file [g]{ipfs_hash}[/g] ... ")
         if not is_ipfs_on():
             start_ipfs_daemon()
@@ -284,7 +301,9 @@ class Ipfs:
 
         try:
             if ipfs_address:
-                with suppress(Exception):  # TODO: Attempt to swarm connect into requester
+                with suppress(
+                    Exception
+                ):  # TODO: Attempt to swarm connect into requester
                     self.swarm_connect(ipfs_address, is_verbose=is_verbose)
 
             output = self.stat(ipfs_hash, _is_ipfs_on=False)
@@ -314,7 +333,9 @@ class Ipfs:
         log(output)
         if is_storage_paid:
             # pin downloaded ipfs hash if storage is paid
-            output = check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
+            output = (
+                check_output(["ipfs", "pin", "add", ipfs_hash]).decode("utf-8").rstrip()
+            )
             log(output)
 
     def get_cumulative_size(self, ipfs_hash: str):
@@ -335,7 +356,15 @@ class Ipfs:
         :param is_hidden: boolean if it is true hidden files/foders are included such as .git
         """
         if os.path.isdir(path):
-            cmd = ["/usr/local/bin/ipfs", "add", "-r", "--quieter", "--progress", "--offline", path]
+            cmd = [
+                "/usr/local/bin/ipfs",
+                "add",
+                "-r",
+                "--quieter",
+                "--progress",
+                "--offline",
+                path,
+            ]
             if is_hidden:
                 # include files that are hidden such as .git/.
                 # Only takes effect on recursive add
@@ -349,15 +378,21 @@ class Ipfs:
             try:
                 result_ipfs_hash = constantly_print_popen(cmd)
                 if not result_ipfs_hash and not self.is_valid(result_ipfs_hash):
-                    log(f"E: Generated new hash string returned empty. Trying again. Try count: {attempt}")
+                    log(
+                        f"E: Generated new hash string returned empty. Trying again. Try count: {attempt}"
+                    )
                     # time.sleep(5)
                 elif not self.is_valid(result_ipfs_hash):
-                    log(f"E: Generated new hash is not valid. Trying again. Try count: {attempt}")
+                    log(
+                        f"E: Generated new hash is not valid. Trying again. Try count: {attempt}"
+                    )
                     # time.sleep(5)
 
                 break
             except:
-                log(f"E: Generated new hash returned empty. Trying again. Try count: {attempt}")
+                log(
+                    f"E: Generated new hash returned empty. Trying again. Try count: {attempt}"
+                )
                 time.sleep(5)
         else:
             raise Exception("Failed all the attempts to generate ipfs hash")
@@ -398,7 +433,9 @@ class Ipfs:
                 s.connect(("8.8.8.8", 80))
                 local_ip = s.getsockname()[0]
                 s.close()
-                ipfs_address = ipfs_address.replace(socket.gethostbyname("avatar-home.duckdns.org"), local_ip)
+                ipfs_address = ipfs_address.replace(
+                    socket.gethostbyname("avatar-home.duckdns.org"), local_ip
+                )
 
         return ipfs_address
 
@@ -412,7 +449,11 @@ class Ipfs:
         ipfs_addresses = _client.id()["Addresses"]
         for ipfs_address in reversed(ipfs_addresses):
             if (
-                ("::" not in ipfs_address and "127.0.0.1" not in ipfs_address and "/tcp/" in ipfs_address)
+                (
+                    "::" not in ipfs_address
+                    and "127.0.0.1" not in ipfs_address
+                    and "/tcp/" in ipfs_address
+                )
                 or "/ip4/127.0.0.1/tcp/4001/p2p/" in ipfs_address
                 or "/ip4/127.0.0.1/tcp/4002/p2p/" in ipfs_address
             ):
@@ -452,9 +493,26 @@ class Ipfs:
     def publish_gpg(self, gpg_fingerprint, is_verbose=True):
         # log("> running: gpg --verbose --keyserver hkps://keyserver.ubuntu.com --send-keys <key_id>")
         if is_verbose:
-            run(["gpg", "--verbose", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
+            run(
+                [
+                    "gpg",
+                    "--verbose",
+                    "--keyserver",
+                    "hkps://keyserver.ubuntu.com",
+                    "--send-keys",
+                    gpg_fingerprint,
+                ]
+            )
         else:
-            run(["gpg", "--keyserver", "hkps://keyserver.ubuntu.com", "--send-keys", gpg_fingerprint])
+            run(
+                [
+                    "gpg",
+                    "--keyserver",
+                    "hkps://keyserver.ubuntu.com",
+                    "--send-keys",
+                    gpg_fingerprint,
+                ]
+            )
 
     def is_gpg_published(self, gpg_fingerprint):
         try:

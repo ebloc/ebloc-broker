@@ -63,7 +63,9 @@ def main():
                     a = Ebb.get_block(int(line[7]))["timestamp"]
                     b = Ebb.get_block(int(line[len(line) - 1]))["timestamp"]
 
-                    completion_time[k_elapsed] += float(format(float((b - a) / 60), ".2f"))
+                    completion_time[k_elapsed] += float(
+                        format(float((b - a) / 60), ".2f")
+                    )
 
                     wait_time[k] += int(line[10])
                     submitJob_gas_used[workload] += int(line[len(line) - 4])

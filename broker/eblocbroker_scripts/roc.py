@@ -4,8 +4,7 @@ import networkx as nx
 
 from broker import cfg, config
 from broker._utils._log import log
-from broker.config import env, setup_logger
-from broker.utils import print_tb
+from broker.config import setup_logger
 
 Ebb = cfg.Ebb
 logging = setup_logger()

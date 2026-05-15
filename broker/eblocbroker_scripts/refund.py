@@ -17,10 +17,14 @@ def refund(self, provider, _from, job_key, index, job_id, cores, elapsed_time):
     _from = self.w3.toChecksumAddress(_from)
     provider = self.w3.toChecksumAddress(provider)
     if not self.does_provider_exist(provider):
-        raise Exception(f"Requested provider's Ethereum address {provider} does not exist")
+        raise Exception(
+            f"Requested provider's Ethereum address {provider} does not exist"
+        )
 
     if provider != _from and not self.does_requester_exist(_from):
-        raise Exception(f"Requested requester's Ethereum address {_from} does not exist")
+        raise Exception(
+            f"Requested requester's Ethereum address {_from} does not exist"
+        )
 
     try:
         tx = self._refund(_from, provider, job_key, index, job_id, cores, elapsed_time)
@@ -50,10 +54,14 @@ if __name__ == "__main__":
         elapsed_time = ["5"]
 
     try:
-        tx_hash = Ebb.refund(provider, _from, job_key, index, job_id, cores, elapsed_time)
+        tx_hash = Ebb.refund(
+            provider, _from, job_key, index, job_id, cores, elapsed_time
+        )
         receipt = get_tx_status(tx_hash)
         if receipt["status"] == 1:
-            processed_logs = Ebb._eblocbroker.events.LogRefundRequest().processReceipt(receipt, errors=DISCARD)
+            processed_logs = Ebb._eblocbroker.events.LogRefundRequest().processReceipt(
+                receipt, errors=DISCARD
+            )
             log(vars(processed_logs[0].args))
             try:
                 log(f"refunded_cent={processed_logs[0].args['refundedCent']}")

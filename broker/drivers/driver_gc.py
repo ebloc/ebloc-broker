@@ -19,7 +19,9 @@ def main():
     for document in cursor:
         # print(document)
         # TODO: requester paramer as get_storage_duration
-        received_bn, storage_duration = Ebb.get_job_storage_duration(env.PROVIDER_ID, document["sourceCodeHash"])
+        received_bn, storage_duration = Ebb.get_job_storage_duration(
+            env.PROVIDER_ID, document["sourceCodeHash"]
+        )
         end_block_time = received_bn + storage_duration * cfg.ONE_HOUR_BLOCK_DURATION
         storageID = document["storageID"]
         if end_block_time < block_number and received_bn != 0:
@@ -29,11 +31,17 @@ def main():
                 print(run(["ipfs", "repo", "gc"]))
             else:
                 cached_file_name = (
-                    env.PROGRAM_PATH / document["requesterID"] / "cache" / document["sourceCodeHash"] + "tar.gz"
+                    env.PROGRAM_PATH
+                    / document["requesterID"]
+                    / "cache"
+                    / document["sourceCodeHash"]
+                    + "tar.gz"
                 )
                 print(cached_file_name)
                 _remove(cached_file_name)
-                cached_file_name = env.PROGRAM_PATH / "cache" / document["sourceCodeHash"] + "tar.gz"
+                cached_file_name = (
+                    env.PROGRAM_PATH / "cache" / document["sourceCodeHash"] + "tar.gz"
+                )
                 print(cached_file_name)
                 _remove(cached_file_name)
 

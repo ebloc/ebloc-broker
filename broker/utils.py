@@ -21,7 +21,15 @@ from broker import cfg, config
 from broker._utils import _log
 from broker._utils._getch import _Getch
 from broker._utils._log import WHERE, br
-from broker._utils.tools import _exit, bytes_to_mb, is_process_on, log, pre_cmd_set, print_tb, run
+from broker._utils.tools import (
+    _exit,
+    bytes_to_mb,
+    is_process_on,
+    log,
+    pre_cmd_set,
+    print_tb,
+    run,
+)
 from broker.config import env
 from broker.errors import QuietExit
 
@@ -131,7 +139,19 @@ def untar(tar_fn, extract_to):
                 log(f"==> {tar_fn} is already extracted into\n    {extract_to}")
                 return
 
-    run(["tar", "--warning=no-timestamp", "-xvpf", tar_fn, "-C", extract_to, "--no-overwrite-dir", "--strip", "1"])
+    run(
+        [
+            "tar",
+            "--warning=no-timestamp",
+            "-xvpf",
+            tar_fn,
+            "-C",
+            extract_to,
+            "--no-overwrite-dir",
+            "--strip",
+            "1",
+        ]
+    )
 
 
 def is_internet_on(host="8.8.8.8", port=53, timeout=3) -> bool:
@@ -234,7 +254,9 @@ def popen_communicate(cmd, stdout_fn=None, mode="w", env=None):
     else:
         with open(stdout_fn, mode) as outfile:
             # output written into file, error will be returned
-            p = Popen(cmd, stdout=outfile, stderr=PIPE, env=env, universal_newlines=False)
+            p = Popen(
+                cmd, stdout=outfile, stderr=PIPE, env=env, universal_newlines=False
+            )
             output, error = p.communicate()
             p.wait()
             return p, output, error.rstrip()
@@ -408,15 +430,22 @@ def is_geth_account_locked(address) -> bool:
     else:
         address = cfg.w3.toChecksumAddress(address)
         for account_idx in range(0, len(cfg.w3.geth.personal.list_wallets())):
-            _address = cfg.w3.geth.personal.list_wallets()[account_idx]["accounts"][0]["address"]
+            _address = cfg.w3.geth.personal.list_wallets()[account_idx]["accounts"][0][
+                "address"
+            ]
             if _address == address:
-                return cfg.w3.geth.personal.list_wallets()[account_idx]["status"] == "Locked"
+                return (
+                    cfg.w3.geth.personal.list_wallets()[account_idx]["status"]
+                    == "Locked"
+                )
     return False
 
 
 def is_driver_on(process_count=1, is_print=True):
     """Check whether driver runs on the background."""
-    if is_process_on("python.*[e]blocbroker driver", process_count=process_count, is_print=is_print):
+    if is_process_on(
+        "python.*[e]blocbroker driver", process_count=process_count, is_print=is_print
+    ):
         log(f"==> Track output using: [blue]tail -f {_log.DRIVER_LOG}")
         raise QuietExit
 
@@ -432,7 +461,9 @@ def is_geth_on():
 
 def is_ganache_on(port) -> bool:
     """Check whether ganache-cli runs on the background."""
-    return is_process_on("node.*[g]anache-cli", "ganache-cli", process_count=0, port=port)
+    return is_process_on(
+        "node.*[g]anache-cli", "ganache-cli", process_count=0, port=port
+    )
 
 
 def start_ipfs_daemon(_is_print=False) -> bool:
@@ -585,7 +616,9 @@ def is_program_valid(cmd):
     try:
         run(cmd)
     except Exception as e:
-        terminate(f"Please install {cmd[0]} or check its path.\n{e}", is_traceback=False)
+        terminate(
+            f"Please install {cmd[0]} or check its path.\n{e}", is_traceback=False
+        )
 
 
 def compress_folder(folder_path, is_exclude_git=False):
@@ -660,4 +693,8 @@ def dump_dict_to_file(fn, job_keys) -> None:
 
 def is_docker():
     path = "/proc/self/cgroup"
-    return os.path.exists("/.dockerenv") or os.path.isfile(path) and any("docker" in line for line in open(path))
+    return (
+        os.path.exists("/.dockerenv")
+        or os.path.isfile(path)
+        and any("docker" in line for line in open(path))
+    )

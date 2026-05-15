@@ -11,7 +11,14 @@ from broker._utils._log import br, ok
 from broker._utils.tools import _remove, mkdir, read_json
 from broker.config import env
 from broker.lib import echo_grep_awk, run, subprocess_call
-from broker.utils import byte_to_mb, compress_folder, dump_dict_to_file, is_program_valid, log, print_tb
+from broker.utils import (
+    byte_to_mb,
+    compress_folder,
+    dump_dict_to_file,
+    is_program_valid,
+    log,
+    print_tb,
+)
 
 
 def refresh_gdrive_token(silent=True):
@@ -58,8 +65,12 @@ def submit(_from, job):
                 if not isinstance(folder_to_share, bytes):
                     # starting from the first data file ignoring source_folder
                     # attempting to share the data folder
-                    folder_key, tar_hash, job.tar_hashes = upload_folder(folder_to_share, job.tmp_dir)
-                    folder_ids_to_share.append(folder_key)  # record keys to share at end
+                    folder_key, tar_hash, job.tar_hashes = upload_folder(
+                        folder_to_share, job.tmp_dir
+                    )
+                    folder_ids_to_share.append(
+                        folder_key
+                    )  # record keys to share at end
                     job.foldername_tar_hash[folder_to_share] = tar_hash
                     job.keys[tar_hash] = folder_key
 
@@ -76,13 +87,19 @@ def submit(_from, job):
             with suppress(Exception):
                 data_json = read_json(data_files_json_path)
                 if job.keys == data_json:
-                    log(f"==> meta_data.json file matches with the given data keys {ok()}")
+                    log(
+                        f"==> meta_data.json file matches with the given data keys {ok()}"
+                    )
                 else:
-                    log("warning: meta_data.json file does not match with the given data keys")
+                    log(
+                        "warning: meta_data.json file does not match with the given data keys"
+                    )
 
         folder_to_share = job.folders_to_share[0]
         if not isinstance(folder_to_share, bytes):
-            folder_key, tar_hash, job.tar_hashes = upload_folder(folder_to_share, job.tmp_dir, folder_key_flag=True)
+            folder_key, tar_hash, job.tar_hashes = upload_folder(
+                folder_to_share, job.tmp_dir, folder_key_flag=True
+            )
             folder_ids_to_share.append(folder_key)  # record keys to share at end
             job.foldername_tar_hash[folder_to_share] = tar_hash
             # add an element to the beginning of the dict since Python
@@ -168,7 +185,14 @@ def delete_all(_type="all"):
             if " dir   " in line:
                 try:
                     log(f"Attempt to delete dir: {line.split()[0]} ", end="", h=False)
-                    output = run(["/usr/local/bin/gdrive", "delete", "--recursive", line.split()[0]])
+                    output = run(
+                        [
+                            "/usr/local/bin/gdrive",
+                            "delete",
+                            "--recursive",
+                            line.split()[0],
+                        ]
+                    )
                     print(output)
                 except Exception as e:
                     if str(e) != "":
@@ -217,10 +241,18 @@ def _list(tar_hash, is_folder=False):
 
 def _upload(dir_path, tar_hash, is_folder=False):
     if is_folder:
-        subprocess.run(["gdrive", "upload", "--recursive", f"{dir_path}/{tar_hash}"], check=True)
+        subprocess.run(
+            ["gdrive", "upload", "--recursive", f"{dir_path}/{tar_hash}"], check=True
+        )
         output = (
             subprocess.check_output(
-                ["gdrive", "list", "--query", f"name='{tar_hash}' and trashed=false", "--no-header"]
+                [
+                    "gdrive",
+                    "list",
+                    "--query",
+                    f"name='{tar_hash}' and trashed=false",
+                    "--no-header",
+                ]
             )
             .decode("utf-8")
             .strip()
@@ -297,7 +329,15 @@ def parse_gdrive_info(gdrive_info):
         log(gdrive_info, "yellow")
 
 
-def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_hashes, is_cached):
+def size(
+    key,
+    mime_type,
+    folder_name,
+    gdrive_info,
+    results_folder_prev,
+    code_hashes,
+    is_cached,
+):
     source_code_key = None
     size_to_download = 0
     if "folder" not in mime_type:
@@ -342,7 +382,9 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
     _source_code_hash = code_hashes[0].decode("utf-8")
     if md5sum != _source_code_hash:
         # checks md5sum obtained from gdrive and given by the user
-        raise Exception(f"md5sum does not match with the provided data {source_code_key}")
+        raise Exception(
+            f"md5sum does not match with the provided data {source_code_key}"
+        )
 
     log(f":beer: folder={md5sum}", "bg")
     byte_size = int(get_file_info(gdrive_info, "Size"))
@@ -373,7 +415,14 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
                     _key = str(v)
                     output = get_file_id(_key)
                     data_key = fetch_grive_output(output, f"{k}.tar.gz")
-                    cmd = ["gdrive", "info", "--bytes", data_key, "-c", env.GDRIVE_METADATA]
+                    cmd = [
+                        "gdrive",
+                        "info",
+                        "--bytes",
+                        data_key,
+                        "-c",
+                        env.GDRIVE_METADATA,
+                    ]
                     gdrive_info = subprocess_call(cmd, 10)
                 except Exception as e:
                     raise e
@@ -407,7 +456,9 @@ def size(key, mime_type, folder_name, gdrive_info, results_folder_prev, code_has
             raise Exception("Something is wrong; data_key_dict is empty")
 
     output = byte_to_mb(size_to_download)
-    log(f"total_size={byte_size} bytes | size to download={size_to_download} bytes ~= {output} MB")
+    log(
+        f"total_size={byte_size} bytes | size to download={size_to_download} bytes ~= {output} MB"
+    )
     return output, data_key_dict, source_code_key
 
 

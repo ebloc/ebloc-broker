@@ -12,14 +12,24 @@ from pathlib import Path
 from broker import cfg
 from broker._utils._log import ok
 from broker._utils.tools import remove_ansi_escape_sequence
-from broker.utils import cd, is_gzip_file_empty, log, path_leaf, popen_communicate, print_tb, run
+from broker.utils import (
+    cd,
+    is_gzip_file_empty,
+    log,
+    path_leaf,
+    popen_communicate,
+    print_tb,
+    run,
+)
 
 
 def git_init():
     log("Creating an empty Git repository using 'git init'", end="")
     run(["git", "init", "--quiet"])
     run(["git", "reflog", "expire", "--all", "--expire=now"])
-    run(["git", "gc", "--prune=now", "--aggressive", "--force"])  # takes few seconds but saves space
+    run(
+        ["git", "gc", "--prune=now", "--aggressive", "--force"]
+    )  # takes few seconds but saves space
     log(ok())
 
 
@@ -44,7 +54,9 @@ def is_initialized(path) -> bool:
     with cd(path):
         try:
             #: checks is the give path top git folder
-            *_, output, err = popen_communicate(["git", "rev-parse", "--is-inside-work-tree"])  # noqa
+            *_, output, err = popen_communicate(
+                ["git", "rev-parse", "--is-inside-work-tree"]
+            )  # noqa
             if output == "true":
                 git.Repo(".", search_parent_directories=False)
                 return True
@@ -110,7 +122,18 @@ def diff_patch(path: Path, source_code_hash, index, target_path, home_dir):
         try:
             # os.environ["HOME"] = str(home_dir)  # needed if repo is used
             #: https://stackoverflow.com/a/52227100/2402577
-            run(["env", f"HOME={home_dir}", "git", "config", "--global", "--add", "safe.directory", path])
+            run(
+                [
+                    "env",
+                    f"HOME={home_dir}",
+                    "git",
+                    "config",
+                    "--global",
+                    "--add",
+                    "safe.directory",
+                    path,
+                ]
+            )
             run(["env", f"HOME={home_dir}", "git", "config", "core.fileMode", "false"])
             # first ignore deleted files not to be added into git ignore deleted
             # files to prevent them to added into git commit which will increase the file size
@@ -120,12 +143,25 @@ def diff_patch(path: Path, source_code_hash, index, target_path, home_dir):
                     fn = line.replace("deleted:", "").strip().replace(" ", "")
                     fn = remove_ansi_escape_sequence(fn)
                     with suppress(Exception):
-                        run(["env", f"HOME={home_dir}", "git", "update-index", "--assume-unchanged", fn])
+                        run(
+                            [
+                                "env",
+                                f"HOME={home_dir}",
+                                "git",
+                                "update-index",
+                                "--assume-unchanged",
+                                fn,
+                            ]
+                        )
 
             # head_commit_id = repo.rev_parse("HEAD")
-            head_commit_id = run(["env", f"HOME={home_dir}", "git", "rev-parse", "HEAD"])
+            head_commit_id = run(
+                ["env", f"HOME={home_dir}", "git", "rev-parse", "HEAD"]
+            )
             sep = "~"  # separator in between the string infos
-            patch_name = f"patch{sep}{head_commit_id}{sep}{source_code_hash}{sep}{index}.diff"
+            patch_name = (
+                f"patch{sep}{head_commit_id}{sep}{source_code_hash}{sep}{index}.diff"
+            )
         except Exception as e:
             print_tb(e)
             return False
@@ -161,11 +197,25 @@ def add_all_(_env):
         run(["git", "add", "-A"], env=_env)
         log(ok())
         try:
-            cmd = ["git", "diff-index", "HEAD", "--ignore-blank-lines", "--ignore-space-at-eol", "--shortstat"]
+            cmd = [
+                "git",
+                "diff-index",
+                "HEAD",
+                "--ignore-blank-lines",
+                "--ignore-space-at-eol",
+                "--shortstat",
+            ]
             output = run(cmd, env=_env)
             changed_file_count = int(output.split("files changed", 1)[0])
         except:
-            cmd = ["git", "diff", "--cached", "--ignore-blank-lines", "--ignore-space-at-eol", "--shortstat"]
+            cmd = [
+                "git",
+                "diff",
+                "--cached",
+                "--ignore-blank-lines",
+                "--ignore-space-at-eol",
+                "--shortstat",
+            ]
             output = run(cmd, env=_env)
             changed_file_count = int(output.split("files changed", 1)[0])
 
@@ -204,16 +254,28 @@ def add_all(repo=None):
         if not repo:
             repo = git.Repo(".", search_parent_directories=True)
 
-        log("all files in the entire working tree are updated in the Git repository", end="")
+        log(
+            "all files in the entire working tree are updated in the Git repository",
+            end="",
+        )
         repo.git.add(A=True)
         log(ok())
         try:
             #: git diff HEAD --name-only | wc -l
-            changed_file_len = len(repo.index.diff("HEAD", ignore_blank_lines=True, ignore_space_at_eol=True))
+            changed_file_len = len(
+                repo.index.diff(
+                    "HEAD", ignore_blank_lines=True, ignore_space_at_eol=True
+                )
+            )
         except:
             # if it is the first commit HEAD might not exist
             changed_file_len = len(
-                repo.git.diff("--cached", "--ignore-blank-lines", "--ignore-space-at-eol", "--name-only").split("\n")
+                repo.git.diff(
+                    "--cached",
+                    "--ignore-blank-lines",
+                    "--ignore-space-at-eol",
+                    "--name-only",
+                ).split("\n")
             )
 
         if changed_file_len > 0:

@@ -174,7 +174,9 @@ def _remove(path: str, is_verbose=False) -> None:
             shutil.rmtree(path)
         else:
             if is_verbose:
-                log(f"warning: {WHERE(1)} Nothing removed, following path does not exist:\n[m]{path}")
+                log(
+                    f"warning: {WHERE(1)} Nothing removed, following path does not exist:\n[m]{path}"
+                )
 
             return
 
@@ -282,7 +284,16 @@ def _percent_change(initial: float, final=None, change=None, decimal: int = 2):
             return 0.0
 
 
-def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=None, is_sign=True, is_print=True):
+def percent_change(
+    initial,
+    change,
+    _decimal=8,
+    end=None,
+    is_arrow=True,
+    color=None,
+    is_sign=True,
+    is_print=True,
+):
     """Calculate the changed percent."""
     if change == 0:
         log("warning: percent_change() <change> is given as 0")
@@ -327,7 +338,9 @@ def percent_change(initial, change, _decimal=8, end=None, is_arrow=True, color=N
         if is_sign:
             log(f"{change}({format(float(percent), '.2f')}%) ", color, end=end)
         else:
-            log(f"{abs(change)}({format(float(abs(percent)), '.2f')}%) ", color, end=end)
+            log(
+                f"{abs(change)}({format(float(abs(percent)), '.2f')}%) ", color, end=end
+            )
     elif is_sign:
         log(f"({format(float(percent), '.2f')}%) ", color, end=end)
     else:
@@ -341,7 +354,10 @@ def print_trace(cmd, back=1, exc="", returncode="") -> None:
         cmd = " ".join(cmd)
 
     if exc:
-        log(f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}", "red")
+        log(
+            f"{WHERE(back)} CalledProcessError: returned non-zero exit status {returncode}",
+            "red",
+        )
         log(f"[blue]$ [/blue][white]{cmd}", is_code=True)
         log(exc.rstrip(), "red")
     else:
@@ -370,7 +386,9 @@ def run(cmd, env=None, suppress_stderr=False) -> str:
     try:
         if env is None:
             if suppress_stderr:
-                return check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8").strip()
+                return (
+                    check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8").strip()
+                )
             else:
                 return check_output(cmd).decode("utf-8").strip()
         else:
@@ -399,7 +417,9 @@ def constantly_print_popen(cmd):
         raise CalledProcessError(p.returncode, p.args)
 
 
-def is_process_on(process_name, name="", process_count=0, port=None, is_print=True) -> bool:
+def is_process_on(
+    process_name, name="", process_count=0, port=None, is_print=True
+) -> bool:
     """Check whether the process runs on the background.
 
     __ https://stackoverflow.com/a/6482230/2402577
@@ -408,7 +428,11 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
         name = process_name
 
     p1 = Popen(["ps", "auxww"], stdout=PIPE)
-    p2 = Popen(["grep", "-v", "-e", "flycheck_", "-e", "grep", "-e", "emacsclient"], stdin=p1.stdout, stdout=PIPE)
+    p2 = Popen(
+        ["grep", "-v", "-e", "flycheck_", "-e", "grep", "-e", "emacsclient"],
+        stdin=p1.stdout,
+        stdout=PIPE,
+    )
     p1.stdout.close()  # type: ignore
     p3 = Popen(["grep", "-E", process_name], stdin=p2.stdout, stdout=PIPE)
     p2.stdout.close()  # type: ignore
@@ -429,7 +453,9 @@ def is_process_on(process_name, name="", process_count=0, port=None, is_print=Tr
             pid = out.strip().split()[1]
             if pid in pids:
                 if is_print:
-                    log(f"==> [g]{name}[/g] is already running on the background, its pid={pid}")
+                    log(
+                        f"==> [g]{name}[/g] is already running on the background, its pid={pid}"
+                    )
 
                 return True
         else:
@@ -490,7 +516,10 @@ def without_keys(d, keys):
 
 
 def quit_function(fn_name) -> None:
-    print("warning: _utils/tools.py: '{0}' function took too long\t\t\t".format(fn_name), file=sys.stderr)
+    print(
+        "warning: _utils/tools.py: '{0}' function took too long\t\t\t".format(fn_name),
+        file=sys.stderr,
+    )
     # raise Exception(f" {fn_name} function took too long")
     sys.stderr.flush()  # python 3 stderr is likely buffered.
     thread.interrupt_main()  # raises KeyboardInterrupt
@@ -543,7 +572,15 @@ def handler(signum, frame):
     """
     if any(
         x in str(frame)
-        for x in ["subprocess.py", "ssl.py", "log_job", "connection.py", "threading.py", "utils.py", "tools.py"]
+        for x in [
+            "subprocess.py",
+            "ssl.py",
+            "log_job",
+            "connection.py",
+            "threading.py",
+            "utils.py",
+            "tools.py",
+        ]
     ):
         pass
     else:
@@ -575,7 +612,9 @@ def get_ip():
 
 def countdown(seconds: int, is_verbose=False) -> None:
     if not is_verbose:
-        log(f"==> sleep_time={seconds} seconds\t                                              ")
+        log(
+            f"==> sleep_time={seconds} seconds\t                                              "
+        )
 
     while seconds:
         mins, secs = divmod(seconds, 60)

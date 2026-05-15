@@ -21,7 +21,9 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         raise Exception(f"Account: {_from} is not a valid address")
 
     if not self.is_owner(_from):
-        raise Exception(f"Account: {_from} that will call the transaction is not the owner of the contract")
+        raise Exception(
+            f"Account: {_from} that will call the transaction is not the owner of the contract"
+        )
 
     if not self.does_requester_exist(address) and not self.does_provider_exist(address):
         raise Exception(f"Address: {address} is not registered")
@@ -33,7 +35,9 @@ def authenticate_orc_id(self, address, orc_id, _from) -> Union[None, str]:
         raise Exception("orc_id contains characters")
 
     if self._is_orc_id_verified(address):
-        raise Exception(f"==> address={address} that has orc_id: {orc_id} is already authenticated")
+        raise Exception(
+            f"==> address={address} that has orc_id: {orc_id} is already authenticated"
+        )
 
     try:
         tx = self._authenticate_orc_id(_from, address, str.encode(orc_id))

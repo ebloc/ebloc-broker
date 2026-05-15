@@ -20,16 +20,22 @@ def _register_data(code_hash, data_price, commitment_dur):
         raise QuietExit
 
     if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-        log(f"warning: provider [g]{env.PROVIDER_ID}[/g]'s orcid id is not authenticated yet")
+        log(
+            f"warning: provider [g]{env.PROVIDER_ID}[/g]'s orcid id is not authenticated yet"
+        )
         raise QuietExit
 
     if commitment_dur < cfg.ONE_HOUR_BLOCK_DURATION:
-        log(f"warning: commitment block number should be greater than {cfg.ONE_HOUR_BLOCK_DURATION}")
+        log(
+            f"warning: commitment block number should be greater than {cfg.ONE_HOUR_BLOCK_DURATION}"
+        )
         raise QuietExit
 
     code_hash_bytes = cfg.w3.toBytes(text=code_hash)
     try:
-        (price, _commitment_dur) = get_latest_data_price(env.PROVIDER_ID, code_hash_bytes, is_verbose=False)
+        (price, _commitment_dur) = get_latest_data_price(
+            env.PROVIDER_ID, code_hash_bytes, is_verbose=False
+        )
         try:
             bn = cfg.Ebb.get_registered_data_bn(env.PROVIDER_ID, code_hash_bytes)
             if bn[0] == 0:
@@ -60,11 +66,15 @@ def _register_data(code_hash, data_price, commitment_dur):
         raise QuietExit
 
     if price == data_price and _commitment_dur == commitment_dur:
-        log(f"==> data([g]{code_hash}[/g]) is already registerered with the given values")
+        log(
+            f"==> data([g]{code_hash}[/g]) is already registerered with the given values"
+        )
         raise QuietExit
 
     if price == 1 and data_price == 0 and _commitment_dur == commitment_dur:
-        log(f"==> data([g]{code_hash}[/g]) is already registerered with the given values")
+        log(
+            f"==> data([g]{code_hash}[/g]) is already registerered with the given values"
+        )
         raise QuietExit
 
     try:

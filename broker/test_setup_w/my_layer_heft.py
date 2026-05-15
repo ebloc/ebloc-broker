@@ -94,7 +94,9 @@ class Ewe:
             key = int(key)
             if key in self.ready or key in self.submitted or key in self.running:
                 keys = value.split("_")
-                job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False)
+                job_info = Ebb.get_job_info(
+                    keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False
+                )
                 state_val = state.inv_code[job_info["stateCode"]]
                 if state_val == "RUNNING":
                     if key in self.submitted:
@@ -138,7 +140,11 @@ def fetch_calcualted_cost(yaml_fn):
 
 def check_completed_jobs(ewe, dependent_jobs):
     for job_id in dependent_jobs:
-        if job_id not in ewe.completed and job_id not in ewe.refunded and job_id not in ewe.failed:
+        if (
+            job_id not in ewe.completed
+            and job_id not in ewe.refunded
+            and job_id not in ewe.failed
+        ):
             return False
 
     return True
@@ -248,7 +254,9 @@ def submit_layering():
                     key = ewe.submitted_node_dict[job_id]
                     keys = key.split("_")
                     log(f"{job_id} => ", end="")
-                    job_info = Ebb.get_job_info(keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False)
+                    job_info = Ebb.get_job_info(
+                        keys[0], keys[1], keys[2], keys[4], keys[3], is_print=False
+                    )
                     state_val = state.inv_code[job_info["stateCode"]]
                     if state_val != "COMPLETED":
                         fn = Ebb.EBB_SCRIPTS / "get_job_info.py"
@@ -286,8 +294,17 @@ def submit_layering():
                             ewe.refunded.append(job_id)
 
                     if job_id in ewe.running:
-                        run_time = round(default_timer() - ewe.jobs_started_run_time[job_id])
-                        if run_time > (int(yaml["config"]["jobs"][f"job{job_id}"]["run_time"]) + 5) * 60:
+                        run_time = round(
+                            default_timer() - ewe.jobs_started_run_time[job_id]
+                        )
+                        if (
+                            run_time
+                            > (
+                                int(yaml["config"]["jobs"][f"job{job_id}"]["run_time"])
+                                + 5
+                            )
+                            * 60
+                        ):
                             with suppress(Exception):
                                 ewe.running.remove(job_id)
 
@@ -363,7 +380,9 @@ def submit_layering():
                         for i, _job in enumerate(sorted(partial_layer)):
                             my_job = yaml_jobs["config"]["jobs"][f"job{_job}"]
                             yaml_original["config"]["jobs"][f"job{i + 1}"]["cores"] = 1
-                            yaml_original["config"]["jobs"][f"job{i + 1}"]["run_time"] = my_job["run_time"]
+                            yaml_original["config"]["jobs"][f"job{i + 1}"][
+                                "run_time"
+                            ] = my_job["run_time"]
                             if ewe.very_first_job[provider_char]:
                                 yaml_original["config"]["dt_in"] = 201
                                 ewe.very_first_job[provider_char] = False
@@ -372,42 +391,63 @@ def submit_layering():
 
                             yaml_original["config"]["data_transfer_out"] = 0
                             for u, v, d in wf.G.edges(data=True):
-                                if int(u) in _slots[provider_char] and int(v) in _slots[provider_char]:
+                                if (
+                                    int(u) in _slots[provider_char]
+                                    and int(v) in _slots[provider_char]
+                                ):
                                     pass
                                 else:
-                                    if u not in list(G_copy.nodes) and v in list(G_copy.nodes):
-                                        yaml_original["config"]["dt_in"] += int(d["weight"])
+                                    if u not in list(G_copy.nodes) and v in list(
+                                        G_copy.nodes
+                                    ):
+                                        yaml_original["config"]["dt_in"] += int(
+                                            d["weight"]
+                                        )
 
-                                    if u in list(G_copy.nodes) and v not in list(G_copy.nodes):
-                                        yaml_original["config"]["data_transfer_out"] += int(d["weight"])
+                                    if u in list(G_copy.nodes) and v not in list(
+                                        G_copy.nodes
+                                    ):
+                                        yaml_original["config"][
+                                            "data_transfer_out"
+                                        ] += int(d["weight"])
                     elif len(partial_layer) == 1:
                         my_job = yaml_jobs["config"]["jobs"][f"job{partial_layer[0]}"]
                         yaml_original["config"]["dt_in"] = my_job["dt_in"]
                         yaml_original["config"]["data_transfer_out"] = my_job["dt_out"]
                         yaml_original["config"]["jobs"] = {}
                         yaml_original["config"]["jobs"]["job1"]["cores"] = 1
-                        yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job["run_time"]
+                        yaml_original["config"]["jobs"]["job1"]["run_time"] = my_job[
+                            "run_time"
+                        ]
                     else:  #: if its empty
                         continue_flag = True
 
                     if not continue_flag:
                         #: Load -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                         if not is_load:
-                            yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                            yaml_original["config"]["provider_address"] = provider_id[
+                                provider_char
+                            ]
                         else:
                             idle_code = get_online_idle_core(provider_ip[provider_char])
                             log(f"provider {provider_char} idle cores: {idle_code}")
                             if idle_code > 0:
-                                yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                                yaml_original["config"]["provider_address"] = (
+                                    provider_id[provider_char]
+                                )
                             else:
-                                yaml_original["config"]["provider_address"] = provider_id[provider_char]
+                                yaml_original["config"]["provider_address"] = (
+                                    provider_id[provider_char]
+                                )
                                 for pr in provider_ip:
                                     idle_code = get_online_idle_core(provider_ip[pr])
                                     if idle_code > 0:
                                         print(
                                             f"#: Load changed to provider={pr} #########################################################################"
                                         )
-                                        yaml_original["config"]["provider_address"] = provider_id[pr]
+                                        yaml_original["config"]["provider_address"] = (
+                                            provider_id[pr]
+                                        )
                                         break
                         # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
                         yaml_original["config"]["source_code"]["path"] = str(BASE)
@@ -424,9 +464,7 @@ def submit_layering():
                             except:
                                 pass
 
-                        key = (
-                            f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
-                        )
+                        key = f"{job.info['provider']}_{job.info['jobKey']}_{job.info['index']}_{job.info['blockNumber']}"
                         for node in G_sorted(G_copy):
                             if node != "\\n":
                                 try:
@@ -463,7 +501,10 @@ def submit_layering():
 
         log()
         log(f"==> workflow_run_time=={ewe.get_run_time()} {n} {edges} (layer)")
-        log("----------------------------------------------------------------------", "yellow")
+        log(
+            "----------------------------------------------------------------------",
+            "yellow",
+        )
 
     log(f"==> final_LAYER_by_layer_workflow_run_time={ewe.get_run_time()} {n} {edges}")
 

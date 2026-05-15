@@ -9,7 +9,9 @@ def add_hook(always=False, style="default", debug=False):
             sys.excepthook = colorizer.colorize_traceback
         except ImportError:
             if debug:
-                sys.stderr.write("Failed to add coloring hook; pygments not available\n")
+                sys.stderr.write(
+                    "Failed to add coloring hook; pygments not available\n"
+                )
 
 
 class Colorizer:

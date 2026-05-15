@@ -34,7 +34,7 @@ class Cent(int):
         * a large float in scientific notation, where direct conversion to int
           would cause inaccuracy: 8.3e32
         * bytes: b'\xff\xff'
-        * hex strings: "0x330124\" """
+        * hex strings: "0x330124\""""
 
     # Known typing error: https://github.com/python/mypy/issues/4290
     def __new__(cls, value: Any) -> Any:  # type: ignore
@@ -103,7 +103,9 @@ class Cent(int):
         try:
             return Fixed(self * Fixed(10) ** -UNITS[unit])
         except KeyError:
-            raise TypeError(f'Cannot convert cent to unknown unit: "{unit}". ') from None
+            raise TypeError(
+                f'Cannot convert cent to unknown unit: "{unit}". '
+            ) from None
 
     def decimals(self):
         return 8
@@ -139,7 +141,9 @@ def _return_int(original: Any, value: Any) -> int:
     try:
         return int(value)
     except ValueError:
-        raise TypeError(f"Cannot convert {type(original).__name__} '{original}' to cent.")
+        raise TypeError(
+            f"Cannot convert {type(original).__name__} '{original}' to cent."
+        )
 
 
 class Fixed(Decimal):
@@ -212,4 +216,6 @@ def _to_fixed(value: Any) -> Decimal:
             pass  # vyper set the precision, do nothing.
         return Decimal(value)
     except Exception as e:
-        raise TypeError(f"Cannot convert {type(value).__name__} '{value}' to decimal.") from e
+        raise TypeError(
+            f"Cannot convert {type(value).__name__} '{value}' to decimal."
+        ) from e

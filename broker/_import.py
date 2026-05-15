@@ -37,4 +37,7 @@ def check_connection(is_silent=False):
         if not network.is_connected():
             time.sleep(15)
     elif not is_silent:
-        log(f"Attempt to connect bloxberg through [g]{cfg.NETWORK_ID}[/g] {ok()}", is_write=False)
+        log(
+            f"Attempt to connect bloxberg through [g]{cfg.NETWORK_ID}[/g] {ok()}",
+            is_write=False,
+        )

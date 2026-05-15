@@ -17,7 +17,14 @@ from typing import Dict, List
 from broker import cfg
 from broker._utils import _log
 from broker._utils._log import WHERE, br, log, ok
-from broker._utils.tools import _remove, exit_after, is_dir, mkdirs, pid_exists, read_json
+from broker._utils.tools import (
+    _remove,
+    exit_after,
+    is_dir,
+    mkdirs,
+    pid_exists,
+    read_json,
+)
 from broker._utils.web3_tools import get_tx_status
 from broker.config import env
 from broker.env import ENV_BASE
@@ -82,7 +89,9 @@ class IpfsGPG(Common):
         """Upload patches right after all the patchings are completed."""
         try:
             from_gpg_fingerprint = ipfs.get_gpg_fingerprint(env.GMAIL).upper()
-            ipfs.gpg_encrypt(from_gpg_fingerprint, self.requester_gpg_fingerprint, self.patch_file)
+            ipfs.gpg_encrypt(
+                from_gpg_fingerprint, self.requester_gpg_fingerprint, self.patch_file
+            )
         except Exception as e:
             _remove(self.patch_file)
             raise e
@@ -95,7 +104,9 @@ class B2drop(Common):
 
     def initialize(self):
         with suppress(Exception):
-            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
+            eudat.login(
+                env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT
+            )
 
         try:
             self.get_shared_tokens()
@@ -105,7 +116,9 @@ class B2drop(Common):
 
     def upload(self, code_hash, *_):
         with suppress(Exception):  # first time uploading
-            uploaded_file_size = eudat.get_size(f_name=f"{code_hash}/{self.patch_upload_fn}")
+            uploaded_file_size = eudat.get_size(
+                f_name=f"{code_hash}/{self.patch_upload_fn}"
+            )
             size_in_bytes = calculate_size(self.patch_file, _type="bytes")
             if uploaded_file_size == float(size_in_bytes):
                 log(f"==> {self.patch_file} is already uploaded")
@@ -116,7 +129,10 @@ class B2drop(Common):
             log(f"==> {br(code_hash)}.data_transfer_out={_data_transfer_out} MB")
             self.data_transfer_out += _data_transfer_out
             eudat.upload_results(
-                self.encoded_share_tokens[code_hash], self.patch_upload_fn, self.patch_dir, max_retries=5
+                self.encoded_share_tokens[code_hash],
+                self.patch_upload_fn,
+                self.patch_dir,
+                max_retries=5,
             )
         except Exception as e:
             raise e
@@ -138,20 +154,39 @@ class Gdrive(Common):
             cmd = [env.GDRIVE, "info", "--bytes", key, "-c", env.GDRIVE_METADATA]
             gdrive_info = subprocess_call(cmd, 5, sleep_time=30)
         except Exception as e:
-            raise Exception(f"{WHERE(1)} E: {key} does not have a match, meta_data={meta_data}. {e}") from e
+            raise Exception(
+                f"{WHERE(1)} E: {key} does not have a match, meta_data={meta_data}. {e}"
+            ) from e
 
         mime_type = gdrive.get_file_info(gdrive_info, "Mime")
         log(f"mime_type=[m]{mime_type}")
         self.data_transfer_out += calculate_size(self.patch_file)
         if self.data_transfer_out > 0:
-            log(f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB")
+            log(
+                f"data_transfer_out={self.data_transfer_out} MB => rounded={int(self.data_transfer_out)} MB"
+            )
         else:
             log(f"data_transfer_out={self.data_transfer_out} MB")
 
         if "folder" in mime_type:
-            cmd = [env.GDRIVE, "upload", "--parent", key, self.patch_file, "-c", env.GDRIVE_METADATA]
+            cmd = [
+                env.GDRIVE,
+                "upload",
+                "--parent",
+                key,
+                self.patch_file,
+                "-c",
+                env.GDRIVE_METADATA,
+            ]
         elif "gzip" in mime_type or "/zip" in mime_type:
-            cmd = [env.GDRIVE, "update", key, self.patch_file, "-c", env.GDRIVE_METADATA]
+            cmd = [
+                env.GDRIVE,
+                "update",
+                key,
+                self.patch_file,
+                "-c",
+                env.GDRIVE_METADATA,
+            ]
         else:
             raise Exception("Files could not be uploaded")
 
@@ -190,7 +225,11 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         self.job_type = int(kwargs.pop("job_type"))  # from workflow
         #: set environment variables: https://stackoverflow.com/a/5971326/2402577
         os.environ["IPFS_PATH"] = str(_env.IPFS_REPO)
-        _log.ll.LOG_FILENAME = Path(env.LOG_DIR) / "end_code_output" / f"{self.job_key}_{self.index}_{self.jobid}.log"
+        _log.ll.LOG_FILENAME = (
+            Path(env.LOG_DIR)
+            / "end_code_output"
+            / f"{self.job_key}_{self.index}_{self.jobid}.log"
+        )
         log(f"{env.EBLOCPATH}/broker/end_code.py {args}", is_code=True)
         log(f"==> slurm_job_id={self.slurm_job_id}")
         if self.job_key == self.index:
@@ -218,7 +257,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             sys.exit(1)
 
         self.requester_home_path = env.PROGRAM_PATH / self.requester_id_address
-        self.results_folder_prev: Path = self.requester_home_path / f"{self.job_key}_{self.index}"
+        self.results_folder_prev: Path = (
+            self.requester_home_path / f"{self.job_key}_{self.index}"
+        )
         self.results_folder = self.results_folder_prev / "JOB_TO_RUN"
         if not is_dir(self.results_folder) and not is_dir(self.results_folder_prev):
             sys.exit(1)
@@ -251,7 +292,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             elif int(self.job_type) == 3:
                 log(" * job_type=[pink]SINGLE")
 
-        self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(self.job_key, self.index)
+        self.job_state_running_pid = Ebb.mongo_broker.get_job_state_running_pid(
+            self.job_key, self.index
+        )
         dot_fn = self.results_folder / "sub_workflow_job.dot"
         if os.path.isfile(dot_fn):
             self.sub_workflow = True
@@ -262,7 +305,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 self.is_workflow = True
 
         # self.wait_job_start_process()
-        self.job_state_running_tx = Ebb.mongo_broker.get_job_state_running_tx(self.job_key, self.index)
+        self.job_state_running_tx = Ebb.mongo_broker.get_job_state_running_tx(
+            self.job_key, self.index
+        )
         log(f"==> job_state_running_tx={self.job_state_running_tx}")
 
     def get_shared_tokens(self):
@@ -273,17 +318,19 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             try:
                 share_token = share_ids[code_hash]["share_token"]
                 self.share_tokens[code_hash] = share_token
-                self.encoded_share_tokens[code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
-                    "utf-8"
-                )
+                self.encoded_share_tokens[code_hash] = base64.b64encode(
+                    (f"{share_token}:").encode("utf-8")
+                ).decode("utf-8")
             except KeyError:
                 try:
-                    shared_id = Ebb.mongo_broker.find_shareid_item(f"{self.job_key}_{self.requester_id_address[:16]}")
+                    shared_id = Ebb.mongo_broker.find_shareid_item(
+                        f"{self.job_key}_{self.requester_id_address[:16]}"
+                    )
                     share_token = shared_id["share_token"]
                     self.share_tokens[code_hash] = share_token
-                    self.encoded_share_tokens[code_hash] = base64.b64encode((f"{share_token}:").encode("utf-8")).decode(
-                        "utf-8"
-                    )
+                    self.encoded_share_tokens[code_hash] = base64.b64encode(
+                        (f"{share_token}:").encode("utf-8")
+                    ).decode("utf-8")
                 except Exception as e:
                     log(f"E: share_id cannot be detected from key={self.job_key}")
                     raise e
@@ -294,9 +341,14 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 encoded_value = self.encoded_share_tokens[key]
             except:
                 _share_token = share_ids[key]["share_token"]
-                encoded_value = base64.b64encode((f"{_share_token}:").encode("utf-8")).decode("utf-8")
+                encoded_value = base64.b64encode(
+                    (f"{_share_token}:").encode("utf-8")
+                ).decode("utf-8")
 
-            log(f"==> shared_tokens: {key} => {value['share_token']} | encoded=[m]{encoded_value}", h=False)
+            log(
+                f"==> shared_tokens: {key} => {value['share_token']} | encoded=[m]{encoded_value}",
+                h=False,
+            )
 
     def wait_job_start_process(self):
         """Wait start.py process.
@@ -316,7 +368,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                         break
                     else:
                         flag = True
-                        log("==> job_state_running() is still running; sleeping for 15 seconds")
+                        log(
+                            "==> job_state_running() is still running; sleeping for 15 seconds"
+                        )
                         sleep(15)
 
     def get_cloud_storage_class(self, _id):
@@ -330,7 +384,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         if self.storage_ids[_id] == StorageID.GDRIVE:
             return Gdrive
 
-        raise Exception(f"corresponding storage_id_class={self.storage_ids[_id]} does not exist")
+        raise Exception(
+            f"corresponding storage_id_class={self.storage_ids[_id]} does not exist"
+        )
 
     def set_code_hashes_to_process(self):
         for idx, code_hash in enumerate(self.code_hashes):
@@ -401,7 +457,15 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         """Client's initial downloaded files are removed."""
         timestamp_fn = f"{self.results_folder_prev}/timestamp.txt"
         try:
-            cmd = ["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn]
+            cmd = [
+                "find",
+                self.results_folder,
+                "-type",
+                "f",
+                "!",
+                "-newer",
+                timestamp_fn,
+            ]
             files_to_remove = run(cmd)
             if files_to_remove:
                 log(f"==> Files to be removed: \n{files_to_remove}\n")
@@ -409,12 +473,25 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
             print_tb(e)
             sys.exit(1)
 
-        run(["find", self.results_folder, "-type", "f", "!", "-newer", timestamp_fn, "-delete"])
+        run(
+            [
+                "find",
+                self.results_folder,
+                "-type",
+                "f",
+                "!",
+                "-newer",
+                timestamp_fn,
+                "-delete",
+            ]
+        )
 
     def clean_before_upload(self) -> None:
         remove_files(f"{self.results_folder}/.node-xmlhttprequest*")
 
-    def git_diff_patch_and_upload(self, source_fn: Path, name, storage_class, is_job_key) -> None:
+    def git_diff_patch_and_upload(
+        self, source_fn: Path, name, storage_class, is_job_key
+    ) -> None:
         if is_job_key:
             log(f"==> base_patch={self.patch_dir}")
             log(f"==> source_code_patch={name}")
@@ -438,13 +515,17 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                     raise e
         except Exception as e:
             print_tb(e)
-            raise Exception("problem on the git_diff_patch_and_upload() function") from e
+            raise Exception(
+                "problem on the git_diff_patch_and_upload() function"
+            ) from e
 
     def upload_driver(self):
         self.clean_before_upload()
         try:
             storage_class = self.get_cloud_storage_class(0)
-            self.git_diff_patch_and_upload(self.results_folder, self.job_key, storage_class, is_job_key=True)
+            self.git_diff_patch_and_upload(
+                self.results_folder, self.job_key, storage_class, is_job_key=True
+            )
         except Exception as e:
             raise e
 
@@ -454,7 +535,10 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
                 if not self.storage_ids[idx] == StorageID.NONE:
                     storage_class = self.get_cloud_storage_class(idx)
                     self.git_diff_patch_and_upload(
-                        self.results_data_folder / name, name, storage_class, is_job_key=False
+                        self.results_data_folder / name,
+                        name,
+                        storage_class,
+                        is_job_key=False,
                     )
                 else:
                     pass
@@ -479,7 +563,9 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         slurm_log_output_fn = f"{self.results_folder}/slurm_job_info.out"
         slurm_log_output_fn_temp = f"{self.results_folder}/slurm_job_info.out~"
         cmd = ["sacct", "-X", "--job", self.slurm_job_id, "--format"]
-        cmd.append("jobID,jobname,user,account,group,cluster,allocCPUS,REQMEM,TotalCPU,elapsed")
+        cmd.append(
+            "jobID,jobname,user,account,group,cluster,allocCPUS,REQMEM,TotalCPU,elapsed"
+        )
         run_stdout_to_file(cmd, slurm_log_output_fn)
         with open(slurm_log_output_fn, "a") as f:
             f.write("\n\n")
@@ -534,7 +620,12 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
             try:
                 self.job_info = Ebb.get_job_info(
-                    env.PROVIDER_ID, self.job_key, self.index, self.jobid, self.received_bn, is_print
+                    env.PROVIDER_ID,
+                    self.job_key,
+                    self.index,
+                    self.jobid,
+                    self.received_bn,
+                    is_print,
                 )
                 is_print = False
             except Exception as e:
@@ -561,12 +652,16 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
         try:
             data = read_json(f"{self.results_folder_prev}/data_transfer_in.json")
             self.data_transfer_in = data["data_transfer_in"]
-            log(f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
+            log(
+                f"==> data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB"
+            )
         except:
             log("E: data_transfer_in.json file does not exist")
 
         try:
-            self.modified_date = read_file(f"{self.results_folder_prev}/modified_date.txt")
+            self.modified_date = read_file(
+                f"{self.results_folder_prev}/modified_date.txt"
+            )
             log(f"==> modified_date={self.modified_date}")
         except:
             log("E: modified_date.txt file could not be read")
@@ -640,17 +735,27 @@ class ENDCODE(IpfsGPG, Ipfs, B2drop, Gdrive):
 
         log(f"finalized_elapsed_time={self.elapsed_time} minutes")
         log("==> [yellow]job_info=", end="")
-        for item in ["processPayment_bn", "processPayment_gas_used", "result_ipfs_hash"]:
+        for item in [
+            "processPayment_bn",
+            "processPayment_gas_used",
+            "result_ipfs_hash",
+        ]:
             del self.job_info[item]
 
         log({k: v for k, v in self.job_info.items() if v is not None})
         self.get_cloud_storage_class(0).initialize(self)
         self.upload_driver()
         data_transfer_sum = self.data_transfer_in + self.data_transfer_out
-        log(f"==> data_transfer_sum={data_transfer_sum} MB -> rounded={int(data_transfer_sum)} MB")
-        log(f"    * data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB")
+        log(
+            f"==> data_transfer_sum={data_transfer_sum} MB -> rounded={int(data_transfer_sum)} MB"
+        )
+        log(
+            f"    * data_transfer_in={self.data_transfer_in} MB -> rounded={int(self.data_transfer_in)} MB"
+        )
         if self.data_transfer_out > 0:
-            log(f"    * data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB")
+            log(
+                f"    * data_transfer_out={self.data_transfer_out} MB -> rounded={int(self.data_transfer_out)} MB"
+            )
         else:
             log(f"    * data_transfer_out={self.data_transfer_out} MB")
 

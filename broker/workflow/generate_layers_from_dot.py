@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-import matplotlib.pyplot as plt
 import networkx as nx
-from pathlib import Path
 
-from broker._utils._log import log
 from broker._utils.tools import print_tb
 from broker.errors import QuietExit
 from broker.workflow.Workflow import Workflow

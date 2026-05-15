@@ -27,7 +27,11 @@ def get_requester_info(self, requester):
         balance = int(Cent(self.get_balance(requester)).to("usd"))
         try:
             gpg_fingerprint = (
-                event_filter.get_all_entries()[0].args["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+                event_filter.get_all_entries()[0]
+                .args["gpgFingerprint"]
+                .rstrip(b"\x00")
+                .hex()[24:]
+                .upper()
             )
             requester_info = {
                 "address": requester.lower(),

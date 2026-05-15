@@ -52,7 +52,6 @@ def main():
                 slots[key].append(int(order.job))
 
     submitted_jobs = []
-    ##
     batch_to_submit = []
     for key, value in slots.items():
         for v in value:

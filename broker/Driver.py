@@ -27,9 +27,21 @@ from broker.drivers.gdrive import GdriveClass
 from broker.drivers.ipfs import IpfsClass
 from broker.eblocbroker_scripts.register_provider import get_ipfs_address
 from broker.eblocbroker_scripts.utils import Cent
-from broker.errors import HandlerException, JobException, QuietExit, QuietTerminate, Terminate
+from broker.errors import (
+    HandlerException,
+    JobException,
+    QuietExit,
+    QuietTerminate,
+    Terminate,
+)
 from broker.imports import nc
-from broker.lib import eblocbroker_function_call, pre_check, run_storage_thread, session_start_msg, state
+from broker.lib import (
+    eblocbroker_function_call,
+    pre_check,
+    run_storage_thread,
+    session_start_msg,
+    state,
+)
 from broker.libs import eudat, gdrive, slurm
 from broker.libs.gdrive import refresh_gdrive_token
 from broker.libs.user_setup import give_rwe_access, user_add
@@ -103,7 +115,9 @@ def tools(bn):
             is_geth_on()
 
         if not Ebb.is_orcid_verified(env.PROVIDER_ID):
-            raise QuietTerminate(f"warning: provider {env.PROVIDER_ID}'s orcid id is not authenticated yet")
+            raise QuietTerminate(
+                f"warning: provider {env.PROVIDER_ID}'s orcid id is not authenticated yet"
+            )
 
         slurm.is_on()
         if not is_process_on("mongod"):
@@ -112,9 +126,13 @@ def tools(bn):
         # run_driver_cancel()  # TODO: uncomment
         if env.IS_B2DROP_USE:
             if not env.OC_USER:
-                raise Terminate(f"OC_USER is not set in {env.LOG_DIR.joinpath('cfg.yaml')}")
+                raise Terminate(
+                    f"OC_USER is not set in {env.LOG_DIR.joinpath('cfg.yaml')}"
+                )
 
-            eudat.login(env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT)
+            eudat.login(
+                env.OC_USER, env.LOG_DIR.joinpath(".b2drop_client.txt"), env.OC_CLIENT
+            )
 
         gmail = provider_info_contract["gmail"]
         if gmail:
@@ -132,7 +150,9 @@ def tools(bn):
                     raise e
 
             if env.GDRIVE == "":
-                raise Terminate(f"E: gdrive_path='{env.GDRIVE}' please set a valid path in the cfg.yaml file")
+                raise Terminate(
+                    f"E: gdrive_path='{env.GDRIVE}' please set a valid path in the cfg.yaml file"
+                )
 
             try:
                 check_output, gdrive_gmail = gdrive.check_gdrive_about(gmail)
@@ -171,7 +191,9 @@ def tools(bn):
                     break
 
             if not flag:
-                raise QuietExit("warning 'ipfs id' does not return connected swarm nodes.")
+                raise QuietExit(
+                    "warning 'ipfs id' does not return connected swarm nodes."
+                )
 
         exception_msg = "warning: Given information is not same with the provider's registered info, please update it."
         try:
@@ -197,16 +219,30 @@ def tools(bn):
 
                 _ipfs_address = get_ipfs_address()
                 if provider_info_contract["ipfs_address"] != _ipfs_address:
-                    if provider_info_contract["ipfs_address"].split("p2p", 1)[1] != _ipfs_address.split("p2p", 1)[1]:
-                        log("warning: [m]IPFS_address[/m] does not match with the registered info.")
-                        log(f"\t\"{provider_info_contract['ipfs_address']}\" != \"{_ipfs_address}\"")
+                    if (
+                        provider_info_contract["ipfs_address"].split("p2p", 1)[1]
+                        != _ipfs_address.split("p2p", 1)[1]
+                    ):
+                        log(
+                            "warning: [m]IPFS_address[/m] does not match with the registered info."
+                        )
+                        log(
+                            f'\t"{provider_info_contract["ipfs_address"]}" != "{_ipfs_address}"'
+                        )
                         flag_error = True
 
                 if not is_docker() and env.GMAIL != "":
                     gpg_fingerprint = cfg.ipfs.get_gpg_fingerprint(env.GMAIL)
-                    if provider_info_contract["gpg_fingerprint"] != gpg_fingerprint.upper():
-                        log("warning: [m]gpg_fingerprint[/m] does not match with the registered info.")
-                        log(f"\t{provider_info_contract['gpg_fingerprint']} != {gpg_fingerprint.upper()}")
+                    if (
+                        provider_info_contract["gpg_fingerprint"]
+                        != gpg_fingerprint.upper()
+                    ):
+                        log(
+                            "warning: [m]gpg_fingerprint[/m] does not match with the registered info."
+                        )
+                        log(
+                            f"\t{provider_info_contract['gpg_fingerprint']} != {gpg_fingerprint.upper()}"
+                        )
                         flag_error = True
 
             if flag_error:
@@ -252,7 +288,9 @@ class Driver:
             raise JobException("==> job is refunded")
 
         if not job_infos["stateCode"] == state.code["SUBMITTED"]:
-            raise JobException("warning: job is already captured and in process or completed")
+            raise JobException(
+                "warning: job is already captured and in process or completed"
+            )
 
     def check_requested_job(self) -> None:
         """Check status of the job."""
@@ -280,7 +318,9 @@ class Driver:
         self.cloud_storage_id = self.logged_job.args["cloudStorageID"]
         log(f"=> job_key=[m]{job_key}[/m] | index={index}")
         log(f"   received_bn={self.job_bn}")
-        log(f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}")
+        log(
+            f"   tx_hash={self.logged_job['transactionHash'].hex()} | log_index={self.logged_job['logIndex']}"
+        )
         log(f"   provider={self.logged_job.args['provider']}")
         log(f"   received={self.logged_job.args['received']}")
         if self.logged_job["blockNumber"] > self.latest_block_number:
@@ -295,7 +335,14 @@ class Driver:
         try:
             job_id = 0  # main job_id
             self.job_info = eblocbroker_function_call(
-                partial(Ebb.get_job_info, env.PROVIDER_ID, job_key, index, job_id, self.job_bn),
+                partial(
+                    Ebb.get_job_info,
+                    env.PROVIDER_ID,
+                    job_key,
+                    index,
+                    job_id,
+                    self.job_bn,
+                ),
                 max_retries=10,
             )
             Ebb.get_job_code_hashes(env.PROVIDER_ID, job_key, index, self.job_bn)
@@ -320,7 +367,14 @@ class Driver:
             for job_id in range(1, len(self.job_info["core"])):
                 with suppress(Exception):
                     self.job_infos.append(  # if workflow is given then add jobs into list
-                        Ebb.get_job_info(env.PROVIDER_ID, job_key, index, job_id, self.job_bn, is_print=False)
+                        Ebb.get_job_info(
+                            env.PROVIDER_ID,
+                            job_key,
+                            index,
+                            job_id,
+                            self.job_bn,
+                            is_print=False,
+                        )
                     )
 
         self.check_requested_job()
@@ -343,7 +397,9 @@ class Driver:
         elif main_cloud_storage_id == StorageID.B2DROP:
             if not config.oc:
                 try:
-                    eudat.login(env.OC_USER, f"{env.LOG_DIR}/.b2drop_client.txt", env.OC_CLIENT)
+                    eudat.login(
+                        env.OC_USER, f"{env.LOG_DIR}/.b2drop_client.txt", env.OC_CLIENT
+                    )
                 except Exception as e:
                     print_tb(e)
                     sys.exit(1)
@@ -354,7 +410,9 @@ class Driver:
 
         # ~~~~~~~~~~~~~~~~~~~~~~~
         if self.is_workflow():
-            log(f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs is received")
+            log(
+                f"==> Workflow that has {len(self.job_infos[0]['core'])} jobs is received"
+            )
             storage_class.is_workflow = True
             # breakpoint()  # DEBUG
         # ~~~~~~~~~~~~~~~~~~~~~~~
@@ -408,13 +466,20 @@ def check_block_number_sync(current_bn, bn_read):
     while current_bn < int(bn_read):
         current_bn = Ebb.get_block_number()
         if flag:
-            log(f"  {current_bn} -- {int(bn_read)} time={time.time()}", "alert", is_write=False, end="")
+            log(
+                f"  {current_bn} -- {int(bn_read)} time={time.time()}",
+                "alert",
+                is_write=False,
+                end="",
+            )
 
         time.sleep(6)
         check_connection(is_silent=True)
         flag = True
         if time.time() > timeout:
-            raise Exception(f"Block number stuck at {current_bn}, something is wrong ...")
+            raise Exception(
+                f"Block number stuck at {current_bn}, something is wrong ..."
+            )
 
     return current_bn
 
@@ -476,14 +541,18 @@ def run_driver(given_bn):
         bn_temp = env.config["block_continue"]
         if not isinstance(env.config["block_continue"], int):
             log("E: block_continue variable is empty or contains an invalid character")
-            if not question_yes_no("==> Would you like to read from the contract's deployed block number?"):
+            if not question_yes_no(
+                "==> Would you like to read from the contract's deployed block number?"
+            ):
                 terminate()
 
             bn_temp = deployed_block_number
             if deployed_block_number:
                 env.config["block_continue"] = deployed_block_number
             else:
-                raise Terminate(f"deployed_block_number={deployed_block_number} is invalid")
+                raise Terminate(
+                    f"deployed_block_number={deployed_block_number} is invalid"
+                )
 
     try:
         tools(bn_temp)
@@ -560,7 +629,9 @@ def run_driver(given_bn):
             if current_bn < int(bn_read):
                 check_connection()
                 msg = f"warning: waiting block number to be updated, it remains constant at {current_bn} < {bn_read}"
-                with Halo(text=msg, text_color="yellow", spinner="line", placement="right"):
+                with Halo(
+                    text=msg, text_color="yellow", spinner="line", placement="right"
+                ):
                     current_bn = check_block_number_sync(current_bn, bn_read)
 
             log()
@@ -575,7 +646,10 @@ def run_driver(given_bn):
         try:
             driver.logged_jobs_to_process = Ebb.run_log_job(bn_read, env.PROVIDER_ID)
             driver.process_logged_jobs()
-            if len(driver.logged_jobs_to_process) > 0 and driver.latest_block_number > 0:
+            if (
+                len(driver.logged_jobs_to_process) > 0
+                and driver.latest_block_number > 0
+            ):
                 # updates the latest read block number
                 bn_read = driver.latest_block_number + 1
                 env.config["block_continue"] = bn_read
@@ -625,7 +699,9 @@ def _run_driver(given_bn, lock):
         except QuietExit as e:
             log(e, is_err=True)
         except zc.lockfile.LockError:
-            log(f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use")
+            log(
+                f"E: Driver cannot lock the file {env.DRIVER_LOCKFILE}, the pid file is in use"
+            )
         except Terminate as e:
             terminate(str(e), lock)
         except Exception as e:
@@ -678,7 +754,9 @@ def main(args):
         lock = None
         if not is_docker:
             try:
-                lock = zc.lockfile.LockFile(env.DRIVER_LOCKFILE, content_template=str(pid))
+                lock = zc.lockfile.LockFile(
+                    env.DRIVER_LOCKFILE, content_template=str(pid)
+                )
             except PermissionError:
                 print_tb("E: PermissionError is generated for the locked file")
 

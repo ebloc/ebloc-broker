@@ -130,7 +130,9 @@ def commit_software():
                     completed_sw.append(sw_node)
 
                     #: save to the blockchain
-                    add_software_exec_record(data_map[sw_node], input_hashes, output_hashes)
+                    add_software_exec_record(
+                        data_map[sw_node], input_hashes, output_hashes
+                    )
 
 
 sw_nodes = []

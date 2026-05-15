@@ -45,7 +45,9 @@ class BaseClass:
 class Storage(BaseClass):
     def __init__(self, **kwargs) -> None:
         self.Ebb = cfg.Ebb
-        self.thread_name = uuid.uuid4().hex  # https://stackoverflow.com/a/44992275/2402577
+        self.thread_name = (
+            uuid.uuid4().hex
+        )  # https://stackoverflow.com/a/44992275/2402577
         self.requester_id = kwargs.pop("requester_id")
         self.job_infos = kwargs.pop("job_infos")
         self.logged_job = kwargs.pop("logged_job")
@@ -60,7 +62,9 @@ class Storage(BaseClass):
         self.data_transfer_in_requested = self.job_infos[0]["data_transfer_in"]
         self.data_transfer_in_to_download_mb = 0  # total size in MB to download
         self.code_hashes: List[bytes] = self.logged_job.args["sourceCodeHash"]
-        self.code_hashes_str: List[str] = [bytes32_to_ipfs(_hash) for _hash in self.code_hashes]
+        self.code_hashes_str: List[str] = [
+            bytes32_to_ipfs(_hash) for _hash in self.code_hashes
+        ]
         self.verified_data: Dict[str, bool] = {}
         self.registered_data_hashes: List[str] = []
         self.job_key_list: List[str] = []
@@ -78,7 +82,9 @@ class Storage(BaseClass):
         self.private_dir = self.requester_home / "cache"
         self.public_dir = self.PROGRAM_PATH / "cache"
         self.patch_dir = self.results_folder_prev / "patch"
-        self.drivers_log_path = f"{env.LOG_DIR}/drivers_output/{self.job_key}_{self.index}.log"
+        self.drivers_log_path = (
+            f"{env.LOG_DIR}/drivers_output/{self.job_key}_{self.index}.log"
+        )
         self.start_timestamp = None
         self.data_transfer_in_to_download: int = 0
         _log.thread_log_files[self.thread_name] = self.drivers_log_path
@@ -110,7 +116,9 @@ class Storage(BaseClass):
                 cmd = f'sbatch -n {job_core_num} "{sbatch_file_path}" --mail-type=ALL'
                 if is_docker():  # user is already 'root'
                     # log(cmd, is_code=True)
-                    output = run(["sbatch", "-n", f"{job_core_num}", f"{sbatch_file_path}"])
+                    output = run(
+                        ["sbatch", "-n", f"{job_core_num}", f"{sbatch_file_path}"]
+                    )
                     return output
                 else:
                     with cd(self.results_folder):
@@ -141,7 +149,9 @@ class Storage(BaseClass):
 
         #: dedicated per-thread handler
         thread_handler = logging.FileHandler(self.drivers_log_path, "a")
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         thread_handler.setFormatter(formatter)
         # The ThreadFilter makes sure this handler only accepts logrecords that originate
         # in *this* thread, only. It needs the current thread id for this:
@@ -216,7 +226,9 @@ class Storage(BaseClass):
 
             return self.is_md5sum_matches(cached_tar_fn, name, _id, "", _cache_type)
         elif os.path.isfile(f"{cache_folder}/run.sh"):
-            return self.is_md5sum_matches(cache_folder, name, _id, "folder", _cache_type)
+            return self.is_md5sum_matches(
+                cache_folder, name, _id, "folder", _cache_type
+            )
 
         return False
 
@@ -312,7 +324,12 @@ class Storage(BaseClass):
         try:
             slurm_job_id = self.submit_slurm_job(job_core_num, sbatch_file_path)
             slurm_job_id = slurm_job_id.split()[3]
-            cmd = ["scontrol", "update", f"jobid={slurm_job_id}", f"TimeLimit={time_limit}"]
+            cmd = [
+                "scontrol",
+                "update",
+                f"jobid={slurm_job_id}",
+                f"TimeLimit={time_limit}",
+            ]
             subprocess_call(cmd, attempt=10, sleep_time=10)
             return slurm_job_id
         except Exception as e:
@@ -393,7 +410,9 @@ class Storage(BaseClass):
         try:
             data = read_json(data_transfer_in_json)
         except:
-            log(f"==> calculated_data_transfer_in={int(self.data_transfer_in_to_download_mb)} MB")
+            log(
+                f"==> calculated_data_transfer_in={int(self.data_transfer_in_to_download_mb)} MB"
+            )
             data["data_transfer_in"] = int(self.data_transfer_in_to_download_mb)
             with open(data_transfer_in_json, "w") as outfile:
                 json.dump(data, outfile)
@@ -413,17 +432,25 @@ class Storage(BaseClass):
             # for jobid in range(len(job_info["core"])):
             for jobid, node in enumerate(list(w.G_sorted())):
                 if node != "\\n":
-                    sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
+                    sbatch_file_path = (
+                        self.results_folder / f"{job_key}~{index}~{job_bn}~{jobid}.sh"
+                    )
                     file_to_run = f"{self.results_folder}/job{node}.sh"
                     self.run_wrapper(file_to_run, sbatch_file_path)
-                    execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
+                    execution_time_second = timedelta(
+                        seconds=int((job_info["run_time"][jobid] + 1) * 60)
+                    )
                     d = datetime(1, 1, 1) + execution_time_second
-                    time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
+                    time_limit = (
+                        str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
+                    )
                     time_limit_arr.append(time_limit)
                     # log(f"==> time_limit={time_limit}")
 
             #: give permission to user that will send jobs to Slurm
-            subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
+            subprocess.check_output(
+                ["sudo", "chown", "-R", self.requester_id, self.results_folder]
+            )
             with cd(self.results_folder):
                 w.sbatch_from_dot(
                     dot_fn,
@@ -437,23 +464,36 @@ class Storage(BaseClass):
             file_to_run = f"{self.results_folder}/run.sh"
             #: separator character is "~"
             if self.is_workflow:
-                sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{self.job_id}.sh"
+                sbatch_file_path = (
+                    self.results_folder / f"{job_key}~{index}~{job_bn}~{self.job_id}.sh"
+                )
             else:
                 jobid = 0
                 SINGLE = "3"
-                sbatch_file_path = self.results_folder / f"{job_key}~{index}~{job_bn}~{self.job_id}~{SINGLE}.sh"
+                sbatch_file_path = (
+                    self.results_folder
+                    / f"{job_key}~{index}~{job_bn}~{self.job_id}~{SINGLE}.sh"
+                )
 
             self.run_wrapper(file_to_run, sbatch_file_path)
             job_core_num = str(job_info["core"][jobid])
             #: client's requested seconds to run his/her job, 1 minute additional given
-            execution_time_second = timedelta(seconds=int((job_info["run_time"][jobid] + 1) * 60))
+            execution_time_second = timedelta(
+                seconds=int((job_info["run_time"][jobid] + 1) * 60)
+            )
             d = datetime(1, 1, 1) + execution_time_second
             time_limit = str(int(d.day) - 1) + "-" + str(d.hour) + ":" + str(d.minute)
-            log(f"==> time_limit=[cy]{time_limit}[/cy] | requested_core_num={job_core_num}")
+            log(
+                f"==> time_limit=[cy]{time_limit}[/cy] | requested_core_num={job_core_num}"
+            )
             #: give permission to user that will send jobs to Slurm
-            subprocess.check_output(["sudo", "chown", "-R", self.requester_id, self.results_folder])
+            subprocess.check_output(
+                ["sudo", "chown", "-R", self.requester_id, self.results_folder]
+            )
             #: sbatch and update time limit
-            slurm_job_id = self.scontrol_update(job_core_num, sbatch_file_path, time_limit)
+            slurm_job_id = self.scontrol_update(
+                job_core_num, sbatch_file_path, time_limit
+            )
             if not slurm_job_id.isdigit():
                 log("E: Detect an error on the sbatch, slurm_job_id is not a digit")
                 return False

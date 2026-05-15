@@ -15,9 +15,15 @@ def get_provider_price_info(address, requested_core, core_minute, data_transfer)
     print("{0: <19}".format("price_core_min: ") + str(price_core_min))
     print("{0: <19}".format("price_data_transfer: ") + str(price_data_transfer))
     if requested_core > availabe_core_num:
-        print("{0: <19}".format("price: ") + "Requested core is greater than provider's core")
+        print(
+            "{0: <19}".format("price: ")
+            + "Requested core is greater than provider's core"
+        )
     else:
-        _price = requested_core * core_minute * price_core_min + data_transfer * price_data_transfer
+        _price = (
+            requested_core * core_minute * price_core_min
+            + data_transfer * price_data_transfer
+        )
         print("{0: <19}".format("price: ") + str(_price))
 
 

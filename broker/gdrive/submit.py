@@ -25,10 +25,14 @@ def pre_check():
 
 def _submit(job, provider, key, requester, required_confs):
     try:
-        tx_hash = Ebb.submit_job(provider, key, job, requester=requester, required_confs=required_confs)
+        tx_hash = Ebb.submit_job(
+            provider, key, job, requester=requester, required_confs=required_confs
+        )
         tx_receipt = get_tx_status(tx_hash)
         if tx_receipt["status"] == 1:
-            processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(tx_receipt, errors=DISCARD)
+            processed_logs = Ebb._eblocbroker.events.LogJob().processReceipt(
+                tx_receipt, errors=DISCARD
+            )
             log(vars(processed_logs[0].args))
             try:
                 log(f"job_index={processed_logs[0].args['index']} {ok()}")
@@ -46,7 +50,17 @@ def _submit(job, provider, key, requester, required_confs):
 
 def _share_folders(folder_ids_to_share, provider_gmail):
     for folder_id in folder_ids_to_share:
-        cmd = ["gdrive", "share", folder_id, "--role", "writer", "--type", "user", "--email", provider_gmail]
+        cmd = [
+            "gdrive",
+            "share",
+            folder_id,
+            "--role",
+            "writer",
+            "--type",
+            "user",
+            "--email",
+            provider_gmail,
+        ]
         log(f"share_output=[m]{run(cmd)}")
 
 
@@ -56,7 +70,9 @@ def submit_gdrive(job: Job, is_pass=False, required_confs=1):
     Ebb._pre_check(requester)
     pre_check()
     job.folders_to_share = job.paths
-    check_link_folders(job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass)
+    check_link_folders(
+        job.data_paths, job.registered_data_files, job.source_code_path, is_pass=is_pass
+    )
     _git.generate_git_repo(job.folders_to_share)
     job.clean_before_submit()
     job, folder_ids_to_share = gdrive.submit(requester, job)

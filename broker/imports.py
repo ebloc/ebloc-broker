@@ -68,21 +68,31 @@ def connect_to_eblocbroker() -> None:
 
     try:
         if env.IS_EBLOCPOA:
-            config.ebb = cfg.w3.eth.contract(env.CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi.json"))
+            config.ebb = cfg.w3.eth.contract(
+                env.CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi.json")
+            )
             config._eblocbroker = config.ebb
             config.ebb.contract_address = cfg.w3.toChecksumAddress(env.CONTRACT_ADDRESS)
         elif env.IS_TESTNET and not cfg.IS_BROWNIE_TEST:
             try:
                 network.connect(cfg.NETWORK_ID)
                 if not network.is_connected():
-                    log(f"E: <{network.show_active()}> is not connected through {env.BLOXBERG_HOST}")
+                    log(
+                        f"E: <{network.show_active()}> is not connected through {env.BLOXBERG_HOST}"
+                    )
                     if cfg.NETWORK_ID == "bloxberg":
-                        log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg_core. ", end="")
+                        log(
+                            f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg_core. ",
+                            end="",
+                        )
                         cfg.NETWORK_ID = "bloxberg_core"
                     elif cfg.NETWORK_ID == "bloxberg_core":
                         with suppress(Exception):
                             nc(cfg.BERG_CMPE_IP, 8545)
-                            log(f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg. ", end="")
+                            log(
+                                f"Switch network_id={cfg.NETWORK_ID} to [blue]bloxberg. ",
+                                end="",
+                            )
                             cfg.NETWORK_ID = "bloxberg"
 
                     log(f"Trying at [blue]{cfg.NETWORK_ID}[/blue] ...")
@@ -120,17 +130,23 @@ def connect_to_eblocbroker() -> None:
             #
             config.usdtmy = project.USDTmy.at(env.TOKEN_CONTRACT_ADDRESS)
             config._usdtmy = cfg.w3.eth.contract(
-                env.TOKEN_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_usdtmy.json")
+                env.TOKEN_CONTRACT_ADDRESS,
+                abi=read_abi_file(env.EBB_SCRIPTS / "abi_usdtmy.json"),
             )
 
             # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
             from brownie import project as pro_roc
 
-            project_roc = pro_roc.load(env.EBLOCPATH / "research_certificate")  # TODO: add as sub-module
+            project_roc = pro_roc.load(
+                env.EBLOCPATH / "research_certificate"
+            )  # TODO: add as sub-module
             config.roc = project_roc.ResearchCertificate.at(env.ROC_CONTRACT_ADDRESS)
-            config.roc.contract_address = cfg.w3.toChecksumAddress(env.ROC_CONTRACT_ADDRESS)
+            config.roc.contract_address = cfg.w3.toChecksumAddress(
+                env.ROC_CONTRACT_ADDRESS
+            )
             config._roc = cfg.w3.eth.contract(
-                env.ROC_CONTRACT_ADDRESS, abi=read_abi_file(env.EBB_SCRIPTS / "abi_ResearchCertificate.json")
+                env.ROC_CONTRACT_ADDRESS,
+                abi=read_abi_file(env.EBB_SCRIPTS / "abi_ResearchCertificate.json"),
             )
             # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
             """

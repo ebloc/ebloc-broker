@@ -42,7 +42,9 @@ def thread_function(name):
     # thread_file_handler = f"/tmp/threadlogfile-{threading.get_ident()}.log"
     thread_file_handler = f"/tmp/threadlogfile{name}.log"
     thread_handler = logging.FileHandler(thread_file_handler, "a")
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     thread_handler.setFormatter(formatter)
     # The ThreadFilter makes sure this handler only accepts logrecords that originate
     # in *this* thread, only. It needs the current thread id for this:

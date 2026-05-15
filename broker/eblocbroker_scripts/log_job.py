@@ -25,7 +25,9 @@ def handle_event(logged_jobs):
         else:
             jobKey = logged_jobs[i].args['jobKey']
         """
-        log(f"transaction_hash={job['transactionHash'].hex()} | log_index={job['logIndex']}")
+        log(
+            f"transaction_hash={job['transactionHash'].hex()} | log_index={job['logIndex']}"
+        )
         log(f"block_number={job['blockNumber']}")
         log(f"provider={job.args['provider']}")
         log(f"job_key={job.args['jobKey']}")
@@ -68,7 +70,9 @@ def log_loop(event_filter, poll_interval: int = 6):
         since_time = datetime.timedelta(seconds=sleep_duration)
         d = _date(_type="tmux")
         if bn:
-            sys.stdout.write(f"\r[  {d}  ] waiting job events since bn={bn} -- counter={since_time} ... ")
+            sys.stdout.write(
+                f"\r[  {d}  ] waiting job events since bn={bn} -- counter={since_time} ... "
+            )
         else:
             sys.stdout.write(f"\r[  {d}  ] waiting job events since {since_time} ")
 
@@ -112,7 +116,9 @@ def main():
     Ebb = cfg.Ebb
     if len(sys.argv) == 3:
         from_block = int(sys.argv[1])
-        provider = str(sys.argv[2])  # Only obtains jobs that are submitted to the provider.
+        provider = str(
+            sys.argv[2]
+        )  # Only obtains jobs that are submitted to the provider.
     else:
         from_block = 15867616
         provider = "0x1926b36af775e1312fdebcc46303ecae50d945af"

@@ -21,7 +21,9 @@ def get_tx_status(tx_hash, is_verbose=False) -> TxReceipt:
         log(f"tx_hash={tx_hash}")
 
     try:
-        tx_receipt = cfg.Ebb._wait_for_transaction_receipt(tx_hash, is_verbose=is_verbose)
+        tx_receipt = cfg.Ebb._wait_for_transaction_receipt(
+            tx_hash, is_verbose=is_verbose
+        )
         tx_receipt_dict = dict(tx_receipt)
         if not is_verbose:
             with suppress(Exception):
@@ -32,7 +34,9 @@ def get_tx_status(tx_hash, is_verbose=False) -> TxReceipt:
             log(tx_receipt_dict, max_depth=1)
             if cfg.TX_LOG_VERBOSE:
                 # TODO: many logs show up investigate the reason for this, for exampole submit job has 3 to 5 events
-                for idx, tx_log in enumerate(tx_receipt_dict["logs"]):  # all logs that are emitted under the Tx
+                for idx, tx_log in enumerate(
+                    tx_receipt_dict["logs"]
+                ):  # all logs that are emitted under the Tx
                     tx_log = dict(tx_log)
                     with suppress(Exception):
                         del tx_log["data"]

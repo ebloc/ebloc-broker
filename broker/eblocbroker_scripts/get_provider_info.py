@@ -28,7 +28,9 @@ def get_provider_info(self, provider):
     try:
         bn = Ebb.get_block_number()
         prices_set_block_numbers = self.get_provider_prices_blocks(provider)
-        block_read_from, provider_prices = self._get_provider_info(provider, prices_set_block_numbers[-1])
+        block_read_from, provider_prices = self._get_provider_info(
+            provider, prices_set_block_numbers[-1]
+        )
         counter = 0
         while True:
             _event_filter = self._eblocbroker.events.LogProviderInfo.createFilter(
@@ -61,7 +63,9 @@ def get_provider_info(self, provider):
 
         if event_filter["gpgFingerprint"]:
             #: removes padding 24 zeros at the beginning
-            gpg_fingerprint = event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+            gpg_fingerprint = (
+                event_filter["gpgFingerprint"].rstrip(b"\x00").hex()[24:].upper()
+            )
         else:
             gpg_fingerprint = ""
 
@@ -78,7 +82,9 @@ def get_provider_info(self, provider):
 
         if bn < prices_set_block_numbers[-1]:
             remaining_blk = prices_set_block_numbers[-1] - bn
-            log(f"==> remaing blocks ({remaining_blk}) for updated prices in future block: {provider_prices}")
+            log(
+                f"==> remaing blocks ({remaining_blk}) for updated prices in future block: {provider_prices}"
+            )
             *_, provider_prices = Ebb._get_provider_info(provider)
             with suppress(Exception):
                 provider_info["block_read_from"] = prices_set_block_numbers[-2]
@@ -108,7 +114,12 @@ def main():
 
     provider_info = Ebb.get_provider_info(provider)
     log("provider_info=", "bold", end="")
-    for _price in ["price_core_min", "price_data_transfer", "price_storage", "price_cache"]:
+    for _price in [
+        "price_core_min",
+        "price_data_transfer",
+        "price_storage",
+        "price_cache",
+    ]:
         provider_info[_price] = f"{Cent(provider_info[_price])._to()} usd"
 
     log(provider_info)

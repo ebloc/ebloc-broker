@@ -67,7 +67,11 @@ class Link:
             is_only_folder_names = False
         else:
             # instead of full path only returns folder names
-            paths = [f for f in listdir(self.folder_target) if isdir(join(self.folder_target, f))]
+            paths = [
+                f
+                for f in listdir(self.folder_target)
+                if isdir(join(self.folder_target, f))
+            ]
             is_only_folder_names = True
 
         for idx, path in enumerate(paths):
@@ -90,10 +94,14 @@ class Link:
                     log()
 
                 folder_new_hash = generate_md5sum(dest)
-                assert folder_hash == folder_new_hash, "Hash of the original and the linked folder does not match"
+                assert folder_hash == folder_new_hash, (
+                    "Hash of the original and the linked folder does not match"
+                )
 
 
-def check_link_folders(folders_to_share, registered_data_files, source_code_path, is_pass=False):
+def check_link_folders(
+    folders_to_share, registered_data_files, source_code_path, is_pass=False
+):
     is_continue = False
     if registered_data_files:
         is_continue = True
@@ -101,7 +109,9 @@ def check_link_folders(folders_to_share, registered_data_files, source_code_path
             if isinstance(data_file, bytes):
                 data_file = data_file.decode("utf-8")
 
-            log(f"[blue] * [/blue][g]{data_file}[/g] => [yellow]../data_link/{data_file}[/yellow]")
+            log(
+                f"[blue] * [/blue][g]{data_file}[/g] => [yellow]../data_link/{data_file}[/yellow]"
+            )
 
     if folders_to_share:
         is_continue = True
@@ -125,7 +135,9 @@ def test_with_small_dataset(value):
     with open(fn, "r+") as file:
         file_data = file.read()
 
-    changed_file_data = file_data.replace("DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'")
+    changed_file_data = file_data.replace(
+        "DATA_HASH='change_folder_hash'", f"DATA_HASH='{value}'"
+    )
     with open(fn, "w+") as file:
         file.write(changed_file_data)
 

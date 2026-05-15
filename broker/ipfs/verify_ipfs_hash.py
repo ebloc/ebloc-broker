@@ -15,7 +15,9 @@ def main():
     # import hashlib
     # data = "foo"
     # print(hashlib.sha1(data))
-    mh = multihash.decode(b"QmRJzsvyCQyizr73Gmms8ZRtvNxmgqumxc2KUp71dfEmoj", "base58")  # hash of b'foo'
+    mh = multihash.decode(
+        b"QmRJzsvyCQyizr73Gmms8ZRtvNxmgqumxc2KUp71dfEmoj", "base58"
+    )  # hash of b'foo'
     print(mh.verify(b"foo"))
     print(mh.verify(b"foo bar"))
 
